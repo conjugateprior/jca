@@ -1,21 +1,21 @@
-# Applications for counting words and categories
+## Apps for counting words and categories
 
 This is experimental code with no guarantee of working at all.
 All subject to change.
 
-## Compiling and usage
+### Compiling and usage
 
-### `ykreporter`
+* `ykreporter`
 
-A command line application to 
-apply a Yoshikoder dictionary to a bunch of files and
-record the result in a CSV file.
+  A command line application to 
+  apply a Yoshikoder dictionary to a bunch of files and
+  record the result in a CSV file.
 
-```ant cljar-cats```
+  To compile: ```ant cljar-cats```
 
-### `ykwordcounter`
+* `ykwordcounter`
 
-A command line application to
-count words and drop the results in LDAC format in a folder.
+  A command line application to
+  count words and drop the results in LDAC format in a folder.
 
-```ant cljar-words```
+  To compile ```ant cljar-words```
