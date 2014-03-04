@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<project name="ykreporter" basedir="." default="cljar-cats">
+
+  <!-- build.number and version -->
+  <property file="./build.properties"/>
+ 
+  <property name="dir" 
+            value="."/>
+  <property name="source.dir" 
+            value="src"/>
+  <property name="class.dir" 
+            value="classes"/>
+  <property name="lib.dir" 
+            value="lib"/>
+  <property name="resource.dir" 
+            value="resources"/>
+  <property name="build.dir" 
+            value="build"/>
+  <property name="jarname.cl.cats" 
+            value="ykreporter"/>
+  <property name="jarname.cl.words" 
+            value="ykwordcounter"/>
+  <property name="main.class.cl.cats" 
+            value="org.conjugateprior.ca.ui.CommandLineCategoryCounter"/>
+  <property name="main.class.cl.words" 
+	            value="org.conjugateprior.ca.ui.CommandLineWordCounter"/>
+
+  <path id="project.class.path">
+    <pathelement location="${class.root}" />
+    <fileset dir="${lib.dir}">
+      <include name="*.jar" />
+    </fileset>
+  </path>
+  
+  <target name="clean" 
+          description="Removes classes, temporary directories, and targets">
+    <delete dir="${class.dir}" />
+    <delete dir="${build.dir}" />
+    <delete file="${jarname.cl.words}-${version}.jar" />
+    <delete file="${jarname.cl.cats}-${version}.jar" />
+  </target>
+
+  <target name="compile" 
+          depends="clean"
+          description="Compiles all Java classes">
+    <mkdir dir="${class.dir}" />
+    <javac srcdir="${source.dir}" 
+           destdir="${class.dir}" 
+           debug="on" 
+    	   optimize="off" 
+           deprecation="on" 
+           classpathref="project.class.path"
+           source="1.6" 
+           target="1.6"
+    	   includeantruntime="false"/>
+  </target>
+ 
+
+  <target name="cljar-words" 
+	  description="Creates the ykwordcounter, a command line word counter"
+	  depends="compile">
+    
+    <!-- make and populate the build directory -->
+    <mkdir dir="${build.dir}" />
+    <unzip dest="${build.dir}">
+      <patternset>
+	<include name="**/*" />
+	<exclude name="META-INF/*" />
+      </patternset>
+      <fileset dir="${lib.dir}">
+	<include name="*.jar" />
+      </fileset>
+    </unzip>
+    
+    <!-- add classes -->
+    <copy todir="${build.dir}">
+    	<fileset dir="${class.dir}" includes="**" />
+        <fileset dir="${basedir}" includes="${resource.dir}/**" />
+    </copy>
+    
+    <!-- construct the jar -->
+    <jar destfile="${jarname.cl.words}-${version}.jar" 
+         basedir="${build.dir}">
+      <manifest>
+	<attribute name="Main-Class" 
+		   value="${main.class.cl.words}" />
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="cljar-cats" 
+	  description="Creates the ykreporter, a command line category counter"
+	  depends="compile">
+    
+    <!-- make and populate the build directory -->
+    <mkdir dir="${build.dir}" />
+    <unzip dest="${build.dir}">
+      <patternset>
+	<include name="**/*" />
+	<exclude name="META-INF/*" />
+      </patternset>
+      <fileset dir="${lib.dir}">
+	<include name="*.jar" />
+      </fileset>
+    </unzip>
+    
+    <!-- add classes -->
+    <copy todir="${build.dir}">
+    	<fileset dir="${class.dir}" includes="**" />
+        <fileset dir="${basedir}" includes="${resource.dir}/**" />
+    </copy>
+    
+    <!-- construct the jar -->
+    <jar destfile="${jarname.cl.cats}-${version}.jar" 
+         basedir="${build.dir}">
+      <manifest>
+	<attribute name="Main-Class" 
+		   value="${main.class.cl.cats}" />
+      </manifest>
+    </jar>
+  </target>
+  
+</project>

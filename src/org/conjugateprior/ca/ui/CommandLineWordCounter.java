@@ -1,0 +1,167 @@
+package org.conjugateprior.ca.ui;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.charset.Charset;
+import java.util.Locale;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.SimpleDocumentTokenizer;
+import org.conjugateprior.ca.SimpleYoshikoderDocument;
+import org.conjugateprior.ca.WordReporter;
+
+public class CommandLineWordCounter extends CommandLineApplication {
+	
+	protected Locale tLocale = Locale.getDefault();
+	protected Charset tEncoding = Charset.defaultCharset();
+	protected File tOutputfile = null;
+	
+	protected boolean removeCurrency = false;
+	protected boolean removeNumbers = false;
+	protected File[] filesToProcess;
+	protected File stopwordFile;
+	
+	protected FileOutputStream streamData;
+	protected FileOutputStream streamWords;
+	protected FileOutputStream streamDocs;
+	
+	@Override
+	protected String getUsageString(){
+		return "ykwordcounter [options] -output <folder name> [doc1.txt doc2.txt folder1]";
+	}
+	
+	public CommandLineWordCounter() {
+		super();
+		
+		Option help = new Option("help", "Show this message, then exit");
+		Option encoding = new Option("encoding", true, "Character encoding for input files e.g. UTF8");
+		encoding.setArgName("encoding name");
+		Option removeStopwords = new Option("stopwords", true, "Stopwords (words not to count)");
+		removeStopwords.setArgName("file");
+		Option locale = new Option("locale",  true, "Locale for input files e.g. en_US");
+		locale.setArgName("locale name");		
+		Option noCurrency = new Option("no_currency", "Remove currency amounts");
+		Option noNumbers = new Option("no_numbers", "Remove numerical quantities");
+
+		Option outputfile = new Option("output", true, "Name for the output folder");
+		outputfile.setRequired(true);
+		outputfile.setArgName("folder name");
+
+		addCommandLineOption(help);
+		addCommandLineOption(encoding);
+		addCommandLineOption(locale);
+		addCommandLineOption(outputfile);
+		addCommandLineOption(noCurrency);
+		addCommandLineOption(noNumbers);
+		addCommandLineOption(removeStopwords);		
+	}
+
+	@Override
+	protected void processLine(CommandLine line) throws Exception {	
+		
+		if (line.hasOption("help")){
+			printUsageAndOptions();
+			System.exit(0);
+		}
+		if (line.hasOption("locale")){
+			try {
+				tLocale = translateLocale(line.getOptionValue("locale"));
+			} catch (Exception ex){
+				throw new Exception(
+						"Could not parse locale argument.\n" + 
+				        "A valid locale consists of a two letter language codes from ISO 639\n" +
+						"optionally connected by an underscore to a two letter country code\n" +
+				        "from ISO 3166.  See also http://en.wikipedia.org/wiki/BCP_47");
+			}
+		}
+		if (line.hasOption("encoding")){
+			try {
+				tEncoding = Charset.forName(line.getOptionValue("encoding"));
+			} catch (Exception ex){
+				throw new Exception("Could not parse file encoding. Error message follows:\n" +
+						ex.getMessage());
+			}
+		}
+		removeCurrency = line.hasOption("no_currency");
+		removeNumbers = line.hasOption("no_numbers");
+		tOutputfile = new File(line.getOptionValue("output"));
+		
+		if (line.hasOption("stopwords")){
+			stopwordFile = new File(line.getOptionValue("stopwords"));
+			if (!stopwordFile.exists())
+				throw new Exception("Could not find stopword file " +
+						stopwordFile.getAbsolutePath());
+		}
+		
+		String[] files = line.getArgs();
+		if (files.length == 0)
+			throw new Exception("No documents or folders of documents to process!");
+		filesToProcess = getRecursiveDepthOneFileArray(files);
+		
+		// wiederholen
+		System.err.println("Settings:");
+		System.err.println("  Locale of input files: " + tLocale + " ie '" + 
+				tLocale.getDisplayName() + "'");
+		System.err.println("  Encoding of input files: " + tEncoding.name() + " ie '" +
+				tEncoding.displayName() + "'");
+		System.err.println("  Remove numbers? " + removeNumbers);
+		System.err.println("  Remove currency? " + removeCurrency);
+		System.err.println("  Remove stopwords? " + ((stopwordFile != null) ? 
+				"yes, from " + stopwordFile.getAbsolutePath() : "no"));
+		
+		System.err.println("And here come the files...");
+		
+		// here we go...
+		if (tOutputfile.exists())
+			throw new Exception(tOutputfile.getAbsolutePath() + " already exists. " + 
+					"Halting to prevent data loss.");
+		
+		boolean makedir = tOutputfile.mkdir();
+		if (!makedir)
+			throw new Exception("Couldn't create the output folder");
+		streamData = new FileOutputStream(new File(tOutputfile, "data.ldac"));
+		streamWords = new FileOutputStream(new File(tOutputfile, "vocab.csv"));
+		streamDocs = new FileOutputStream(new File(tOutputfile, "docs.csv"));
+
+		IYoshikoderDocument doc = null;
+		SimpleDocumentTokenizer tok = new SimpleDocumentTokenizer(tLocale);
+
+		WordReporter rep = new WordReporter();
+		if (removeNumbers)
+			rep.addFilter(rep.new NoNumberFilter());
+		if (removeCurrency)
+			rep.addFilter(rep.new NoCurrencyFilter());
+		if (stopwordFile != null)
+			rep.addFilter(rep.new StopwordFilter(stopwordFile));
+		
+		rep.openStreamingReport(streamData, streamDocs, streamWords);
+		for (File file : filesToProcess) {
+			try {
+				String txt = SimpleYoshikoderDocument.getTextFromFile(file, tEncoding);
+				String docTitle = file.getName();
+				System.err.println("Processing " + docTitle);
+				doc = new SimpleYoshikoderDocument(docTitle, txt, null, tok); // null date
+				rep.streamReportLine(doc);
+			} catch (Exception exc){
+				System.err.println("Problem with " + doc.getTitle());
+				System.err.println("Error message follows:");
+				System.err.println(exc.getMessage());
+				System.err.println("Carrying on without processing this document...");
+			}
+		}
+		rep.closeStreamingReport();	
+	}
+	
+	public static void main(String[] args) {
+		CommandLineWordCounter rep = new CommandLineWordCounter();
+		try {
+			rep.process(args);
+		} catch (Exception ex){
+			System.err.println(ex.getMessage());
+			rep.printUsageAndOptions();
+			System.exit(0);
+		}
+	}	
+}
