@@ -22,6 +22,22 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.tartarus.snowball.SnowballStemmer;
+import org.tartarus.snowball.ext.danishStemmer;
+import org.tartarus.snowball.ext.dutchStemmer;
+import org.tartarus.snowball.ext.englishStemmer;
+import org.tartarus.snowball.ext.finnishStemmer;
+import org.tartarus.snowball.ext.germanStemmer;
+import org.tartarus.snowball.ext.hungarianStemmer;
+import org.tartarus.snowball.ext.italianStemmer;
+import org.tartarus.snowball.ext.norwegianStemmer;
+import org.tartarus.snowball.ext.portugueseStemmer;
+import org.tartarus.snowball.ext.romanianStemmer;
+import org.tartarus.snowball.ext.russianStemmer;
+import org.tartarus.snowball.ext.spanishStemmer;
+import org.tartarus.snowball.ext.swedishStemmer;
+import org.tartarus.snowball.ext.turkishStemmer;
+
 public class WordReporter {
 
 	protected BufferedWriter writer;
@@ -73,6 +89,7 @@ public class WordReporter {
 			return wd;
 		}
 	}
+	
 	public class NoNumberFilter extends BaseFilter {
 		public String filter(String wd){
 			if (Character.isDigit(wd.charAt(0)))
@@ -80,6 +97,39 @@ public class WordReporter {
 			return wd;
 		}
 	}
+	
+	public class Stemmer extends BaseFilter {	
+		SnowballStemmer stemmer; // default
+		Stemmer(SnowballStemmer stem){
+			stemmer = stem;
+		}
+		public String filter(String wd){
+			stemmer.setCurrent(wd);
+			boolean b = stemmer.stem();
+			if (b)
+				return stemmer.getCurrent();
+			return null;
+		}
+	}
+	
+	public Stemmer getStemmerByName(String name){
+		if (name.equals("english")) return new Stemmer(new englishStemmer());
+		else if (name.equals("dutch")) return new Stemmer(new dutchStemmer()); 
+		else if (name.equals("danish")) return new Stemmer(new danishStemmer()); 
+		else if (name.equals("finnish")) return new Stemmer(new finnishStemmer()); 
+		else if (name.equals("german")) return new Stemmer(new germanStemmer()); 
+		else if (name.equals("hungarian")) return new Stemmer(new hungarianStemmer()); 
+		else if (name.equals("italian")) return new Stemmer(new italianStemmer()); 
+		else if (name.equals("norwegian")) return new Stemmer(new norwegianStemmer()); 
+		else if (name.equals("turkish")) return new Stemmer(new turkishStemmer()); 
+		else if (name.equals("portuguese")) return new Stemmer(new portugueseStemmer()); 
+		else if (name.equals("russian")) return new Stemmer(new russianStemmer()); 
+		else if (name.equals("spanish")) return new Stemmer(new spanishStemmer()); 
+		else if (name.equals("romanian")) return new Stemmer(new romanianStemmer()); 
+		else if (name.equals("swedish")) return new Stemmer(new swedishStemmer()); 
+		else return null;
+	}
+	
 	public class StopwordFilter extends BaseFilter {
 		Set<String> stops = new HashSet<String>();
 		
@@ -154,6 +204,38 @@ public class WordReporter {
 		}
 		return sb.toString();
 	}
+
+	class MTXLine {
+		int maxWordTypeCountId = -1;
+		int maxWordIndex = -1;
+		String vals = null;
+		public MTXLine(int mwi, int mwtci, String s) {
+			maxWordIndex = mwi;
+			maxWordTypeCountId = mwtci;
+			vals = s;
+		}
+	}
+	
+	// no newline TODO make an object that represents the highest word index, number of elements
+	// and a newline separated stacked string
+	public MTXLine makeMTXLineFromDocument(IYoshikoderDocument doc){
+		Map<String,Integer> map = applyFilters(doc.getWordCountMap(), fp);
+
+		StringBuffer sb = new StringBuffer();
+		sb.append(map.keySet().size()); // this many feature pairs
+		for (String wd : map.keySet()) {
+			Integer id = wordToId.get(wd);
+			if (id == null){
+				id = idIndex;
+				wordToId.put(wd, idIndex);
+				idIndex++;
+			}
+			sb.append(" " + id + ":" + map.get(wd));
+		}
+		
+		return new MTXLine(mwi, mwtci, s).toString();
+	}
+
 	
 	public void openStreamingReport(OutputStream out, OutputStream docsOut, OutputStream wordsOut) throws Exception {
 		OutputStreamWriter osw = new OutputStreamWriter(out, outputCharset);
@@ -169,9 +251,16 @@ public class WordReporter {
 				new FileOutputStream(fdocs), new FileOutputStream(fwords));		
 	}
 
-	public void streamReportLine(IYoshikoderDocument doc) throws IOException {
+	public void streamLDACReportLine(IYoshikoderDocument doc) throws IOException {
 		docsWriter.write(doc.getTitle() + newline); 
 		String line = makeLDALineFromDocument(doc);
+		writer.write(line + newline);
+	}
+	
+	// TODO fix me to use the functions above
+	public void streamMTXReportLine(IYoshikoderDocument doc) throws IOException {
+		docsWriter.write(doc.getTitle() + newline); 
+		String line = makeMTXLineFromDocument(doc);
 		writer.write(line + newline);
 	}
 	
@@ -211,9 +300,10 @@ public class WordReporter {
 
 		WordReporter rep = new WordReporter();
 		rep.addFilter(rep.new NoNumberFilter());
+		rep.addFilter(rep.getStemmerByName("english"));
 		rep.openStreamingReport(out, out1, out2);
-		rep.streamReportLine(d1);
-		rep.streamReportLine(d2);
+		rep.streamLDACReportLine(d1);
+		rep.streamLDACReportLine(d2);
 		rep.closeStreamingReport();
 		
 		System.out.println(out.toString());

@@ -22,6 +22,10 @@ public class CommandLineWordCounter extends CommandLineApplication {
 	protected boolean removeNumbers = false;
 	protected File[] filesToProcess;
 	protected File stopwordFile;
+	protected boolean stem = false;
+	
+	protected boolean mtx = false;
+	protected boolean ldac = true;
 	
 	protected FileOutputStream streamData;
 	protected FileOutputStream streamWords;
@@ -49,13 +53,21 @@ public class CommandLineWordCounter extends CommandLineApplication {
 		outputfile.setRequired(true);
 		outputfile.setArgName("folder name");
 
+		Option stemmer = new Option("stemmer",  true, "Stem the input files (happens last)");
+		stemmer.setArgName("language name");	
+
+		Option format = new Option("format", true, "Matrix format for output");
+		outputfile.setArgName("matrix format");
+		
 		addCommandLineOption(help);
 		addCommandLineOption(encoding);
 		addCommandLineOption(locale);
 		addCommandLineOption(outputfile);
+		addCommandLineOption(format);
 		addCommandLineOption(noCurrency);
 		addCommandLineOption(noNumbers);
-		addCommandLineOption(removeStopwords);		
+		addCommandLineOption(removeStopwords);
+		addCommandLineOption(stemmer);
 	}
 
 	@Override
@@ -95,6 +107,38 @@ public class CommandLineWordCounter extends CommandLineApplication {
 						stopwordFile.getAbsolutePath());
 		}
 		
+		String stemmerLanguage = null;
+		if (line.hasOption("stemmer")){
+			stem = true;
+			String langname = line.getOptionValue("stemmer").toLowerCase();
+			String llist = "danish dutch english finnish french german hungarian " + 
+					"italian norwegian portuguese romanian russian spanish swedish turkish";
+			String[] langs = llist.split(" ");
+			for (String l : langs) {
+				if (langname.equals(l)){
+					stemmerLanguage = l;
+					break;
+				}
+			}
+			if (stemmerLanguage == null){
+				throw new Exception("Unrecognized language for stemmer. Must be one of: " + llist);
+			}
+		}
+		
+		String form = null;
+		if (line.hasOption("format")){
+			form = line.getOptionValue("format");
+			if (form.equals("ldac"))
+				ldac = true;
+			else if (form.equals("mtx"))
+				mtx = true;
+			else
+				throw new Exception("Unrecognized matrix format argument. Must be one of: ldac mtx");
+		} else {
+			form = "ldac";
+			ldac = true;
+		}
+		
 		String[] files = line.getArgs();
 		if (files.length == 0)
 			throw new Exception("No documents or folders of documents to process!");
@@ -110,6 +154,8 @@ public class CommandLineWordCounter extends CommandLineApplication {
 		System.err.println("  Remove currency? " + removeCurrency);
 		System.err.println("  Remove stopwords? " + ((stopwordFile != null) ? 
 				"yes, from " + stopwordFile.getAbsolutePath() : "no"));
+		System.err.println("  Stem tokens? " + (stem ? ("True (using " + stemmerLanguage + " stemmer)") : "False"));
+		System.err.println("  Matrix output format: " + form);
 		
 		System.err.println("And here come the files...");
 		
@@ -118,16 +164,6 @@ public class CommandLineWordCounter extends CommandLineApplication {
 			throw new Exception(tOutputfile.getAbsolutePath() + " already exists. " + 
 					"Halting to prevent data loss.");
 		
-		boolean makedir = tOutputfile.mkdir();
-		if (!makedir)
-			throw new Exception("Couldn't create the output folder");
-		streamData = new FileOutputStream(new File(tOutputfile, "data.ldac"));
-		streamWords = new FileOutputStream(new File(tOutputfile, "vocab.csv"));
-		streamDocs = new FileOutputStream(new File(tOutputfile, "docs.csv"));
-
-		IYoshikoderDocument doc = null;
-		SimpleDocumentTokenizer tok = new SimpleDocumentTokenizer(tLocale);
-
 		WordReporter rep = new WordReporter();
 		if (removeNumbers)
 			rep.addFilter(rep.new NoNumberFilter());
@@ -135,23 +171,62 @@ public class CommandLineWordCounter extends CommandLineApplication {
 			rep.addFilter(rep.new NoCurrencyFilter());
 		if (stopwordFile != null)
 			rep.addFilter(rep.new StopwordFilter(stopwordFile));
-		
-		rep.openStreamingReport(streamData, streamDocs, streamWords);
-		for (File file : filesToProcess) {
-			try {
-				String txt = SimpleYoshikoderDocument.getTextFromFile(file, tEncoding);
-				String docTitle = file.getName();
-				System.err.println("Processing " + docTitle);
-				doc = new SimpleYoshikoderDocument(docTitle, txt, null, tok); // null date
-				rep.streamReportLine(doc);
-			} catch (Exception exc){
-				System.err.println("Problem with " + doc.getTitle());
-				System.err.println("Error message follows:");
-				System.err.println(exc.getMessage());
-				System.err.println("Carrying on without processing this document...");
+		if (stem)
+			rep.addFilter(rep.getStemmerByName(stemmerLanguage));
+
+		// output business
+		boolean makedir = tOutputfile.mkdir();
+		if (!makedir)
+			throw new Exception("Couldn't create the output folder");
+		streamWords = new FileOutputStream(new File(tOutputfile, "vocab.csv"));
+		streamDocs = new FileOutputStream(new File(tOutputfile, "docs.csv"));
+
+		IYoshikoderDocument doc = null;
+		SimpleDocumentTokenizer tok = new SimpleDocumentTokenizer(tLocale);
+
+		if (ldac){ 
+			streamData = new FileOutputStream(new File(tOutputfile, "data.ldac"));
+			
+			rep.openStreamingReport(streamData, streamDocs, streamWords);
+			for (File file : filesToProcess) {
+				try {
+					String txt = SimpleYoshikoderDocument.getTextFromFile(file, tEncoding);
+					String docTitle = file.getName();
+					System.err.println("Processing " + docTitle);
+					doc = new SimpleYoshikoderDocument(docTitle, txt, null, tok); // null date
+					rep.streamLDACReportLine(doc);
+				} catch (Exception exc){
+					System.err.println("Problem with " + doc.getTitle());
+					System.err.println("Error message follows:");
+					System.err.println(exc.getMessage());
+					System.err.println("Carrying on without processing this document...");
+				}
 			}
+			rep.closeStreamingReport();
+		} else if (mtx){
+			streamData = new FileOutputStream(new File(tOutputfile, "data.mtx"));
+			
+			rep.openStreamingReport(streamData, streamDocs, streamWords);
+			for (File file : filesToProcess) {
+				try {
+					String txt = SimpleYoshikoderDocument.getTextFromFile(file, tEncoding);
+					String docTitle = file.getName();
+					System.err.println("Processing " + docTitle);
+					doc = new SimpleYoshikoderDocument(docTitle, txt, null, tok); // null date
+					rep.streamLDACReportLine(doc);
+				} catch (Exception exc){
+					System.err.println("Problem with " + doc.getTitle());
+					System.err.println("Error message follows:");
+					System.err.println(exc.getMessage());
+					System.err.println("Carrying on without processing this document...");
+				}
+			}
+			rep.closeStreamingReport();
+			
+			
+		} else {
+			System.err.println("Should never get here!");
 		}
-		rep.closeStreamingReport();	
 	}
 	
 	public static void main(String[] args) {
