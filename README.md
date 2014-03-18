@@ -16,6 +16,6 @@ All subject to change.
 * `ykwordcounter`
 
   A command line application to
-  count words and drop the results in LDAC format in a folder.
+  count words and drop the results in LDAC or Matrix Market format in a folder.
 
   To compile ```ant cljar-words```
