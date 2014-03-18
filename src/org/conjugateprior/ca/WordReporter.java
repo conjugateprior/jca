@@ -1,25 +1,16 @@
 package org.conjugateprior.ca;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.tartarus.snowball.SnowballStemmer;
@@ -39,15 +30,8 @@ import org.tartarus.snowball.ext.swedishStemmer;
 import org.tartarus.snowball.ext.turkishStemmer;
 
 public class WordReporter {
-
-	protected BufferedWriter writer;
-	protected BufferedWriter docsWriter;
-	protected BufferedWriter wordsWriter;
-	protected Charset outputCharset = Charset.forName("UTF8");
-	protected String newline = "\n";
+		
 	
-	protected int idIndex = 0;
-	protected Map<String,Integer> wordToId = new HashMap<String,Integer>();
 	protected FilterPipe fp;
 	
 	public class FilterPipe {
@@ -170,6 +154,11 @@ public class WordReporter {
 		fp.addFilter(filt);
 	}
 	
+	public Map<String,Integer> getWordCountMapFromDocument(IYoshikoderDocument doc){
+		Map<String,Integer> map = applyFilters(doc.getWordCountMap(), fp);
+		return map;
+	}
+	
 	protected Map<String,Integer> applyFilters(Map<String, Integer> map, FilterPipe filt){
 		Map<String,Integer> m = new HashMap<String,Integer>();
 		for (String key : map.keySet()) {
@@ -186,107 +175,7 @@ public class WordReporter {
 		} 
 		return m;
 	}
-		
-	// no newline
-	public String makeLDALineFromDocument(IYoshikoderDocument doc){
-		Map<String,Integer> map = applyFilters(doc.getWordCountMap(), fp);
-
-		StringBuffer sb = new StringBuffer();
-		sb.append(map.keySet().size()); // this many feature pairs
-		for (String wd : map.keySet()) {
-			Integer id = wordToId.get(wd);
-			if (id == null){
-				id = idIndex;
-				wordToId.put(wd, idIndex);
-				idIndex++;
-			}
-			sb.append(" " + id + ":" + map.get(wd));
-		}
-		return sb.toString();
-	}
-
-	class MTXLine {
-		int maxWordTypeCountId = -1;
-		int maxWordIndex = -1;
-		String vals = null;
-		public MTXLine(int mwi, int mwtci, String s) {
-			maxWordIndex = mwi;
-			maxWordTypeCountId = mwtci;
-			vals = s;
-		}
-	}
 	
-	// no newline TODO make an object that represents the highest word index, number of elements
-	// and a newline separated stacked string
-	public MTXLine makeMTXLineFromDocument(IYoshikoderDocument doc){
-		Map<String,Integer> map = applyFilters(doc.getWordCountMap(), fp);
-
-		StringBuffer sb = new StringBuffer();
-		sb.append(map.keySet().size()); // this many feature pairs
-		for (String wd : map.keySet()) {
-			Integer id = wordToId.get(wd);
-			if (id == null){
-				id = idIndex;
-				wordToId.put(wd, idIndex);
-				idIndex++;
-			}
-			sb.append(" " + id + ":" + map.get(wd));
-		}
-		
-		return new MTXLine(mwi, mwtci, s).toString();
-	}
-
-	
-	public void openStreamingReport(OutputStream out, OutputStream docsOut, OutputStream wordsOut) throws Exception {
-		OutputStreamWriter osw = new OutputStreamWriter(out, outputCharset);
-		writer = new BufferedWriter(osw);
-		OutputStreamWriter words = new OutputStreamWriter(wordsOut, outputCharset);
-		wordsWriter = new BufferedWriter(words);
-		OutputStreamWriter docs = new OutputStreamWriter(docsOut, outputCharset);
-		docsWriter = new BufferedWriter(docs);
-	}
-	
-	public void openStreamingReport(File f, File fdocs, File fwords) throws Exception {
-		openStreamingReport(new FileOutputStream(f), 
-				new FileOutputStream(fdocs), new FileOutputStream(fwords));		
-	}
-
-	public void streamLDACReportLine(IYoshikoderDocument doc) throws IOException {
-		docsWriter.write(doc.getTitle() + newline); 
-		String line = makeLDALineFromDocument(doc);
-		writer.write(line + newline);
-	}
-	
-	// TODO fix me to use the functions above
-	public void streamMTXReportLine(IYoshikoderDocument doc) throws IOException {
-		docsWriter.write(doc.getTitle() + newline); 
-		String line = makeMTXLineFromDocument(doc);
-		writer.write(line + newline);
-	}
-	
-	public void closeStreamingReport() throws IOException {
-		if (writer != null)
-			writer.close();
-		if (docsWriter != null)
-			docsWriter.close();
-		
-		// push out the words one per line, 
-		// sorted by identifier so the row numbers are the feature id numbers.
-		List<Entry<String,Integer>> lst = 
-				new ArrayList<Entry<String,Integer>>(wordToId.entrySet());
-		Collections.sort(lst, new Comparator<Entry<String, Integer>>() {
-			public int compare(Entry<String, Integer> o1,
-					Entry<String, Integer> o2) {
-				return o1.getValue().compareTo(o2.getValue());
-			}
-		});
-		for (Entry<String, Integer> entry : lst)
-			wordsWriter.write(entry.getKey() + newline);
-		
-		if (wordsWriter != null)
-			wordsWriter.close();
-	}
-
 	public static void main(String[] args) throws Exception {
 		String doc1 = "Mary had 1 little lamb, her fleece was white as snow";
 		String doc2 = "And everywhere that Mary went, the lamb was sure to go";
@@ -300,11 +189,11 @@ public class WordReporter {
 
 		WordReporter rep = new WordReporter();
 		rep.addFilter(rep.new NoNumberFilter());
-		rep.addFilter(rep.getStemmerByName("english"));
-		rep.openStreamingReport(out, out1, out2);
-		rep.streamLDACReportLine(d1);
-		rep.streamLDACReportLine(d2);
-		rep.closeStreamingReport();
+		//rep.addFilter(rep.getStemmerByName("english"));
+		//rep.openStreamingReport(out, out1, out2);
+		//rep.streamMTXReportLine(d1);
+		//rep.streamMTXReportLine(d2);
+		//rep.closeStreamingReport();
 		
 		System.out.println(out.toString());
 		System.out.println(out1.toString());

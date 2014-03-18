@@ -7,9 +7,7 @@ import java.util.Locale;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-import org.conjugateprior.ca.IYoshikoderDocument;
-import org.conjugateprior.ca.SimpleDocumentTokenizer;
-import org.conjugateprior.ca.SimpleYoshikoderDocument;
+import org.conjugateprior.ca.WordReportFormatter;
 import org.conjugateprior.ca.WordReporter;
 
 public class CommandLineWordCounter extends CommandLineApplication {
@@ -173,57 +171,16 @@ public class CommandLineWordCounter extends CommandLineApplication {
 			rep.addFilter(rep.new StopwordFilter(stopwordFile));
 		if (stem)
 			rep.addFilter(rep.getStemmerByName(stemmerLanguage));
-
-		// output business
-		boolean makedir = tOutputfile.mkdir();
-		if (!makedir)
-			throw new Exception("Couldn't create the output folder");
-		streamWords = new FileOutputStream(new File(tOutputfile, "vocab.csv"));
-		streamDocs = new FileOutputStream(new File(tOutputfile, "docs.csv"));
-
-		IYoshikoderDocument doc = null;
-		SimpleDocumentTokenizer tok = new SimpleDocumentTokenizer(tLocale);
-
+		
+		WordReportFormatter formatter = null;
 		if (ldac){ 
-			streamData = new FileOutputStream(new File(tOutputfile, "data.ldac"));
-			
-			rep.openStreamingReport(streamData, streamDocs, streamWords);
-			for (File file : filesToProcess) {
-				try {
-					String txt = SimpleYoshikoderDocument.getTextFromFile(file, tEncoding);
-					String docTitle = file.getName();
-					System.err.println("Processing " + docTitle);
-					doc = new SimpleYoshikoderDocument(docTitle, txt, null, tok); // null date
-					rep.streamLDACReportLine(doc);
-				} catch (Exception exc){
-					System.err.println("Problem with " + doc.getTitle());
-					System.err.println("Error message follows:");
-					System.err.println(exc.getMessage());
-					System.err.println("Carrying on without processing this document...");
-				}
-			}
-			rep.closeStreamingReport();
+			formatter = new WordReportFormatter(rep, 
+					WordReportFormatter.OutputFormatType.LDAC, tOutputfile);
+			formatter.makeReport(filesToProcess, tEncoding, tLocale);
 		} else if (mtx){
-			streamData = new FileOutputStream(new File(tOutputfile, "data.mtx"));
-			
-			rep.openStreamingReport(streamData, streamDocs, streamWords);
-			for (File file : filesToProcess) {
-				try {
-					String txt = SimpleYoshikoderDocument.getTextFromFile(file, tEncoding);
-					String docTitle = file.getName();
-					System.err.println("Processing " + docTitle);
-					doc = new SimpleYoshikoderDocument(docTitle, txt, null, tok); // null date
-					rep.streamLDACReportLine(doc);
-				} catch (Exception exc){
-					System.err.println("Problem with " + doc.getTitle());
-					System.err.println("Error message follows:");
-					System.err.println(exc.getMessage());
-					System.err.println("Carrying on without processing this document...");
-				}
-			}
-			rep.closeStreamingReport();
-			
-			
+			formatter = new WordReportFormatter(rep, 
+					WordReportFormatter.OutputFormatType.MTX, tOutputfile);
+			formatter.makeReport(filesToProcess, tEncoding, tLocale);
 		} else {
 			System.err.println("Should never get here!");
 		}
