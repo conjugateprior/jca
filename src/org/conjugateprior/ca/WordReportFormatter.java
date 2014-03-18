@@ -4,6 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -52,7 +54,7 @@ public class WordReportFormatter {
 						new FileOutputStream(new File(folder, "words.csv")), outputCharset);
 				wordsWriter = new BufferedWriter(words);
 				OutputStreamWriter docs = new OutputStreamWriter(
-						new FileOutputStream(new File(folder, "docs.csv")), outputCharset);
+						new FileOutputStream(new File(folder, "documents.csv")), outputCharset);
 				docsWriter = new BufferedWriter(docs);
 			} catch (Exception ex){
 				throw new Exception("Could not create all the files needed inside " +
@@ -100,6 +102,22 @@ public class WordReportFormatter {
 		public File getOutputFolder(){
 			return folder;
 		}
+		
+		public void extractREADMEFileAndSaveToFolder(String readmeResourceName) throws Exception {
+	    	InputStream in = getClass().getResourceAsStream("resources/" + readmeResourceName);
+	    	if (in == null) // for when we're developing
+	    		in = new FileInputStream(new File("/Users/will/tmp/jca/resources/" + 
+	    				readmeResourceName));
+	    	FileWriter out = null;
+	    	try {
+	    		out = new FileWriter(new File(folder, "README.md"));
+	    		int c;
+	    		while ((c = in.read()) != -1) { out.write(c); }
+	    	} finally {
+	    		if (in != null) { in.close(); }
+	    		if (out != null) { out.close(); }
+	    	}
+	    }
 	}
 	
 	class LDACPrinter extends Printer {		
@@ -132,6 +150,8 @@ public class WordReportFormatter {
 	}
 	
 	class MTXPrinter extends Printer {				
+		
+		String helpFileContents;
 		
 		int mtxDocumentLineCounter = 0; // this starts at 1
 		int mtxMaxColIndex = -1;
@@ -168,7 +188,8 @@ public class WordReportFormatter {
 		void postProcess() throws Exception {
 			OutputStreamWriter real = new OutputStreamWriter(
 					new FileOutputStream(new File(folder, "data.mtx")));
-			real.write(getHeader());
+			String header = getHeader();
+			real.write(header);
 			real.close();
 			
 			File tmpfile = new File(folder, datafilename);
@@ -177,7 +198,7 @@ public class WordReportFormatter {
 			try {
 				inputChannel = new FileInputStream(tmpfile).getChannel();
 				outputChannel = new FileOutputStream(new File(folder, "data.mtx"), true).getChannel();
-				outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
+				outputChannel.transferFrom(inputChannel, header.getBytes().length, inputChannel.size());
 			} finally {
 				inputChannel.close();
 				outputChannel.close();
@@ -186,6 +207,8 @@ public class WordReportFormatter {
 			if (!b)
 				throw new Exception("Could not delete temporary file " + tmpfile.getAbsolutePath());
 			datafilename = "data.mtx";
+
+			extractREADMEFileAndSaveToFolder("README-mtx");
 		}
 		
 		protected String getHeader(){
@@ -221,5 +244,20 @@ public class WordReportFormatter {
 	public File makeReport(File[] fs, Charset cs, Locale l) throws Exception {
 		printer.run(fs, cs, l);
 		return printer.getOutputFolder();
+	}
+
+	public static void main(String[] args) throws Exception {
+		WordReporter reporter = new WordReporter();
+		//File f1 = new File("/Users/will/test/mtxtest");
+		//File f2 = new File("/Users/will/test/ldactest");
+		//if (f1.exists()) System.err.println( f1.delete() );
+		//if (f2.exists()) System.err.println( f2.delete() );
+		WordReportFormatter formatter = new WordReportFormatter(reporter, 
+				WordReportFormatter.OutputFormatType.MTX, 
+				new File("/Users/will/test/mtxtest"));
+		formatter.makeReport(new File[]{new File("/Users/will/test/", "m1.txt"), 
+				new File("/Users/will/test/", "m2.txt") }, Charset.forName("UTF-8"), 
+				Locale.ENGLISH);
+		
 	}
 }

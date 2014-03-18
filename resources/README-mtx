@@ -1,0 +1,20 @@
+README
+------
+
+To read the word counts stored in sparse (Matrix Market) format in this folder 
+into R, use the following function:
+
+    read.mtx <- function(folder){ 
+      require(Matrix)
+      ff <- readMM(file.path(folder, "data.mtx"))
+      rown <- read.csv(file.path(folder, "documents.csv"), header=FALSE)$V1 
+      coln <- read.csv(file.path(folder, "words.csv"), header=FALSE)$V1
+      dimnames(ff) <- list(documents=rown, words=coln)
+      ff
+    } 
+
+The function takes the path of your output folder (this one) as an argument and
+returns an object of type `Matrix`, e.g. 
+
+    wcm <- read.mtx("path/to/output/folder")
+    
