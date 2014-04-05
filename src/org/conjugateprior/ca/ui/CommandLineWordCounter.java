@@ -1,5 +1,7 @@
 package org.conjugateprior.ca.ui;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.Charset;
@@ -8,6 +10,7 @@ import java.util.Locale;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.conjugateprior.ca.WordReportFormatter;
+import org.conjugateprior.ca.WordReportFormatter.Printer;
 import org.conjugateprior.ca.WordReporter;
 
 public class CommandLineWordCounter extends CommandLineApplication {
@@ -173,17 +176,32 @@ public class CommandLineWordCounter extends CommandLineApplication {
 			rep.addFilter(rep.getStemmerByName(stemmerLanguage));
 		
 		WordReportFormatter formatter = null;
+		Printer worker = null;
 		if (ldac){ 
 			formatter = new WordReportFormatter(rep, 
-					WordReportFormatter.OutputFormatType.LDAC, tOutputfile);
-			formatter.makeReport(filesToProcess, tEncoding, tLocale);
+					WordReportFormatter.OutputFormat.LDAC, tOutputfile, 
+					tEncoding, tLocale, filesToProcess);
+			worker = formatter.getReportPrinter();
 		} else if (mtx){
 			formatter = new WordReportFormatter(rep, 
-					WordReportFormatter.OutputFormatType.MTX, tOutputfile);
-			formatter.makeReport(filesToProcess, tEncoding, tLocale);
+					WordReportFormatter.OutputFormat.MTX, tOutputfile, 
+					tEncoding, tLocale, filesToProcess);
+			worker = formatter.getReportPrinter();
 		} else {
 			System.err.println("Should never get here!");
 		}
+		
+		worker.addPropertyChangeListener(new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				if ("progress" == evt.getPropertyName()) {
+					int progress = (Integer) evt.getNewValue();
+					System.err.println(progress + "%");
+				} 
+			}
+		});
+		
+		worker.execute();
 	}
 	
 	public static void main(String[] args) {

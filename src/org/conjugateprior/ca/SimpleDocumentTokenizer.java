@@ -69,15 +69,17 @@ public class SimpleDocumentTokenizer implements IDocumentTokenizer {
         int end = sentenceIterator.next();
         int tokennumber = 0;
         while (end != BreakIterator.DONE) {
-            // remove the trailing whitespace - there must be a more elegant way...
+        	// remove the trailing whitespace - there must be a more elegant way...
         	String s = txt.substring(start, end);
-        	int ii = s.length()-1;
-        	while (!Character.isLetterOrDigit(s.charAt(ii)))
-        		ii--;
-        	int diff = (end-start) - (ii + 1);
-        	
-        	list.add(new int[]{start, end-diff, tokennumber++});            
-            start = end;
+        	if (s.trim().length()>1){
+        		//int ii = s.length()-1;
+        		//while (!Character.isLetterOrDigit(s.charAt(ii)))
+        		//	ii--;
+        		//int diff = (end-start) - (ii + 1);
+
+        		list.add(new int[]{start, end, tokennumber++});            
+        	}
+        	start = end;
             try {
                 end = sentenceIterator.next();
             } catch (Exception e) { // but keep on trucking

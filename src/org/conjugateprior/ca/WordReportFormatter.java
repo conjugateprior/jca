@@ -1,5 +1,7 @@
 package org.conjugateprior.ca;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,35 +11,90 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
+
+import javax.swing.SwingWorker;
 
 public class WordReportFormatter {
 
-	public enum OutputFormatType { LDAC, MTX }
+	public enum OutputFormat { LDAC, MTX }
 	
-	abstract class Printer {
+	abstract public class Printer extends SwingWorker<File, Void>{
+		int idIndex = 0;
+		Map<String,Integer> wordToId = new HashMap<String,Integer>();
+		
 		File folder;
 		String datafilename;
 		BufferedWriter writer;
 		BufferedWriter docsWriter;
 		BufferedWriter wordsWriter;
 		
-		Printer(File f, String df){
+		Charset charset;
+		Locale locale;
+		SimpleDocumentTokenizer tokenizer;
+		File[] files;
+		
+		Printer(File f, String df, Charset cs, Locale loc, File[] fs){
 			folder = f;
 			datafilename = df;
+			charset = cs;
+			locale = loc;
+			files = fs;
+			
+			tokenizer = new SimpleDocumentTokenizer(loc);
 		}
 		
-		public void run(File[] fs, Charset cs, Locale l) throws Exception {
+		@Override
+		protected File doInBackground() throws Exception {
+			setProgress(0);
 			openFileWriters();
-			processDocuments(fs, cs, l);
+		
+			IYoshikoderDocument doc = null;
+			float counter = 0;
+			for (File file : files) {
+				if (isCancelled()){
+					writer.close();
+					docsWriter.close();
+					wordsWriter.close();
+					return folder; // return the half filled folder
+				}				
+				try {
+					String txt = SimpleYoshikoderDocument.getTextFromFile(file, charset);
+					String docTitle = file.getName();
+					//System.err.println("Processing " + docTitle); // TODO put me elsewhere
+					doc = new SimpleYoshikoderDocument(docTitle, txt, null, tokenizer); // null date
+					String s = makeLineFromDocument(doc); // reporter invoked here
+					docsWriter.write(docTitle + newline);
+					writer.write(s);
+					System.err.println(getProgress());
+					counter++;
+					setProgress( Math.round(100*(counter/files.length)) );
+				
+				} catch (Exception ex){
+					ex.printStackTrace();
+					// do something sensible with this
+					System.err.println("Problem with " + doc.getTitle() +
+							" [" + ex.getMessage() + "] Skipping this document");
+				}
+			}
+			writer.close();
+			docsWriter.close();			
+			// sort out the words
+			String[] wdsInOrder = new String[wordToId.size()];
+			for (String wd : wordToId.keySet()) {
+				int ind = wordToId.get(wd);
+				wdsInOrder[ind] = wd;
+			}
+			for (String entry : wdsInOrder)
+				wordsWriter.write(entry + newline);
+			wordsWriter.close();
+			// tidy up
 			postProcess();
+			setProgress(100);
+			
+			return folder;
 		}
 		
 		protected void openFileWriters() throws Exception{
@@ -62,51 +119,14 @@ public class WordReportFormatter {
 			}
 		}
 		
-		protected void processDocuments(File[] files, Charset encoding, Locale loc) throws Exception {
-			IYoshikoderDocument doc = null;
-			SimpleDocumentTokenizer tok = new SimpleDocumentTokenizer(loc);
-			for (File file : files) {
-				try {
-					String txt = SimpleYoshikoderDocument.getTextFromFile(file, encoding);
-					String docTitle = file.getName();
-					System.err.println("Processing " + docTitle); // TODO put me elsewhere
-					doc = new SimpleYoshikoderDocument(docTitle, txt, null, tok); // null date
-					String s = makeLineFromDocument(doc); // reporter invoked here
-					docsWriter.write(docTitle + newline);
-					writer.write(s);
-				} catch (Exception ex){
-					System.err.println("Problem with " + doc.getTitle() +
-							" [" + ex.getMessage() + "] Skipping this document");
-				}
-			}
-			writer.close();
-			docsWriter.close();			
-			// push out the words one per line, 
-			// sorted by identifier so the row numbers are the feature id numbers.
-			List<Entry<String,Integer>> lst = 
-					new ArrayList<Entry<String,Integer>>(wordToId.entrySet());
-			Collections.sort(lst, new Comparator<Entry<String, Integer>>() {
-				public int compare(Entry<String, Integer> o1,
-						Entry<String, Integer> o2) {
-					return o1.getValue().compareTo(o2.getValue());
-				}
-			});
-			for (Entry<String, Integer> entry : lst)
-				wordsWriter.write(entry.getKey() + newline);
-			wordsWriter.close();
-		}
 		
 		abstract String makeLineFromDocument(IYoshikoderDocument doc);
 		abstract void postProcess() throws Exception;
 		
-		public File getOutputFolder(){
-			return folder;
-		}
-		
 		public void extractREADMEFileAndSaveToFolder(String readmeResourceName) throws Exception {
 	    	InputStream in = getClass().getResourceAsStream("resources/" + readmeResourceName);
 	    	if (in == null) // for when we're developing
-	    		in = new FileInputStream(new File("/Users/will/tmp/jca/resources/" + 
+	    		in = new FileInputStream(new File("resources/" + 
 	    				readmeResourceName));
 	    	FileWriter out = null;
 	    	try {
@@ -120,10 +140,10 @@ public class WordReportFormatter {
 	    }
 	}
 	
-	class LDACPrinter extends Printer {		
+	public class LDACPrinter extends Printer {		
 
-		public LDACPrinter(File folder) {
-			super(folder, "data.ldac");
+		public LDACPrinter(File folder, Charset c, Locale l, File[] f) {
+			super(folder, "data.ldac", c, l, f);
 		}
 				
 		@Override
@@ -149,7 +169,7 @@ public class WordReportFormatter {
 		void postProcess() throws Exception { /* nothing */ }
 	}
 	
-	class MTXPrinter extends Printer {				
+	public class MTXPrinter extends Printer {				
 		
 		String helpFileContents;
 		
@@ -157,8 +177,8 @@ public class WordReportFormatter {
 		int mtxMaxColIndex = -1;
 		int tripleCount = 0; // how many entries in all
 
-		public MTXPrinter(File folder) {
-			super(folder, "data.mtx-tmp");
+		public MTXPrinter(File folder, Charset c, Locale l, File[] f) {
+			super(folder, "data.mtx", c, l, f);
 		}
 				
 		@Override
@@ -221,29 +241,31 @@ public class WordReportFormatter {
 		}
 	}
 	
-	protected int idIndex = 0;
-	protected Map<String,Integer> wordToId = new HashMap<String,Integer>();
 	protected Charset outputCharset = Charset.forName("UTF8");
 	protected String newline = "\n";
 	
 	protected WordReporter reporter;
 	protected Printer printer;
 		
-	public WordReportFormatter(WordReporter rep, OutputFormatType out, File folder){
+	public Printer getPrinter(){
+		return printer;
+	}
+	
+	public WordReportFormatter(WordReporter rep, OutputFormat out, 
+			File folder, Charset c, Locale l, File[] fs){
 		reporter = rep;
-		if (out == OutputFormatType.LDAC)
-			printer = new LDACPrinter(folder);
-		else if (out == OutputFormatType.MTX)
-			printer = new MTXPrinter(folder);
+		if (out == OutputFormat.LDAC)
+			printer = new LDACPrinter(folder, c, l, fs);
+		else if (out == OutputFormat.MTX)
+			printer = new MTXPrinter(folder, c, l, fs);
 		else {
 			System.err.println("Should never get here");
 		}
 	}
 	
 	// returns the output folder
-	public File makeReport(File[] fs, Charset cs, Locale l) throws Exception {
-		printer.run(fs, cs, l);
-		return printer.getOutputFolder();
+	public Printer getReportPrinter() throws Exception {
+		return printer;		
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -252,12 +274,35 @@ public class WordReportFormatter {
 		//File f2 = new File("/Users/will/test/ldactest");
 		//if (f1.exists()) System.err.println( f1.delete() );
 		//if (f2.exists()) System.err.println( f2.delete() );
-		WordReportFormatter formatter = new WordReportFormatter(reporter, 
-				WordReportFormatter.OutputFormatType.MTX, 
-				new File("/Users/will/test/mtxtest"));
-		formatter.makeReport(new File[]{new File("/Users/will/test/", "m1.txt"), 
-				new File("/Users/will/test/", "m2.txt") }, Charset.forName("UTF-8"), 
-				Locale.ENGLISH);
+		File la = new File("/Users/will/Dropbox/NicoleWillUncertain/LA_articles");
+		File[] fls = la.listFiles();
 		
+		/*
+		WordReportFormatter formatter = new WordReportFormatter(reporter, 
+				WordReportFormatter.OutputFormat.MTX, 
+				new File("/Users/will/test/mtxtest"),
+				Charset.forName("UTF-8"), 
+				Locale.ENGLISH,
+				new File[]{new File("/Users/will/test/", "m1.txt"), 
+			               new File("/Users/will/test/", "m2.txt")});
+		*/
+		
+		WordReportFormatter formatter = new WordReportFormatter(reporter, 
+				WordReportFormatter.OutputFormat.MTX, 
+				new File("/Users/will/test/mtxtest"),
+				Charset.forName("UTF-8"), 
+				Locale.ENGLISH, fls);
+		
+		Printer worker = formatter.getPrinter();
+		worker.addPropertyChangeListener(new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				if ("progress" == evt.getPropertyName()) {
+					int progress = (Integer) evt.getNewValue();
+					System.err.println(progress + "%");
+				} 
+			}
+		});
+		worker.execute();
 	}
 }

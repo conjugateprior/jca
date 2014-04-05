@@ -1,8 +1,7 @@
 README
 ------
 
-To read the word counts stored in sparse (Matrix Market) format in this folder 
-into R, use the following function:
+To read the word counts stored here in sparse Matrix Market format into R use:
 
     read.mtx <- function(folder){ 
       require(Matrix)
@@ -13,7 +12,7 @@ into R, use the following function:
       ff
     } 
 
-The function takes the path of your output folder (this one) as an argument and
+This function takes the path of your output folder (this one) as an argument and
 returns an object of type `Matrix`, e.g. 
 
     wcm <- read.mtx("path/to/output/folder")
