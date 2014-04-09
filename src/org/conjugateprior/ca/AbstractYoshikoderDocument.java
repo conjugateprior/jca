@@ -141,6 +141,8 @@ abstract public class AbstractYoshikoderDocument
 			byte[] bytes = new byte[(int) size];
 			
 			buf.get(bytes);
+			in.close();
+			
 			return bytes;
 		} finally {
 			if (in != null) {
