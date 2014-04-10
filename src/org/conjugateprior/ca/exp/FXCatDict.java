@@ -159,6 +159,10 @@ public class FXCatDict {
 
 	protected void insertNodeAlphabeticallyInto(TreeItem<DCat> cat, 
 			TreeItem<DCat> parent) throws Exception {
+		for (TreeItem<DCat> item : parent.getChildren()) {
+			if (cat.getValue().name.equals( item.getValue().name ))
+				throw new Exception(duplicateMessage);
+		}
 		int ind = findIndexFor(cat, parent);
 		parent.getChildren().add(ind, cat);
 	}
