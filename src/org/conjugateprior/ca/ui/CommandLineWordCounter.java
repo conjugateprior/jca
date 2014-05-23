@@ -56,7 +56,7 @@ public class CommandLineWordCounter extends CommandLineApplication {
 		Option stemmer = new Option("stemmer",  true, "Stem the input files (happens last)");
 		stemmer.setArgName("language name");	
 
-		Option format = new Option("format", true, "Matrix format for output");
+		Option format = new Option("format", true, "Format for output");
 		outputfile.setArgName("matrix format");
 		
 		addCommandLineOption(help);
