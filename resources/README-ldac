@@ -1,0 +1,39 @@
+## LDA-C Format
+
+This folder contains three files:
+
+	words.csv
+	documents.csv
+	data.ldac
+	
+The file data.ldac contains lines of the following form
+
+	N [A:B]+
+	
+Following the LDA-C format, the K-th such line represents that 
+the document whose title is the Kth line of documents.csv contains
+the word listed in the A+1th line of words.csv B times. 
+Note: A indexes from zero. N denotes the number of distinct word types
+in the document.
+
+See http://www.cs.princeton.edu/~blei/lda-c/readme.txt sec.B.2
+for details.
+
+## Note on text2ldac
+
+If you have used the python script text2ldac then the documents.csv
+corresponds to the .dmap file, words.csv to the .vocab file and 
+data.ldac to the .dat file produced by that software.
+
+## Note on topic model packages in R
+
+To read the word counts stored here in sparse LDA-C format into R from 
+an output folder called 'folder'
+
+	## for the lda package 
+	documents <- read.documents("folder/data.ldac")
+	vocab <- read.vocab("folder/words.csv")
+
+The topicmodels package has an ldaformat2dtm function to transform this into 
+TermDocumentMatrix objects, as used by the tm package.
+

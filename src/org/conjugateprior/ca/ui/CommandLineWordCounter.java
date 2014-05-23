@@ -1,7 +1,5 @@
 package org.conjugateprior.ca.ui;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.Charset;
@@ -9,9 +7,11 @@ import java.util.Locale;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-import org.conjugateprior.ca.WordReportFormatter;
-import org.conjugateprior.ca.WordReportFormatter.Printer;
-import org.conjugateprior.ca.WordReporter;
+import org.conjugateprior.ca.reports.CountPrinter;
+import org.conjugateprior.ca.reports.ICountPrinter;
+import org.conjugateprior.ca.reports.LDACWordCountPrinter;
+import org.conjugateprior.ca.reports.MTXWordCountPrinter;
+import org.conjugateprior.ca.reports.WordCounter;
 
 public class CommandLineWordCounter extends CommandLineApplication {
 	
@@ -25,8 +25,7 @@ public class CommandLineWordCounter extends CommandLineApplication {
 	protected File stopwordFile;
 	protected boolean stem = false;
 	
-	protected boolean mtx = false;
-	protected boolean ldac = true;
+	protected ICountPrinter.Format outputFormat;
 	
 	protected FileOutputStream streamData;
 	protected FileOutputStream streamWords;
@@ -127,17 +126,15 @@ public class CommandLineWordCounter extends CommandLineApplication {
 		}
 		
 		String form = null;
+		// default is ldac
 		if (line.hasOption("format")){
 			form = line.getOptionValue("format");
-			if (form.equals("ldac"))
-				ldac = true;
-			else if (form.equals("mtx"))
-				mtx = true;
+			if (form.equals("mtx"))
+				outputFormat = ICountPrinter.Format.MTX;
+			else if (form.equals("ldac"))
+				outputFormat = ICountPrinter.Format.LDAC;
 			else
 				throw new Exception("Unrecognized matrix format argument. Must be one of: ldac mtx");
-		} else {
-			form = "ldac";
-			ldac = true;
 		}
 		
 		String[] files = line.getArgs();
@@ -165,7 +162,7 @@ public class CommandLineWordCounter extends CommandLineApplication {
 			throw new Exception(tOutputfile.getAbsolutePath() + " already exists. " + 
 					"Halting to prevent data loss.");
 		
-		WordReporter rep = new WordReporter();
+		WordCounter rep = new WordCounter();
 		if (removeNumbers)
 			rep.addFilter(rep.new NoNumberFilter());
 		if (removeCurrency)
@@ -173,25 +170,14 @@ public class CommandLineWordCounter extends CommandLineApplication {
 		if (stopwordFile != null)
 			rep.addFilter(rep.new StopwordFilter(stopwordFile));
 		if (stem)
-			rep.addFilter(rep.getStemmerByName(stemmerLanguage));
+			rep.addStemmingFilter(stemmerLanguage);
 		
-		WordReportFormatter formatter = null;
-		Printer worker = null;
-		if (ldac){ 
-			formatter = new WordReportFormatter(rep, 
-					WordReportFormatter.OutputFormat.LDAC, tOutputfile, 
+		ICountPrinter wp = CountPrinter.getWordCountPrinter(rep, 
+					outputFormat, tOutputfile, 
 					tEncoding, tLocale, filesToProcess);
-			worker = formatter.getReportPrinter();
-		} else if (mtx){
-			formatter = new WordReportFormatter(rep, 
-					WordReportFormatter.OutputFormat.MTX, tOutputfile, 
-					tEncoding, tLocale, filesToProcess);
-			worker = formatter.getReportPrinter();
-		} else {
-			System.err.println("Should never get here!");
-		}
-		
-		worker.addPropertyChangeListener(new PropertyChangeListener() {
+
+		/*
+		wp.addPropertyChangeListener(new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				if ("progress" == evt.getPropertyName()) {
@@ -200,8 +186,9 @@ public class CommandLineWordCounter extends CommandLineApplication {
 				} 
 			}
 		});
-		
-		worker.execute();
+		*/
+		wp.processFiles(true);
+		//worker.execute();
 	}
 	
 	public static void main(String[] args) {

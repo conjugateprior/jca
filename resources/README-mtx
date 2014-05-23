@@ -1,5 +1,22 @@
-README
-------
+## Matrix Market format
+
+This folder contains three files:
+
+	words.csv
+	documents.csv
+	data.mtx
+	
+The file data.mtx is in Matrix Market 'coordinate' format. This consists 
+of a header and lines of the form
+
+    A B C
+    
+where A, B, and C are the row number, column number, and value respectively 
+of asingle element of the document by term word count matrix.  The document
+named on line A of documents.csv contains the word named on line B of words.csv
+C times. Further details are at http://math.nist.gov/MatrixMarket/formats.html
+
+## Reading Matrix Market format into R
 
 To read the word counts stored here in sparse Matrix Market format into R use:
 
@@ -12,8 +29,9 @@ To read the word counts stored here in sparse Matrix Market format into R use:
       ff
     } 
 
-This function takes the path of your output folder (this one) as an argument and
-returns an object of type `Matrix`, e.g. 
+To read the word counts stored here in Matrix Market format into R from 
+an output folder called 'folder' 
 
-    wcm <- read.mtx("path/to/output/folder")
-    
+    wcm <- read.mtx("folder")
+
+

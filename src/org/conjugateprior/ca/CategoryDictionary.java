@@ -95,7 +95,7 @@ public class CategoryDictionary extends DefaultTreeModel {
 			matchedIndices = new HashSet<Integer>();
 		}
 		
-		Set<Integer> getMatchedIndices(){
+		public Set<Integer> getMatchedIndices(){
 			return matchedIndices;
 		}
 		

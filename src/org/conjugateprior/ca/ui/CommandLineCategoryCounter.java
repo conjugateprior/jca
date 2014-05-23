@@ -1,17 +1,13 @@
 package org.conjugateprior.ca.ui;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.nio.charset.Charset;
 import java.util.Locale;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.conjugateprior.ca.CategoryDictionary;
-import org.conjugateprior.ca.CategoryReporter;
-import org.conjugateprior.ca.IYoshikoderDocument;
-import org.conjugateprior.ca.SimpleDocumentTokenizer;
-import org.conjugateprior.ca.SimpleYoshikoderDocument;
+import org.conjugateprior.ca.reports.CSVCategoryCountPrinter;
 
 public class CommandLineCategoryCounter extends CommandLineApplication {
 
@@ -24,7 +20,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		
 	@Override
 	protected String getUsageString() {
-		return "ykreporter [options] -dictionary <file.ykd> -output <file.csv> [doc1.txt doc2.txt folder1]";
+		return "ykreporter [options] -dictionary <file.ykd> -output <folder> [doc1.txt doc2.txt folder1]";
 	}
 	
 	public CommandLineCategoryCounter() {
@@ -40,7 +36,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		Option dictionary = new Option("dictionary", true, "Content analysis dictionary from Yoshikoder");
 		dictionary.setArgName("file");
 		dictionary.setRequired(true);
-		Option outputfile = new Option("output", true, "Specify a name for the output file e.g. output.csv");
+		Option outputfile = new Option("output", true, "Specify a name for the output folder");
 		outputfile.setRequired(true);
 		outputfile.setArgName("file");
 		
@@ -118,39 +114,42 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 				(onWindows() ? "windows-1252 ('Latin 1')" : "UTF8"));
 		System.err.println("  Output file line endings: " + 
 				(onWindows() ? "\\r\\n (Windows style)" : "\\n (Unix style)"));
-		System.err.println("And here come the files...");
+		System.err.println("Now let's go...");
 
-		// and we're off
-		FileOutputStream fout = new FileOutputStream(tOutputfile);
-		CategoryReporter reporter = new CategoryReporter(dict);
+		CSVCategoryCountPrinter printer = new CSVCategoryCountPrinter(dict, 
+				tOutputfile, tEncoding, tLocale, filesToProcess);
 		if (onWindows())
-			reporter.setWindowsOutput(); // \r\n and Latin 1 (FFS...)
+			printer.setWindowsOutput(); // \r\n and Latin 1 (FFS...)
+		printer.processFiles(true);
 
-		SimpleDocumentTokenizer tok = new SimpleDocumentTokenizer(tLocale);
-		
-		IYoshikoderDocument doc = null;
-		reporter.openStreamingReport(fout); // write out first line
-		for (File file : filesToProcess) {
-			try {
-				String txt = SimpleYoshikoderDocument.getTextFromFile(file, tEncoding);
-				String docTitle = file.getName();
-				System.err.println("Processing " + docTitle);
-				doc = new SimpleYoshikoderDocument(docTitle, txt, null, tok); // null date
-				if (!oldMatchStrategy)
-					reporter.streamReportLine(docTitle, reporter.reportOnDocument(doc));
-				else 
-					reporter.streamReportLine(docTitle, reporter.reportOnDocumentOldStyle(doc));
-				
-			} catch (Exception exc){
-				System.err.println("Problem with " + doc.getTitle());
-				System.err.println("Error message follows:");
-				System.err.println(exc.getMessage());
-				System.err.println("Carrying on without processing this document...");
-			}
-		}
-		reporter.closeStreamingReport();
+		//FileOutputStream fout = new FileOutputStream(tOutputfile);
+		//CategoryReporter reporter = new CategoryReporter(dict);
+		//		
+		//		//SimpleDocumentTokenizer tok = new SimpleDocumentTokenizer(tLocale);
+		//		
+		//		IYoshikoderDocument doc = null;
+		//		reporter.openStreamingReport(fout); // write out first line
+		//		for (File file : filesToProcess) {
+		//			try {
+		//				String txt = SimpleYoshikoderDocument.getTextFromFile(file, tEncoding);
+		//				String docTitle = file.getName();
+		//				System.err.println("Processing " + docTitle);
+		//				doc = new SimpleYoshikoderDocument(docTitle, txt, null, tok); // null date
+		//				if (!oldMatchStrategy)
+		//					reporter.streamReportLine(docTitle, reporter.reportOnDocument(doc));
+		//				else 
+		//					reporter.streamReportLine(docTitle, reporter.reportOnDocumentOldStyle(doc));
+		//				
+		//			} catch (Exception exc){
+		//				System.err.println("Problem with " + doc.getTitle());
+		//				System.err.println("Error message follows:");
+		//				System.err.println(exc.getMessage());
+		//				System.err.println("Carrying on without processing this document...");
+		//			}
+		//		}
+		//		reporter.closeStreamingReport();
 	}
-	
+
 	public static void main(String[] args) {
 		CommandLineCategoryCounter rep = new CommandLineCategoryCounter();
 		try {

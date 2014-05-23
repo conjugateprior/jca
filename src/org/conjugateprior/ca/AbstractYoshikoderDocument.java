@@ -70,7 +70,6 @@ abstract public class AbstractYoshikoderDocument
 	public Map<String,Integer> getWordCounts() {
 		return tokenization.getWordCountMap();
 	}
-
 	
 	/**
 	 * Equality between documents depends only on the title.
@@ -128,8 +127,10 @@ abstract public class AbstractYoshikoderDocument
 	
 	protected static byte[] getBytes(File f) throws IOException {
 		FileChannel in = null;
+		FileInputStream fis = null;
 		try {
-			in = new FileInputStream(f).getChannel();
+			fis = new FileInputStream(f);
+			in = fis.getChannel();
 			
 			long size = in.size();
 			if (size > Integer.MAX_VALUE) {
@@ -146,6 +147,7 @@ abstract public class AbstractYoshikoderDocument
 			return bytes;
 		} finally {
 			if (in != null) {
+				fis.close();
 				in.close();
 			}
 		}
