@@ -1,4 +1,4 @@
-package org.conjugateprior.ca;
+package org.conjugateprior.ca.reports;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -17,9 +17,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.conjugateprior.ca.CategoryDictionary;
+import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.SimpleDocumentTokenizer;
+import org.conjugateprior.ca.SimpleYoshikoderDocument;
 import org.conjugateprior.ca.CategoryDictionary.DictionaryCategory;
 import org.conjugateprior.ca.CategoryDictionary.DictionaryPattern;
-
+/**
+ * @deprecated
+ * @author will
+ *
+ */
 public class CategoryReporter {
 
 	class ReportLine {
