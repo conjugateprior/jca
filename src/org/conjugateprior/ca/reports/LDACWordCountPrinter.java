@@ -1,5 +1,7 @@
 package org.conjugateprior.ca.reports;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Locale;
@@ -37,16 +39,28 @@ public class LDACWordCountPrinter extends WordCountPrinter {
 	@Override
 	protected void writeReadmeFile() throws Exception {
 		extractREADMEFileAndSaveToFolder("README-ldac");
+		
+		super.writeReadmeFile(); // updates progress
 	}
 	
 	public static void main(String[] args) throws Exception {
 		WordCounter rep = new WordCounter();
-		ICountPrinter wp = CountPrinter.getWordCountPrinter(rep, 
-				ICountPrinter.Format.LDAC, new File("/Users/will/Desktop/fold"), 
+		CountPrinter wp = CountPrinter.getWordCountPrinter(rep, 
+				ICountPrinter.Format.MTX, new File("/Users/will/Desktop/fold"), 
 				Charset.forName("UTF8"), Locale.ENGLISH, 
 				new File[]{new File("/Users/will/Desktop/jfreqing/d1.txt"),
 				new File("/Users/will/Desktop/jfreqing/d2.txt")});
-		wp.processFiles(true);
+		final int maxProg = wp.getMaxProgress();
+		PropertyChangeListener listener = new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				if ("progress".equals(evt.getPropertyName())){
+					System.err.println(evt.getNewValue().getClass().getName() + " of " + maxProg);
+				}
+			}
+		};
+		wp.addPropertyChangeListener(listener);
+		wp.processFiles(false);
 	}
 	
 }

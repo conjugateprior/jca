@@ -68,11 +68,14 @@ public class MTXWordCountPrinter extends WordCountPrinter {
 			throw new Exception("Could not delete temporary file " + tmpfile.getAbsolutePath());
 		datafilename = "data.mtx";
 
+		super.postProcess(); // updates progress
 	}
 
 	@Override
 	protected void writeReadmeFile() throws Exception {
 		extractREADMEFileAndSaveToFolder("README-mtx");
+		
+		super.writeReadmeFile(); // updates progress
 	}
 	
 	protected String getHeader(){

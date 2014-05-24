@@ -8,6 +8,8 @@ public interface ICountPrinter {
 	
 	public abstract int getProgress();
 	
+	public abstract int getMaxProgress();
+	
 	public abstract File processFiles(boolean showProgress) throws Exception;
 
 }

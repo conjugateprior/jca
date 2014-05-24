@@ -1,5 +1,7 @@
 package org.conjugateprior.ca.reports;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,7 +24,9 @@ import org.conjugateprior.ca.SimpleYoshikoderDocument;
 public abstract class CountPrinter implements ICountPrinter {
 	
 	protected int progress = 0;
-
+	protected int maxProgress = 0; // stages + documents
+	private PropertyChangeSupport mPcs = new PropertyChangeSupport(this);
+	
 	protected File[] files;
 	protected Charset charset;
 	protected Locale locale;
@@ -37,6 +41,10 @@ public abstract class CountPrinter implements ICountPrinter {
 	protected String rowfilename = "documents.csv";
 	protected String columnfilename = "words.csv";
 	protected String readmefilename = "readme.txt";
+	
+	public int getMaxProgress() {
+		return maxProgress;
+	}
 	
 	public Charset getOutputCharset() {
 		return outputCharset;
@@ -60,7 +68,9 @@ public abstract class CountPrinter implements ICountPrinter {
 	}
 	
 	void setProgress(int ii){
+		int oldprog = progress;
 		progress = ii;
+		mPcs.firePropertyChange("progress", oldprog, ii);
 	}
 	
 	public CountPrinter(File f, String df, File[] fs, Charset chset, Locale loc){
@@ -69,8 +79,10 @@ public abstract class CountPrinter implements ICountPrinter {
 		files = fs;
 		charset = chset;
 		locale = loc;
-		
 		tokenizer = new SimpleDocumentTokenizer(locale);
+
+		maxProgress = files.length + 5;
+		setProgress(0);
 	}
 	/**
 	 * The order of operations: preProcess, writeDataFile, writeColumnsfile,
@@ -95,6 +107,7 @@ public abstract class CountPrinter implements ICountPrinter {
 		boolean b = folder.mkdirs();
 		if (!b) throw new Exception("Could not create all the folder elements in " + 
 				folder.getAbsolutePath());
+		setProgress(1);
 	}
 	
 	// this should include the newline if implemented in a subclass
@@ -126,7 +139,7 @@ public abstract class CountPrinter implements ICountPrinter {
 					if (showProgress)
 						System.err.println(getProgress());
 					counter++;
-					setProgress( Math.round(100*(counter/files.length)) );
+					setProgress( counter+1 ); // preprocess + files to date
 				
 				} catch (Exception ex){
 					ex.printStackTrace();
@@ -142,16 +155,24 @@ public abstract class CountPrinter implements ICountPrinter {
 		}
 	}
 	
-	protected void writeRowsFile() throws Exception {}
-	protected void writeColumnsFile() throws Exception {}
+	protected void writeRowsFile() throws Exception {
+		setProgress(files.length + 3);
+	}
+	protected void writeColumnsFile() throws Exception {
+		setProgress(files.length + 2);
+	}
 		
 	// override in subclasses
 	abstract public String makeLineFromDocument(IYoshikoderDocument doc);
 	
 	// file writers are now closed, any last minute movements
-	protected void postProcess() throws Exception {/* do nothing */ };
+	protected void postProcess() throws Exception {
+		setProgress(files.length + 5);
+	};
 	
-	protected void writeReadmeFile() throws Exception {}
+	protected void writeReadmeFile() throws Exception {
+		setProgress(files.length + 4);
+	}
 	
 	protected void extractREADMEFileAndSaveToFolder(String readmeResourceName) 
 			throws Exception {
@@ -171,7 +192,7 @@ public abstract class CountPrinter implements ICountPrinter {
 		}
 	}
 	
-	public static ICountPrinter getCategoryCountPrinter(CategoryDictionary dict,
+	public static CountPrinter getCategoryCountPrinter(CategoryDictionary dict,
 			Format out, File folder, Charset c, Locale l, File[] fs) 
 					throws Exception {
 		if (out.equals(Format.CSV))
@@ -180,7 +201,7 @@ public abstract class CountPrinter implements ICountPrinter {
 			throw new Exception("No category counters are available for format " + out);
 	}
 	
-	public static ICountPrinter getWordCountPrinter(WordCounter rep, 
+	public static CountPrinter getWordCountPrinter(WordCounter rep, 
 			Format out, File folder, Charset c, Locale l, File[] fs)
 					throws Exception {
 		
@@ -191,6 +212,14 @@ public abstract class CountPrinter implements ICountPrinter {
 		else
 			throw new Exception("No word counters are available for format " + out);
 	}
+	
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+        mPcs.addPropertyChangeListener(listener);
+    }
+    
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        mPcs.removePropertyChangeListener(listener);
+    }
 	
 	/*
 	public static void main(String[] args) {
