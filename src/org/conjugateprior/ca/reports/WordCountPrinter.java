@@ -37,7 +37,6 @@ public abstract class WordCountPrinter extends CountPrinter {
 		} finally {
 			if (docsWriter != null)
 				docsWriter.close();
-			super.writeRowsFile(); // updates progress
 		}
 	}
 	
@@ -62,7 +61,6 @@ public abstract class WordCountPrinter extends CountPrinter {
 		} finally {
 			if (wordsWriter != null)
 				wordsWriter.close();
-			super.writeColumnsFile();
 		}
 	}
 	

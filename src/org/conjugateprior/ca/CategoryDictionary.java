@@ -3,6 +3,8 @@ package org.conjugateprior.ca;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +21,7 @@ import javax.swing.tree.TreeNode;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -369,8 +372,72 @@ public class CategoryDictionary extends DefaultTreeModel {
 		}
 	}
 	
+	private String getDictionaryXMLHeader(){
+		return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+	}
+	
+	private String escapeXML(String s){
+		return StringEscapeUtils.escapeXml10(s);
+	}
+	
+	private String escapeColorRGB(Color cc){
+		return cc.getRed() + " " + cc.getGreen() + " " + cc.getBlue();
+	}
+	
+	private String toXml(DictionaryCategory n, boolean close) {
+		if (close)
+			return "</cnode>\n";
+		
+		StringBuilder str = new StringBuilder("<cnode");
+		str.append(" name=\"" + escapeXML(n.getName()) + '"');
+		Color cc = n.getColor();
+		if (cc != null)
+			str.append(" color=\"" + escapeColorRGB(cc) + '"');
+		str.append(">\n");
+		return str.toString();
+	}
+
+	private String patternsToXml(DictionaryCategory n) {
+		Set<DictionaryPattern> pats = n.getPatterns();
+		StringBuilder str = new StringBuilder();
+		for (DictionaryPattern dictionaryPattern : pats) {
+			str.append("<pnode name=\"" + 
+					escapeXML(dictionaryPattern.getName()) + 
+					"\"/>\n");
+		}
+		return str.toString();
+	}
+	
+	private void toXmlRecurse(StringBuffer sb, DictionaryCategory node){
+		sb.append(toXml(node, false));
+		if (node.getPatterns().size() > 0)
+			sb.append(patternsToXml(node));
+	
+		@SuppressWarnings("unchecked")
+		Enumeration<DictionaryCategory> en = node.children();
+		while (en.hasMoreElements()) {
+			CategoryDictionary.DictionaryCategory dc = en.nextElement();
+			toXmlRecurse(sb, dc);
+		}
+		
+		sb.append(toXml(node, true));
+	}
+	
 	public IPatternEngine getPatternEngine() {
 		return patternEngine;
+	}
+	
+	public String toXml(boolean addHeader){
+		StringBuffer sb = new StringBuffer();
+		
+		if (addHeader)
+			sb.append(getDictionaryXMLHeader());
+		
+		sb.append("<dictionary style=\"050805\" patternengine=\"substring\">\n");
+		toXmlRecurse(sb, getCategoryRoot());
+		sb.append("</dictionary>");
+		
+		return sb.toString();
 	}
 	
 	@Override

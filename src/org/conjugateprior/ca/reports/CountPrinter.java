@@ -73,6 +73,10 @@ public abstract class CountPrinter implements ICountPrinter {
 		mPcs.firePropertyChange("progress", oldprog, ii);
 	}
 	
+	public String getReadmefilename() {
+		return readmefilename;
+	}
+	
 	public CountPrinter(File f, String df, File[] fs, Charset chset, Locale loc){
 		folder = f;
 		datafilename = df;
@@ -89,13 +93,23 @@ public abstract class CountPrinter implements ICountPrinter {
 	 * writeRowsFile, writeReadmeFile, postProcess
 	 */
 	public File processFiles(boolean showProgress) throws Exception {
+		preProcess();
+		setProgress(1);
 		
-		preProcess(); // make folder
 		writeDataFile(showProgress);
+		setProgress(files.length + 1); // even if we blew out on a few
+		
 		writeColumnsFile();
+		setProgress(files.length + 2);
+		
 		writeRowsFile();
+		setProgress(files.length + 3);
+		
 		writeReadmeFile();
+		setProgress(files.length + 4);
+		
 		postProcess();
+		setProgress(files.length + 5);
 		
 		return folder;
 	}
@@ -107,7 +121,7 @@ public abstract class CountPrinter implements ICountPrinter {
 		boolean b = folder.mkdirs();
 		if (!b) throw new Exception("Could not create all the folder elements in " + 
 				folder.getAbsolutePath());
-		setProgress(1);
+		
 	}
 	
 	// this should include the newline if implemented in a subclass
@@ -139,7 +153,7 @@ public abstract class CountPrinter implements ICountPrinter {
 					if (showProgress)
 						System.err.println(getProgress());
 					counter++;
-					setProgress( counter+1 ); // preprocess + files to date
+					setProgress( counter ); // preprocess + files to date
 				
 				} catch (Exception ex){
 					ex.printStackTrace();
@@ -154,25 +168,15 @@ public abstract class CountPrinter implements ICountPrinter {
 				writer.close();
 		}
 	}
-	
-	protected void writeRowsFile() throws Exception {
-		setProgress(files.length + 3);
-	}
-	protected void writeColumnsFile() throws Exception {
-		setProgress(files.length + 2);
-	}
-		
-	// override in subclasses
+
+	// must be overridden in subclasses
 	abstract public String makeLineFromDocument(IYoshikoderDocument doc);
-	
-	// file writers are now closed, any last minute movements
-	protected void postProcess() throws Exception {
-		setProgress(files.length + 5);
-	};
-	
-	protected void writeReadmeFile() throws Exception {
-		setProgress(files.length + 4);
-	}
+
+	// null implementations may be overridden in subclasses
+	protected void writeRowsFile() throws Exception {}
+	protected void writeColumnsFile() throws Exception {}
+	protected void postProcess() throws Exception {}
+	protected void writeReadmeFile() throws Exception {}
 	
 	protected void extractREADMEFileAndSaveToFolder(String readmeResourceName) 
 			throws Exception {

@@ -1,13 +1,20 @@
 package org.conjugateprior.ca.ui;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.text.DecimalFormat;
 import java.util.Locale;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.conjugateprior.ca.CategoryDictionary;
 import org.conjugateprior.ca.reports.CSVCategoryCountPrinter;
+import org.conjugateprior.ca.reports.CSVOldCategoryCountPrinter;
 
 public class CommandLineCategoryCounter extends CommandLineApplication {
 
@@ -16,6 +23,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 	protected File tOutputfile = null;
 	protected boolean oldMatchStrategy = false;
 	protected File[] filesToProcess;
+	
 	protected CategoryDictionary dict;
 		
 	@Override
@@ -27,15 +35,18 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		super();
 
 		Option help = new Option("help", "Show this message, then exit");
-		Option encoding = new Option("encoding", true, "Encoding for input files e.g. UTF8");
+		Option encoding = new Option("encoding", true, "Encoding for input files (default: " + 
+				Charset.defaultCharset().displayName() + ")");
 		encoding.setArgName("encoding name");
 		Option oldMatching = new Option("oldmatching", "Use old-style Yoshikoder pattern matching");
-		Option locale = new Option("locale",  true, "A locale for input files e.g. en_US");
+		Option locale = new Option("locale",  true, "A locale for input files (default: " + 
+				Locale.getDefault().toString() + ")");
 		locale.setArgName("locale name");				
 		// required
 		Option dictionary = new Option("dictionary", true, "Content analysis dictionary from Yoshikoder");
 		dictionary.setArgName("file");
 		dictionary.setRequired(true);
+		
 		Option outputfile = new Option("output", true, "Specify a name for the output folder");
 		outputfile.setRequired(true);
 		outputfile.setArgName("file");
@@ -45,6 +56,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		addCommandLineOption(locale);
 		addCommandLineOption(dictionary);
 		addCommandLineOption(oldMatching);
+		
 		addCommandLineOption(outputfile);		
 	}
 	
@@ -116,11 +128,62 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 				(onWindows() ? "\\r\\n (Windows style)" : "\\n (Unix style)"));
 		System.err.println("Now let's go...");
 
-		CSVCategoryCountPrinter printer = new CSVCategoryCountPrinter(dict, 
+		CSVCategoryCountPrinter printer = null;
+		if (oldMatchStrategy){
+			printer = new CSVOldCategoryCountPrinter(dict, 
 				tOutputfile, tEncoding, tLocale, filesToProcess);
+		} else {
+			printer = new CSVCategoryCountPrinter(dict, 
+				tOutputfile, tEncoding, tLocale, filesToProcess);
+		}
 		if (onWindows())
 			printer.setWindowsOutput(); // \r\n and Latin 1 (FFS...)
-		printer.processFiles(true);
+		
+		final float maxProg = (float)printer.getMaxProgress();
+		final DecimalFormat df = new DecimalFormat("#.##");
+		PropertyChangeListener listener = new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				if ("progress".equals(evt.getPropertyName())){
+					int prog = (Integer)evt.getNewValue();
+					System.err.println(df.format((prog / maxProg) * 100) + "% complete");
+				}
+			}
+		};
+		printer.addPropertyChangeListener(listener);
+		
+		printer.processFiles(false);
+		
+		
+		
+		BufferedWriter writer = null;
+		try {
+			String newl = printer.getNewline();
+			File rme = new File(tOutputfile, printer.getReadmefilename());
+			OutputStreamWriter out = new OutputStreamWriter(
+					new FileOutputStream(rme, true), /* appending */
+					printer.getOutputCharset());
+			writer = new BufferedWriter(out);
+			writer.write(newl);
+			writer.write("Settings:");
+			writer.write(newl + newl);
+			writer.write("File enc:\t" + printer.getOutputCharset());
+			writer.write(newl);
+			writer.write("Output enc:\t" + 
+					(onWindows() ? "windows-1252 ('Latin 1')" : "UTF-8"));
+			writer.write(newl);
+			writer.write("Dict:\t" + line.getOptionValue("dictionary") + " (source file)");
+			writer.write(newl);
+			writer.write("Matching:\t" + (oldMatchStrategy ? "old" : "new"));
+			writer.write(newl);
+			writer.write("Line endings:\t" + 
+					(onWindows() ? "'\\r\\n' (Windows style)" : "'\\n' (Unix style)"));
+			writer.write(newl);
+			
+		} finally {
+			if (writer != null)
+				writer.close();
+		}
 
 		//FileOutputStream fout = new FileOutputStream(tOutputfile);
 		//CategoryReporter reporter = new CategoryReporter(dict);

@@ -1,15 +1,21 @@
 package org.conjugateprior.ca.reports;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.conjugateprior.ca.CategoryDictionary;
 import org.conjugateprior.ca.CategoryDictionary.DictionaryCategory;
 import org.conjugateprior.ca.CategoryDictionary.DictionaryPattern;
@@ -18,11 +24,11 @@ import org.conjugateprior.ca.IYoshikoderDocument;
 public class CSVCategoryCountPrinter extends CountPrinter {
 
     protected String wordCountHeader = "WordCount";
+    protected String dictfilename = "dict.ykd";
 	
 	protected CategoryDictionary hdict; // instead of the WordCounter
 	protected DictionaryCategory[] categoryNodesInPrintOrder;
 	
-	protected BufferedWriter writer;
 	protected String fieldSeparator = ",";
 	protected String categorySeparator = ">";
 	
@@ -102,14 +108,75 @@ public class CSVCategoryCountPrinter extends CountPrinter {
 		return sb.toString();
 	}
 
+	protected void writeRowsFile() throws Exception {
+		BufferedWriter docsWriter = null;
+		try {
+			OutputStreamWriter docs = new OutputStreamWriter(
+					new FileOutputStream(new File(folder, rowfilename)), outputCharset);
+			docsWriter = new BufferedWriter(docs);
+		
+			for (File file : files) {
+				docsWriter.write(file.getName() + newline);
+			}
+		} finally {
+			if (docsWriter != null)
+				docsWriter.close();
+		}
+	}
+	
+	protected void writeReadmeFile() throws Exception {
+		Date d = new Date();
+		String user = System.getProperty("user.name");
+		BufferedWriter writer = null;
+		try {
+			OutputStreamWriter out = new OutputStreamWriter(
+					new FileOutputStream(new File(folder, readmefilename)), outputCharset);
+			writer = new BufferedWriter(out);
+			writer.write("Dictionary-based content analysis");
+			writer.write(newline);
+			writer.write(newline);
+			writer.write("User:\t" + user);
+			writer.write(newline);
+			writer.write("Time:\t" + d.toString());
+			writer.write(newline);
+			writer.write("Dict:\tdict.ykd (copy of the original)");
+			writer.write(newline);
+			writer.write("Docs:\tdocuments.csv");
+			writer.write(newline);
+		} finally {
+			if (writer != null)
+				writer.close();
+		}
+	}
+	
+	// write out the dictionary too...
+	@Override
+	protected void postProcess() throws Exception {
+		String s = hdict.toXml(true); // construct with a header
+		
+		BufferedWriter writer = null;
+		try {
+			OutputStreamWriter out = new OutputStreamWriter(
+					new FileOutputStream(new File(folder, dictfilename)), outputCharset);
+			writer = new BufferedWriter(out);
+			writer.write(s);
+		} finally {
+			if (writer != null)
+				writer.close();
+		}
+	}
+	
 	// Excel escaping: double quotes get doubled, commas trigger double quotes
 	protected String excelEscape(String s){
+		return StringEscapeUtils.escapeCsv(s);
+		/*
 		String ss = s;
 		if (s.contains("\""))
 			ss = s.replaceAll("\"", "\"\"");
 		if (ss.contains(",")) // should also check for newlines
 			ss = "\"" + ss + "\"";
 		return ss;
+		*/
 	}
 
 	// this is the new style match counting where we never double count
@@ -152,19 +219,30 @@ public class CSVCategoryCountPrinter extends CountPrinter {
 		DictionaryCategory ct1 = 
 				dict.addCategoryToParentCategory("Cat1", dict.getCategoryRoot());
 		dict.addPatternToCategory("mar*", ct1);
+		dict.addPatternToCategory("mar* had", ct1);
 		dict.addPatternToCategory("lamb", ct1);
 		DictionaryCategory ct2 = 
 				dict.addCategoryToParentCategory("Cat2", dict.getCategoryRoot());
 		dict.addPatternToCategory("every*", ct2);
 		
 		File outf = new File("/Users/will/Desktop/jfreq-folder");
-		CSVCategoryCountPrinter pr = new CSVCategoryCountPrinter(dict, 
+		CSVCategoryCountPrinter wp = new CSVCategoryCountPrinter(dict, 
 				outf, 
 				Charset.forName("UTF8"), Locale.ENGLISH, 
 				new File[]{new File("/Users/will/Desktop/jfreqing", "d1.txt"), 
 			new File("/Users/will/Desktop/jfreqing", "d2.txt")});
 
-		pr.processFiles(true);
+		final int maxProg = wp.getMaxProgress();
+		PropertyChangeListener listener = new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				if ("progress".equals(evt.getPropertyName())){
+					System.err.println(evt.getNewValue() + " of " + maxProg);
+				}
+			}
+		};
+		wp.addPropertyChangeListener(listener);
+		wp.processFiles(false);		
 	}
 	
 }

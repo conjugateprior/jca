@@ -39,8 +39,6 @@ public class LDACWordCountPrinter extends WordCountPrinter {
 	@Override
 	protected void writeReadmeFile() throws Exception {
 		extractREADMEFileAndSaveToFolder("README-ldac");
-		
-		super.writeReadmeFile(); // updates progress
 	}
 	
 	public static void main(String[] args) throws Exception {

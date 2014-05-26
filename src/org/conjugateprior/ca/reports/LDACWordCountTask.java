@@ -24,6 +24,21 @@ public class LDACWordCountTask extends Task<File> {
 		super();
 		printer = new LDACWordCountPrinter(reporter, folder, c, l, f){			
 			@Override
+			public String makeLineFromDocument(IYoshikoderDocument doc) {
+				
+				
+				if (LDACWordCountTask.this.isCancelled()) { 
+					updateMessage("Cancelled document processing");
+					updateProgress(files.length + 1, getMaxProgress());
+					//break; 
+				}
+				updateMessage("Processed " + getProgress() + " of " + getMaxProgress() + " documents");
+				updateProgress(getProgress(), getMaxProgress());
+				
+				return super.makeLineFromDocument(doc);
+			}
+			
+			@Override
 			protected void writeDataFile(boolean showProgress) throws Exception {	
 				BufferedWriter writer = null;
 				try {
