@@ -1,11 +1,13 @@
 package org.conjugateprior.ca;
 
 import java.awt.Color;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.Character.UnicodeBlock;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -13,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -22,6 +25,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.text.translate.UnicodeEscaper;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -160,6 +164,74 @@ public class CategoryDictionary extends DefaultTreeModel {
 	    }
 	}
 	
+	public enum XmlDictionaryType {
+	    LEXICODER, YOSHIKODER_050805 
+	}
+	
+	public static class XMLDictionaryTypeIdentifier extends DefaultHandler {
+		
+		XmlDictionaryType type = null;
+		
+		public void startElement(String uri, String localName, String qName,
+				Attributes attributes) throws SAXException{
+			if (qName.equals("dictionary")){ 
+				String style = attributes.getValue("style");
+				if (style.equals("Lexicoder"))
+					type = XmlDictionaryType.LEXICODER;
+				else if (style.equals("050805"))
+					type = XmlDictionaryType.YOSHIKODER_050805;
+			}
+		}
+		
+		public XmlDictionaryType getDictionaryType(){
+			return type;
+		}
+	}
+
+	public static class LexicoderHandler extends DefaultHandler {
+		private Stack<DictionaryCategory> stack = new Stack<DictionaryCategory>();
+		private CategoryDictionary dict;
+
+		public void startElement(String uri, String localName, String qName,
+				Attributes attributes) throws SAXException{
+			if (qName.equals("dictionary")){ 
+				dict = new CategoryDictionary(); // substring pattern engine by default
+				String name = attributes.getValue("name");
+				dict.getCategoryRoot().setName(name);
+				stack.push(dict.getCategoryRoot());
+				
+			} else if (qName.equals("cnode")){ 
+				String name = attributes.getValue("name");             
+				DictionaryCategory newcat = null;
+				// the dictionary root is always on the stack at this point
+				try {
+					newcat = dict.addCategoryToParentCategory(name, stack.peek());
+				} catch (Exception ex){
+					throw new SAXException(ex);
+				}
+				stack.push(newcat);
+			} else if (qName.equals("pnode")){ 
+				String name = attributes.getValue("name");
+				try {
+					// trim because we Lexicoder seems to add a leading space
+					dict.addPatternToCategory(name.trim(), stack.peek());
+				} catch (Exception ex){
+					throw new SAXException(ex);
+				}
+			}
+		}
+
+		public void endElement(String uri, String localName, String qName) 
+				throws SAXException{
+			if (qName.equals("cnode"))
+				stack.pop();
+		}
+		
+		public CategoryDictionary getCategoryDictionary(){
+			return dict;
+		}
+	}	
+	
 	public static class YKDHandler050805 extends DefaultHandler {
 		private Stack<DictionaryCategory> stack = new Stack<DictionaryCategory>();
 		private CategoryDictionary dict;
@@ -202,24 +274,128 @@ public class CategoryDictionary extends DefaultTreeModel {
 			return dict;
 		}
 	}
-	
-	public static CategoryDictionary readCategoryDictionaryFromFile(File f) throws Exception {
-		SAXParserFactory factory = SAXParserFactory.newInstance();
-		InputStream stream = null;
+	//style="Lexicoder" name="LSDv3a"
+		
+	public static CategoryDictionary importCategoryDictionaryFromFileVBPRO(File f) throws Exception {
+		
+		BufferedReader reader = null;
 		CategoryDictionary d = null;
 		try {
+			InputStreamReader osw = new InputStreamReader(
+					new FileInputStream(f), Charset.forName("UTF8"));
+			reader = new BufferedReader(osw);
+			d = new CategoryDictionary();
+			String line = null;
+			d.getCategoryRoot().setName("Dictionary");
+			DictionaryCategory currentCat = d.getCategoryRoot();
+			Matcher catname = Pattern.compile(">>(.+)<<").matcher("");
+			while((line = reader.readLine()) != null){
+				catname.reset(line);
+				if (catname.matches()){
+					String newcatname = catname.group(1);
+					currentCat = d.addCategoryToParentCategory(newcatname, d.getCategoryRoot());
+				} else if (line.startsWith("#")){
+					// pass
+				} else {
+					d.addPatternToCategory(line.trim(), currentCat);
+				}
+			}
+		} finally {
+			if (reader != null)
+				reader.close();
+		}
+		return d;
+	}
+
+	public static CategoryDictionary importCategoryDictionaryFromFileWordstat(File f) throws Exception {
+		
+		BufferedReader reader = null;
+		CategoryDictionary d = null;
+		try {
+			InputStreamReader osw = new InputStreamReader(
+					new FileInputStream(f), Charset.forName("UTF8"));
+			reader = new BufferedReader(osw);
+			reader.read(); // BOM
+			d = new CategoryDictionary();
+			String line = null;
+			d.getCategoryRoot().setName("Dictionary");
+			DictionaryCategory currentCat = d.getCategoryRoot();
+			Matcher patname = Pattern.compile("(.+)\\(\\d+\\)").matcher("");
+			while((line = reader.readLine()) != null){
+				patname.reset(line);
+				if (patname.matches()){
+					String newpatname = patname.group(1);
+					d.addPatternToCategory(newpatname.trim(), currentCat);
+					
+				} else if (line.startsWith("#")){
+					// pass
+				} else {
+					String nme = line.trim();
+					if (nme.startsWith("\uFEFF")) // remove BOM for UTF8
+						nme = nme.substring(1);
+					currentCat = d.addCategoryToParentCategory(nme, 
+							d.getCategoryRoot());
+				}
+			}
+		} finally {
+			if (reader != null)
+				reader.close();
+		}
+		return d;
+	}
+	
+	// get the type of xml dictionary or null if we can't tell
+	public static XmlDictionaryType identifyDictionaryXmlFormat(File f) 
+			throws Exception {
+		SAXParserFactory factory = SAXParserFactory.newInstance();
+		InputStream stream = null;
+		try {
 			SAXParser parser = factory.newSAXParser();
-			YKDHandler050805 h = new YKDHandler050805();
+			XMLDictionaryTypeIdentifier identifier = new XMLDictionaryTypeIdentifier();
 			stream = new FileInputStream(f);
-			parser.parse(stream, h);
-			d = h.getCategoryDictionary();
-			return d;
+			parser.parse(stream, identifier);
+			return identifier.getDictionaryType();
+
 		} catch (Exception e){
 			throw e; // re-throw
 		} finally {
 			if (stream != null)
 				stream.close();
 		}
+	}
+	
+	// return 
+	public static CategoryDictionary readXmlCategoryDictionaryFromFile(File f) throws Exception {
+		SAXParserFactory factory = SAXParserFactory.newInstance();
+		InputStream stream = null;
+		CategoryDictionary d = null;
+		try {
+			SAXParser parser = factory.newSAXParser();
+			XmlDictionaryType type = identifyDictionaryXmlFormat(f);
+			if (type != null){
+				if (type.equals(XmlDictionaryType.YOSHIKODER_050805)){
+					YKDHandler050805 h = new YKDHandler050805();
+					stream = new FileInputStream(f);
+					parser.parse(stream, h);
+					d = h.getCategoryDictionary();
+					
+				} else if (type.equals(XmlDictionaryType.LEXICODER)){
+					LexicoderHandler h = new LexicoderHandler();
+					stream = new FileInputStream(f);
+					parser.parse(stream, h);
+					d = h.getCategoryDictionary();
+				
+				} else {
+					throw new Exception("Could not recognise this dictionary format");
+				}
+			} else {
+				throw new Exception("Could not identify the dictionary format");
+			}
+		} finally {
+			if (stream != null)
+				stream.close();
+		}
+		return d;
 	}
 	
 	public CategoryDictionary(DictionaryCategory root) {
@@ -448,9 +624,17 @@ public class CategoryDictionary extends DefaultTreeModel {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		File f = new File("/Users/will/Desktop/2007_abortion_dictionary.ykd");
-		CategoryDictionary dict = CategoryDictionary.readCategoryDictionaryFromFile(f);
-        System.out.println(dict);
+		// File f = new File("/Users/will/Desktop/2007_abortion_dictionary.ykd");
+		// CategoryDictionary dict = CategoryDictionary.readCategoryDictionaryFromFile(f);
+		
+		//File f2 = new File("/Users/will/Desktop/thing.vbpro");
+		//CategoryDictionary d = CategoryDictionary.importCategoryDictionaryFromFileVBPRO(f2);
+		//System.out.println(d.toXml(true));
+
+		File f3 = new File("/Users/will/Dropbox/shared/SOP/LSD/LSD2011/LSD2011.CAT");
+		CategoryDictionary d = CategoryDictionary.importCategoryDictionaryFromFileWordstat(f3);
+		System.out.println(d.toXml(true).substring(0, 800));
+
 	}
 
 }

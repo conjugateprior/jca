@@ -28,7 +28,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		
 	@Override
 	protected String getUsageString() {
-		return "ykreporter [options] -dictionary <file.ykd> -output <folder> [doc1.txt doc2.txt folder1]";
+		return "ykreporter [options] -dictionary <dictfile> -output <folder> [doc1.txt doc2.txt folder1]";
 	}
 	
 	public CommandLineCategoryCounter() {
@@ -43,7 +43,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 				Locale.getDefault().toString() + ")");
 		locale.setArgName("locale name");				
 		// required
-		Option dictionary = new Option("dictionary", true, "Content analysis dictionary from Yoshikoder");
+		Option dictionary = new Option("dictionary", true, "Content analysis dictionary in Yoshikoder, Lexicoder, or VBPro format");
 		dictionary.setArgName("file");
 		dictionary.setRequired(true);
 		
@@ -86,24 +86,38 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 						ex.getMessage());
 			}
 		}
+		
 		tOutputfile = new File(line.getOptionValue("output"));
 		
 		if (line.hasOption("dictionary")) {
 			String fname = line.getOptionValue("dictionary");
 			File sf = new File(fname);
 			if (!sf.exists()){
-				throw new Exception("Dictionary file cannot be found. Check path?");
+				throw new Exception("Dictionary file cannot be found at"
+						+ sf.getAbsolutePath());
 			}
-			try {
-				dict = CategoryDictionary.readCategoryDictionaryFromFile(sf);
-				
-			} catch (Exception ex){
-				throw new Exception("Dictionary file could not be parsed. Check this is" +
-					"a valid Yoshikoder dictionary format?" + 
-					"(Normal filename suffix is '.ykd')" +
-					"Error message follows:" + ex.getMessage());
+			
+			if (fname.toLowerCase().endsWith(".ykd") || 
+				fname.toLowerCase().endsWith(".lcd")){
+				dict = CategoryDictionary.readXmlCategoryDictionaryFromFile(sf); 	
+			
+			} else if (fname.toLowerCase().endsWith(".vbpro")){
+				dict = CategoryDictionary.importCategoryDictionaryFromFileVBPRO(sf); 
+			
+			} else if (fname.toLowerCase().endsWith(".cat")){
+				dict = CategoryDictionary.importCategoryDictionaryFromFileWordstat(sf);
+			
+			} else if (fname.toLowerCase().endsWith(".xml")) {
+				// windows or server .xml addition?
+				dict = CategoryDictionary.readXmlCategoryDictionaryFromFile(sf); 
+					
+			} else {
+				throw new Exception(
+						"Dictionary file format could not be identified.\n" +
+					    "It must be a Yoshikoder ('.ykd'), Lexicoder ('.lcd'), " +
+					    "Wordstat ('.CAT'), or VBPro ('.vbpro') file\n");
 			}
-		}	
+		}
 		oldMatchStrategy = line.hasOption("oldmatching");
 		
 		tOutputfile = new File(line.getOptionValue("output"));
@@ -119,14 +133,13 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 				tLocale.getDisplayName() + "'");
 		System.err.println("  Encoding of input files: " + tEncoding.name() + " ie '" +
 				tEncoding.displayName() + "'");
-		System.out.println("  Yoshikoder dictionary file: " + 
+		System.out.println("  Dictionary file: " + 
 				line.getOptionValue("dictionary"));
 		System.err.println("  Using old pattern matching strategy? " + oldMatchStrategy);
 		System.err.println("  Output CSV file encoding: " + 
 				(onWindows() ? "windows-1252 ('Latin 1')" : "UTF8"));
 		System.err.println("  Output file line endings: " + 
 				(onWindows() ? "\\r\\n (Windows style)" : "\\n (Unix style)"));
-		System.err.println("Now let's go...");
 
 		CSVCategoryCountPrinter printer = null;
 		if (oldMatchStrategy){
@@ -150,11 +163,8 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 				}
 			}
 		};
-		printer.addPropertyChangeListener(listener);
-		
+		printer.addPropertyChangeListener(listener);		
 		printer.processFiles(false);
-		
-		
 		
 		BufferedWriter writer = null;
 		try {
@@ -185,32 +195,6 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 				writer.close();
 		}
 
-		//FileOutputStream fout = new FileOutputStream(tOutputfile);
-		//CategoryReporter reporter = new CategoryReporter(dict);
-		//		
-		//		//SimpleDocumentTokenizer tok = new SimpleDocumentTokenizer(tLocale);
-		//		
-		//		IYoshikoderDocument doc = null;
-		//		reporter.openStreamingReport(fout); // write out first line
-		//		for (File file : filesToProcess) {
-		//			try {
-		//				String txt = SimpleYoshikoderDocument.getTextFromFile(file, tEncoding);
-		//				String docTitle = file.getName();
-		//				System.err.println("Processing " + docTitle);
-		//				doc = new SimpleYoshikoderDocument(docTitle, txt, null, tok); // null date
-		//				if (!oldMatchStrategy)
-		//					reporter.streamReportLine(docTitle, reporter.reportOnDocument(doc));
-		//				else 
-		//					reporter.streamReportLine(docTitle, reporter.reportOnDocumentOldStyle(doc));
-		//				
-		//			} catch (Exception exc){
-		//				System.err.println("Problem with " + doc.getTitle());
-		//				System.err.println("Error message follows:");
-		//				System.err.println(exc.getMessage());
-		//				System.err.println("Carrying on without processing this document...");
-		//			}
-		//		}
-		//		reporter.closeStreamingReport();
 	}
 
 	public static void main(String[] args) {
