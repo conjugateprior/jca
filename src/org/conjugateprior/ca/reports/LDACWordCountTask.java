@@ -1,7 +1,5 @@
 package org.conjugateprior.ca.reports;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,11 +7,11 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.Locale;
 
+import javafx.concurrent.Task;
+
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
 import org.conjugateprior.ca.IYoshikoderDocument;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
-
-import javafx.concurrent.Task;
 
 public class LDACWordCountTask extends Task<File> {
 

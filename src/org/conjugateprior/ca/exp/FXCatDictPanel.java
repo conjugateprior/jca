@@ -1,8 +1,9 @@
 package org.conjugateprior.ca.exp;
 
-import java.awt.Color;
+
 import java.util.List;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -10,6 +11,8 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ColorPicker;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
@@ -21,10 +24,19 @@ import javafx.scene.control.TreeView.EditEvent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.paint.Color;
 import javafx.util.Callback;
 
+import org.controlsfx.control.ButtonBar;
+import org.controlsfx.control.ButtonBar.ButtonType;
+import org.controlsfx.control.action.AbstractAction;
+import org.controlsfx.control.action.Action;
+import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.Dialogs;
+
 
 public class FXCatDictPanel {
 
@@ -88,7 +100,7 @@ public class FXCatDictPanel {
 					if (event.getCode() == KeyCode.ENTER){
 						String newname = textField.getText();
 						DCat dc = getItem();
-						dc.name = newname;
+						dc.setName(newname);
 						commitEdit(dc);
 						//rearrangeTree();
 					} else if (event.getCode() == KeyCode.ESCAPE)
@@ -103,14 +115,12 @@ public class FXCatDictPanel {
 	}
 	
 	public TreeItem<DCat> addCategory(String name, Color color, TreeItem<DCat> par) throws Exception {
-		DCat dc = new DCat();
-		dc.name = name;
-		dc.color = color;
+		DCat dc = new DCat(name, color);
 		TreeItem<DCat> item = new TreeItem<DCat>(dc);			
 		try {
 			model.addCategoryToParentCategory(item, par);
 		} catch (Exception ex){
-			duplicateYelp(name, par.getValue().name);
+			duplicateYelp(name, par.getValue().getName());
 		}
 		tree.getSelectionModel().select(item);
 		tree.requestFocus();
@@ -120,7 +130,7 @@ public class FXCatDictPanel {
 	public TreeItem<DCat> addPatternToCategory(String val, TreeItem<DCat> par) throws Exception {
 		DCat dc = par.getValue();
 		DPat dp = new DPat(val);
-		dc.patterns.add(dp);
+		dc.getPatterns().add(dp);
 		updatePatternList();
 		list.getSelectionModel().select(dp);
 		tree.requestFocus();
@@ -134,6 +144,11 @@ public class FXCatDictPanel {
 		Dialogs.create().owner(borderPane).message(message)
 			.title(duplicateErrorMessageTitle).masthead(null).nativeTitleBar()
 			.showInformation();
+	}
+	
+	public DCat removePattern(DCat cat, DPat item) {
+		cat.getPatterns().remove(item);
+		return cat;
 	}
 	
 	public TreeItem<DCat> removeCategory(TreeItem<DCat> item) throws Exception {
@@ -187,7 +202,8 @@ public class FXCatDictPanel {
 				updatePatternList(); // checks for a non-null selection
 			}
 		});
-		tree.setEditable(true);
+		//tree.setEditable(true);
+		/*
 		tree.setOnEditCommit(new EventHandler<TreeView.EditEvent<DCat>>() {
 			@Override
 			public void handle(EditEvent<DCat> event) {
@@ -196,6 +212,7 @@ public class FXCatDictPanel {
 				System.out.println(dc.name + " -> " + dcnew.name);
 			}
 		});
+		*/
 		tree.setCellFactory(new Callback<TreeView<DCat>, TreeCell<DCat>>() {
 			@Override
 			public TreeCell<DCat> call(TreeView<DCat> param) {
@@ -216,11 +233,16 @@ public class FXCatDictPanel {
         });
         box.setSelected(false);
 
+        // custom dialog for new category
+        
         Button add = new Button("+");
         add.setOnAction(new EventHandler<ActionEvent>() {
         	@Override
         	public void handle(ActionEvent event) {
         		TreeItem<DCat> sel = tree.getSelectionModel().getSelectedItem();
+        		
+        		showNewCategoryDialog(sel.getValue());
+        		/*
         		String s = Dialogs.create().owner(borderPane).message("Name")
         				.title("New Category").masthead(null).nativeTitleBar().showTextInput();
         		if (s != null){
@@ -233,6 +255,7 @@ public class FXCatDictPanel {
         				}
         			}
         		}
+        		*/
         	}
         });
         Button addPattern = new Button("P");
@@ -259,12 +282,21 @@ public class FXCatDictPanel {
         remove.setOnAction(new EventHandler<ActionEvent>() {
         	@Override
         	public void handle(ActionEvent event) {
-        		TreeItem<DCat> sel = tree.getSelectionModel().getSelectedItem();
-        		try {
-        			removeCategory(sel);
-        		} catch (Exception ex){
-        			tree.requestFocus();
-        			// ignore attempt to remove root node
+        		boolean aboutPattern = list.isFocused();
+        		if (aboutPattern){
+        			int jj = list.getSelectionModel().getSelectedIndex();
+        			DPat pat = list.getSelectionModel().getSelectedItem();
+        			DCat cat = tree.getSelectionModel().getSelectedItem().getValue();
+        			removePattern(cat, pat);
+        			
+        			
+        		} else {
+        			TreeItem<DCat> sel = tree.getSelectionModel().getSelectedItem();
+        			try {
+        				removeCategory(sel);
+        			} catch (Exception ex){
+        				tree.requestFocus();
+        			}
         		}
         	}
         });
@@ -284,6 +316,73 @@ public class FXCatDictPanel {
 		updatePatternList();
 	}
 
+	private TextField diaCategoryName = new TextField();
+    private ColorPicker diaColorPicker = new ColorPicker();
+	private Dialog newCategoryDialog = null;
+	private DCat editedDcat = null;
+	
+	private DCat showNewCategoryDialog(DCat dcat) {			
+		if (newCategoryDialog == null){
+			newCategoryDialog = new Dialog(null, "New Category", false, true);
+			final Action actionLogin = new AbstractAction("Create") {
+				{  ButtonBar.setType(this, ButtonType.OK_DONE); }
+				public void execute(ActionEvent ae) {
+					Dialog dlg = (Dialog) ae.getSource();
+					String newcat = diaCategoryName.getText();
+					Color c = diaColorPicker.getValue();
+					editedDcat = new DCat(newcat, c); // override the the thing
+					dlg.hide();
+				}
+			};
+			ChangeListener<String> changeListener = new ChangeListener<String>() {
+				public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+					actionLogin.disabledProperty().set(
+						diaCategoryName.getText().trim().isEmpty());
+				}
+			};
+			diaCategoryName.textProperty().addListener(changeListener);
+			// validate
+			actionLogin.disabledProperty().set(
+					diaCategoryName.getText().trim().isEmpty());
+			
+			final GridPane content = new GridPane();
+			content.setHgap(10);
+			content.setVgap(10);
+
+			content.add(new Label("User name"), 0, 0);
+			content.add(diaCategoryName, 1, 0);
+			GridPane.setHgrow(diaCategoryName, Priority.ALWAYS);
+			content.add(new Label("Colour"), 0, 1);
+			content.add(diaColorPicker, 1, 1);
+			//GridPane.setHgrow(txPassword, Priority.ALWAYS);
+
+			newCategoryDialog.setResizable(false);
+			newCategoryDialog.setIconifiable(false);
+			//dlg.setGraphic(new ImageView(HelloDialog.class.getResource("login.png").toString()));
+			newCategoryDialog.setContent(content);
+			newCategoryDialog.getActions().addAll(actionLogin, Dialog.Actions.CANCEL);
+		} 
+		
+		if (dcat != null){
+			//editedDcat;
+			//newdc.color = dcat.color;		
+			diaCategoryName.setText(dcat.getName());
+			diaColorPicker.setValue(dcat.getColor());
+		} else {
+			diaCategoryName.setText("");
+			diaColorPicker.setValue(null);
+		}
+		Platform.runLater(new Runnable() {
+			public void run() {
+				diaCategoryName.requestFocus();
+			}
+		});
+		newCategoryDialog.show();
+		
+		return null; // TODO FIXME THIS IS BUST
+	}
+
+	
 	public BorderPane getBorderPane() {
 		return borderPane;
 	}

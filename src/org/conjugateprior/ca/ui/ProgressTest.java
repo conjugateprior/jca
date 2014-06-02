@@ -4,12 +4,7 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Locale;
 
-import org.conjugateprior.ca.reports.LDACWordCountTask;
-import org.conjugateprior.ca.reports.WordCounter;
-
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -17,11 +12,11 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+
+import org.conjugateprior.ca.reports.LDACWordCountTask;
+import org.conjugateprior.ca.reports.WordCounter;
 
 public class ProgressTest extends Application {
 	 

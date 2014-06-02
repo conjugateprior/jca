@@ -18,11 +18,11 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.conjugateprior.ca.CategoryDictionary;
+import org.conjugateprior.ca.CategoryDictionary.DictionaryCategory;
+import org.conjugateprior.ca.CategoryDictionary.DictionaryPattern;
 import org.conjugateprior.ca.IYoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
-import org.conjugateprior.ca.CategoryDictionary.DictionaryCategory;
-import org.conjugateprior.ca.CategoryDictionary.DictionaryPattern;
 /**
  * @deprecated
  * @author will

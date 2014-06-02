@@ -9,8 +9,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.conjugateprior.ca.reports.CountPrinter;
 import org.conjugateprior.ca.reports.ICountPrinter;
-import org.conjugateprior.ca.reports.LDACWordCountPrinter;
-import org.conjugateprior.ca.reports.MTXWordCountPrinter;
 import org.conjugateprior.ca.reports.WordCounter;
 
 public class CommandLineWordCounter extends CommandLineApplication {

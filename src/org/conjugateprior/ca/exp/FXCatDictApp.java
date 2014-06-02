@@ -19,7 +19,7 @@ public class FXCatDictApp extends Application {
 		Scene scene = new Scene(border, 600, 550); 
 		
 		File f = new File("/Users/will/Documents/scratch/2007_abortion_dictionary.ykd");
-		FXCatDict dict = FXCatDict.readCategoryDictionaryFromFile(f);
+		FXCatDict dict = FXCatDict.readXmlCategoryDictionaryFromFile(f);
 		TreeView<DCat> tree = new TreeView<DCat>();
 		tree.setRoot(dict.getCategoryRoot());
 		border.setCenter(tree);
@@ -30,7 +30,7 @@ public class FXCatDictApp extends Application {
 	
 	public static void main(String[] args) throws Exception {
 		File f = new File("/Users/will/Documents/scratch/2007_abortion_dictionary.ykd");
-		FXCatDict dict = FXCatDict.readCategoryDictionaryFromFile(f);
+		FXCatDict dict = FXCatDict.readXmlCategoryDictionaryFromFile(f);
         
 		
 		System.out.println(dict);

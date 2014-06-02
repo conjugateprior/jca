@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.Character.UnicodeBlock;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,12 +24,14 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.text.translate.UnicodeEscaper;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+// this functionality is duplicated (hopefully) by FXCatDict
 public class CategoryDictionary extends DefaultTreeModel {
+
+	private static final long serialVersionUID = -6071338642400002382L;
 
 	protected String duplicateMessage = 
 			"There is already a category with that name under this parent category";
@@ -86,6 +87,8 @@ public class CategoryDictionary extends DefaultTreeModel {
 	
 	public class DictionaryCategory extends DefaultMutableTreeNode 
 	                         implements Comparable<DictionaryCategory>{
+		
+		private static final long serialVersionUID = -7535185037037073347L;
 		
 		protected String name;
 		protected Set<DictionaryPattern> patterns;
@@ -274,7 +277,6 @@ public class CategoryDictionary extends DefaultTreeModel {
 			return dict;
 		}
 	}
-	//style="Lexicoder" name="LSDv3a"
 		
 	public static CategoryDictionary importCategoryDictionaryFromFileVBPRO(File f) throws Exception {
 		
@@ -386,7 +388,7 @@ public class CategoryDictionary extends DefaultTreeModel {
 					d = h.getCategoryDictionary();
 				
 				} else {
-					throw new Exception("Could not recognise this dictionary format");
+					throw new Exception("Could not identify the dictionary format");
 				}
 			} else {
 				throw new Exception("Could not identify the dictionary format");

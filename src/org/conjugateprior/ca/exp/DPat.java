@@ -3,11 +3,11 @@ package org.conjugateprior.ca.exp;
 import java.util.regex.Pattern;
 
 public class DPat implements Comparable<DPat>{
-
+	
 	private String[] elements;
 	private String name;
 	private Pattern[] regexps;
-
+	
 	public DPat(String s){
 		elements = s.split("[ ]+");
 		regexps = FXCatDict.patternEngine.makeRegexp(elements);
