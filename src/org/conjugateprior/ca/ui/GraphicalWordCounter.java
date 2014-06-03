@@ -1,11 +1,429 @@
 package org.conjugateprior.ca.ui;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
-public class GraphicalWordCounter {
+import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TextField;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.RowConstraints;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
+public class GraphicalWordCounter extends Application {
+
+	static class Wrapper implements Comparable<Wrapper> {
+		String name; // for sorting
+		public Wrapper(String n) {
+			name = n;
+		}
+		@Override
+		public String toString() {
+			return getDisplayName();
+		}
+		@Override
+		public int compareTo(Wrapper o) {
+			return name.compareTo(o.name);
+		}
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof Wrapper)
+				return ((Wrapper)obj).name.equals(name);
+			return super.equals(obj);
+		}
+		public String getDisplayName(){
+			return name;
+		}
+	}
+	
+	static private class LocaleWrap extends Wrapper {
+		Locale locale;
+		public LocaleWrap(Locale loc) {
+			super(loc.toString());
+			locale = loc;
+		}
+		public String getDisplayName(){
+			String country = locale.getDisplayCountry();
+			return locale.getDisplayLanguage() + 
+			 (country.length() > 0 ? ": " + country : "") +
+			  " (" + locale.toString() + ")";
+		}	
+		static List<LocaleWrap> getAllLocaleWraps(){
+			Locale[] locs = Locale.getAvailableLocales();
+			List<LocaleWrap> locWrapList = new ArrayList<LocaleWrap>(locs.length);
+			for (Locale locale : locs) 
+				locWrapList.add(new LocaleWrap(locale));
+			Collections.sort(locWrapList);
+			return locWrapList;
+		}		
+	}
+	
+	static private class CharsetWrap extends Wrapper {
+		Charset charset;		
+		public CharsetWrap(Charset cs) {
+			super(cs.name());			
+			charset = cs;
+		}
+		static List<CharsetWrap> getAllCharsetWraps(){
+			SortedMap<String, Charset> smap = Charset.availableCharsets();
+			Set<String> names = smap.keySet();
+			List<String> sortedNames = new ArrayList<String>(names);
+			Collections.sort(sortedNames);
+			List<CharsetWrap> charsetWrapList = new ArrayList<CharsetWrap>(sortedNames.size());
+			for (String cs : sortedNames) 
+				charsetWrapList.add(new CharsetWrap(smap.get(cs)));
+			return charsetWrapList;
+		}
+	}
+	
+	// TODO
+	protected String[] stemLangs = new String[]{"English", 
+		"French", "German", "Russian", "Dutch"};
+	
+	protected CheckBox cbLowercase = new CheckBox();
+	protected CheckBox cbNoNumbers = new CheckBox();
+	protected CheckBox cbNoCurrency = new CheckBox();
+	protected ChoiceBox<LocaleWrap> listLocale;
+	protected ChoiceBox<CharsetWrap> listCharset;
+	protected ChoiceBox<String> listStemming;
+	protected CheckBox cbStem = new CheckBox();
+	protected FileChooser dirChooser = new FileChooser();
+	protected File directory;
+	protected FileChooser stopwordFileChooser = new FileChooser();
+	protected File stopsFile;
+	protected CheckBox cbStop = new CheckBox();
+	protected CheckBox cbGzip = new CheckBox();
+	// output format
+	protected ChoiceBox<String> outputFormat = new ChoiceBox<String>();
+	protected TextField stopsDesc = new TextField();
+	
+	// go
+	protected Button goButton = new Button("GO");
+	protected ProgressBar progressBar = new ProgressBar(0.0);
+	
+	protected ListView<File> list;
+	
+	@Override
+	public void start(final Stage primaryStage) throws Exception {
+		primaryStage.setTitle("JFreq");
+		
+		GridPane grid = new GridPane(); 
+		grid.setAlignment(Pos.TOP_CENTER); 
+		grid.setHgap(10);
+		grid.setVgap(10);
+		grid.setPadding(new Insets(10));
+
+		/*
+		ColumnConstraints col1 = new ColumnConstraints();
+		//col1.setPercentWidth(25);
+		ColumnConstraints col2 = new ColumnConstraints();
+		col2.setFillWidth(true);
+		ColumnConstraints col3 = new ColumnConstraints();
+		col3.setFillWidth(true);
+		//col3.setPercentWidth(25);
+		ColumnConstraints col4 = new ColumnConstraints();
+		grid.getColumnConstraints().addAll(col1, col2, col3, col4);	
+		*/
+		
+		list = new ListView<File>();
+		list.setOnDragOver(new EventHandler <DragEvent>() {
+            public void handle(DragEvent event) {
+                if (event.getDragboard().hasFiles())
+                	event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+                event.consume();
+            }
+        });
+		list.setOnDragDropped(new EventHandler <DragEvent>() {
+            public void handle(DragEvent event) {
+                Dragboard db = event.getDragboard();
+                boolean success = false;
+                if (db.hasFiles()) {
+                    for (File file : db.getFiles()) {
+						if (file.isDirectory()){
+							for (File subfile : file.listFiles()) {
+								if (!subfile.isDirectory()){
+									if (!list.getItems().contains(subfile))
+										list.getItems().add(subfile);
+								}
+							}
+						} else {
+							if (!list.getItems().contains(file))
+								list.getItems().add(file);
+						}
+                    }
+                    success = true;
+                }
+                event.setDropCompleted(success);       
+                event.consume();
+            }
+        });
+		list.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		list.setOnKeyPressed(new EventHandler <KeyEvent>(){
+			@Override
+			public void handle(KeyEvent event) {
+				if (event.getCode().equals(KeyCode.BACK_SPACE) ||
+					event.getCode().equals((KeyCode.DELETE))){
+					// workaround for bug: http://javafx-jira.kenai.com/browse/RT-24367
+					ObservableList<File> sels = 
+			            FXCollections.observableArrayList( //copy
+			            		list.getSelectionModel().getSelectedItems());
+					if (sels != null) {
+						//heroes.addAll(sels);
+						list.getItems().removeAll(sels);
+						list.getSelectionModel().clearSelection();
+					}
+				}
+			}
+		});
+		
+		SplitPane sp = new SplitPane();
+		
+		// left hand side
+        Label lab1 = new Label("Document Properties");
+        lab1.setFont(Font.font(null, FontWeight.BOLD, 20));
+        lab1.setPadding(new Insets(20,10,20,10));
+        lab1.setAlignment(Pos.CENTER);
+        
+        BorderPane propertiespane = new BorderPane();
+        propertiespane.setTop(lab1);
+        BorderPane.setAlignment(lab1, Pos.CENTER);
+        
+        propertiespane.setCenter(grid);
+        BorderPane.setAlignment(grid, Pos.TOP_CENTER);
+
+        // right hand side
+        BorderPane listpane = new BorderPane();
+        listpane.setCenter(list);
+        Label lab = new Label("Documents");
+        lab.setFont(Font.font(null, FontWeight.BOLD, 20));
+        lab.setPadding(new Insets(20,10,20,10));
+        listpane.setTop(lab);
+        BorderPane.setAlignment(lab, Pos.CENTER);
+		
+        // add them
+        sp.getItems().addAll(propertiespane, listpane);
+        
+        BorderPane borderPane = new BorderPane();
+        borderPane.setCenter(sp);
+        
+		//grid.setGridLinesVisible(true);
+		Scene scene = new Scene(borderPane, 1000, 550); 
+
+		// lowercase
+		Label labLowercase = new Label("Lowercase:");
+		labLowercase.setDisable(true);
+				
+		// no numbers
+		cbLowercase.setSelected(true);
+		cbLowercase.setDisable(true); 
+		Label labNoNumbers = new Label("No numbers:");
+				
+		// no currency
+		Label labNoCurrency = new Label("No currency:");
+
+		// locale
+		List<LocaleWrap> locs = LocaleWrap.getAllLocaleWraps();
+		listLocale = new ChoiceBox<LocaleWrap>(FXCollections.observableArrayList(locs));
+		LocaleWrap here = new LocaleWrap(Locale.getDefault());
+		listLocale.getSelectionModel().select(here);
+		Label labLocale = new Label("Locale:");
+		
+		// charsets
+		List<CharsetWrap> cs = CharsetWrap.getAllCharsetWraps();
+		listCharset = new ChoiceBox<CharsetWrap>(FXCollections.observableArrayList(cs));
+		Charset mine = Charset.defaultCharset();
+		CharsetWrap mywrap = new CharsetWrap(mine);
+		listCharset.getSelectionModel().select(mywrap);
+		Label labCharset = new Label("Encoding:");
+
+		// stem 
+		listStemming = new ChoiceBox<String>();
+		Label labStemming = new Label("Stem:");
+		for (String lang : stemLangs)
+			listStemming.getItems().add(lang);
+		listStemming.getSelectionModel().select("English");
+		cbStem.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent arg0) {
+				listStemming.setDisable(!cbStem.isSelected());
+		    }
+		});
+		listStemming.setDisable(!cbStem.isSelected());
+
+		// output folder
+		final TextField dirDesc = new TextField();
+		dirDesc.setEditable(false);
+		Label labFolder = new Label("Output folder:");
+		Button btn = new Button("Choose");
+		btn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				File f = dirChooser.showSaveDialog(primaryStage);
+				if (f != null){
+					directory = f;
+					dirDesc.setText(directory.getAbsolutePath());
+				}
+			}
+		});
+			
+		// output format
+		Label labFormat = new Label("Output format:");		
+		outputFormat.getItems().addAll("LDA-C", "Matrix Market");
+		outputFormat.getSelectionModel().select(0);
+		
+		// gzip output file
+		Label labGzip = new Label("GZIP data file:");
+			
+		// stopwords
+		stopsDesc.setEditable(false);
+		Label labStops = new Label("Remove stopwords:");
+		final Button stopsBtn = new Button("Choose");
+		stopsBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				File f = stopwordFileChooser.showOpenDialog(primaryStage);
+				if (f != null){
+					stopsFile = f;
+					stopsDesc.setText(stopsFile.getAbsolutePath());
+				}
+			}
+		});
+		cbStop.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent arg0) {
+				boolean sel = !cbStop.isSelected();
+				stopsBtn.setDisable(sel);
+				stopsDesc.setDisable(sel);
+		    }
+		});
+		boolean sel = !cbStop.isSelected();
+		stopsBtn.setDisable(sel);
+		stopsDesc.setDisable(sel);
+		
+		grid.add(labLocale, 0, 0);
+		listLocale.setMaxWidth(Double.MAX_VALUE);
+		grid.add(listLocale, 1, 0, 3, 1);
+
+		grid.add(labCharset, 0, 1);
+		listCharset.setMaxWidth(Double.MAX_VALUE);
+		grid.add(listCharset, 1, 1, 3, 1);
+
+		grid.add(labLowercase, 0, 2);
+		grid.add(cbLowercase, 1, 2);
+
+		grid.add(labNoNumbers, 0, 3);
+		grid.add(cbNoNumbers, 1, 3);
+
+		grid.add(labNoCurrency, 0, 4);
+		grid.add(cbNoCurrency, 1, 4);
+	
+		grid.add(labStops, 0, 5);
+		grid.add(cbStop, 1, 5);
+		grid.add(stopsDesc, 2, 5);
+		grid.add(stopsBtn, 3, 5);	
+				
+		grid.add(labStemming, 0, 6);
+		grid.add(cbStem, 1, 6);
+		//listStemming.setMaxWidth(Double.MAX_VALUE);
+		grid.add(listStemming, 2, 6, 3, 1);
+		
+		grid.add(labFolder, 0, 7);
+		grid.add(dirDesc, 1, 7, 2, 1);
+		grid.add(btn, 3, 7);	
+		
+		grid.add(labFormat, 0, 8);
+		outputFormat.setMaxWidth(150);
+		grid.add(outputFormat, 1, 8, 3, 1);
+		
+		grid.add(labGzip, 0, 9);
+		grid.add(cbGzip, 1, 9);	
+		
+		progressBar.setMaxWidth(Double.MAX_VALUE);
+		grid.add(progressBar, 0, 10, 3, 1);
+		grid.add(goButton, 3, 10);
+		
+		primaryStage.setScene(scene);
+		primaryStage.show();
+	}
+	
+	protected void saveGUIStateToPreferences() throws BackingStoreException {
+		Preferences prefs = 
+				Preferences.userRoot().node("org.conjugateprior.jfreq");
+		prefs.putBoolean("remove_currency", cbNoCurrency.isSelected());
+		prefs.putBoolean("remove_numbers", cbNoNumbers.isSelected());
+		prefs.putBoolean("gzip_file_data", cbGzip.isSelected());
+		prefs.putBoolean("remove_stopwords", cbStop.isSelected());
+		prefs.put("stopword_file", 
+			(stopsFile == null ? null : stopsFile.getAbsolutePath()));
+		prefs.putBoolean("stem", cbStem.isSelected());
+		String wrap = listStemming.getSelectionModel().getSelectedItem();
+		prefs.put("stem_language", wrap);
+		String oformat = outputFormat.getSelectionModel().getSelectedItem();
+		prefs.put("output_format", oformat);
+		prefs.flush();
+	}
+	
+	protected void configureGUIFromPreferences(){
+		Preferences prefs = 
+				Preferences.userRoot().node("org.conjugateprior.jfreq");
+		cbNoCurrency.setSelected(prefs.getBoolean("remove_currency", true));
+		cbNoNumbers.setSelected(prefs.getBoolean("remove_numbers", true));
+		cbGzip.setSelected(prefs.getBoolean("gzip_data_file", false));
+		cbStop.setSelected(prefs.getBoolean("remove_stopwords", false));
+		String sfile = prefs.get("stopword_file", null);
+		if (sfile != null){
+			File sf = new File(sfile);
+			if (sf.exists()){
+				stopsFile = sf;
+				stopsDesc.setText(stopsFile.getAbsolutePath());
+			}
+		}
+		cbStem.setSelected(prefs.getBoolean("stem", false));
+		sfile = prefs.get("stem_language", "English");		
+		if (sfile != null)
+			listStemming.getSelectionModel().select(sfile);
+		sfile = prefs.get("output_format", "LDA-C");		
+		if (sfile != null)
+			outputFormat.getSelectionModel().select("LDA-C");
+		// don't remember the output folder
+	}
+	
+	public static void main(String[] args) {
+		launch(args);
+	}
+	
 	protected File[] getRecursiveDepthOneFileArray(String[] files) throws Exception {
 		List<File> filelist = new ArrayList<File>();
 		File fail = null;
