@@ -12,6 +12,8 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.Locale;
 
+import javafx.concurrent.Task;
+
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
 import org.conjugateprior.ca.CategoryDictionary;
 import org.conjugateprior.ca.IYoshikoderDocument;
@@ -41,6 +43,96 @@ public abstract class CountPrinter implements ICountPrinter {
 	protected String rowfilename = "documents.csv";
 	protected String columnfilename = "words.csv";
 	protected String readmefilename = "readme.txt";
+	
+	public CountingTask getNewCountingTask(){
+		return new CountingTask(getMaxProgress());
+	}
+	
+	public class CountingTask extends Task<Void> {
+
+		private double max;
+		
+		public CountingTask(int totalProg) {
+			super();
+			max = (double)totalProg;
+		}
+		
+		private boolean writeDF() throws Exception {
+			boolean interrupted = false;
+			
+			BufferedWriter writer = null;
+			try {
+				OutputStreamWriter osw = new OutputStreamWriter(
+						new FileOutputStream(new File(folder, datafilename)), outputCharset);
+				writer = new BufferedWriter(osw);
+				
+				String dh = getDataHeader();
+				if (dh != null)
+					writer.write(dh); // nothing usually
+				
+				int counter = 0;
+				for (File file : files) {
+					IYoshikoderDocument doc = null;
+					try {
+						doc = new SimpleYoshikoderDocument(file.getName(), 
+							AbstractYoshikoderDocument.getTextFromFile(file, charset),
+							null, tokenizer);		
+						
+						// subclasses override this
+						String s = makeLineFromDocument(doc);
+						writer.write(s);
+					
+					} catch (InterruptedException iex){
+						System.err.println("Interrupted - closing down");
+						if (writer != null)
+							writer.close();
+						interrupted = true;
+						break;
+					
+					} catch (Exception ex){
+						ex.printStackTrace();
+						throw new Exception("Problem with " + doc.getTitle() +
+								" [" + ex.getMessage() + "] Skipping this document");
+					} finally {
+						counter++; // even if we failed, make sure progress goes up
+						updateProgress(counter, max); // preprocess + files to date
+					}
+				}
+				
+			} finally {
+				if (writer != null)
+					writer.close();
+			}
+			return interrupted;
+		}
+		
+		@Override
+		protected Void call() throws Exception {
+			double max = (double)getMaxProgress();
+			preProcess();
+			updateProgress(1.0, max);
+			
+			boolean interrupted = writeDF();
+			if (interrupted)
+				return null; // bail out unceremoniously
+			
+			updateProgress(files.length + 1, max); // even if we blew out on a few
+			
+			writeColumnsFile();
+			updateProgress(files.length + 2, max);
+			
+			writeRowsFile();
+			updateProgress(files.length + 3, max);
+			
+			writeReadmeFile();
+			updateProgress(files.length + 4, max);
+			
+			postProcess();
+			updateProgress(files.length + 5, max);
+			
+			return null;
+		}
+	}
 	
 	public int getMaxProgress() {
 		return maxProgress;
@@ -224,38 +316,6 @@ public abstract class CountPrinter implements ICountPrinter {
     public void removePropertyChangeListener(PropertyChangeListener listener) {
         mPcs.removePropertyChangeListener(listener);
     }
-	
-	/*
-	public static void main(String[] args) {
-		
-		WordReportFormatter formatter = new WordReportFormatter(reporter, 
-				WordReportFormatter.OutputFormat.MTX, 
-				new File("/Users/will/test/mtxtest"),
-				Charset.forName("UTF-8"), 
-				Locale.ENGLISH,
-				new File[]{new File("/Users/will/test/", "m1.txt"), 
-			               new File("/Users/will/test/", "m2.txt")});
-		
-		
-		WordReportFormatter formatter = new WordReportFormatter(reporter, 
-				WordReportFormatter.OutputFormat.MTX, 
-				new File("/Users/will/test/mtxtest"),
-				Charset.forName("UTF-8"), 
-				Locale.ENGLISH, fls);
-		
-		Printer worker = formatter.getPrinter();
-		worker.addPropertyChangeListener(new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				if ("progress" == evt.getPropertyName()) {
-					int progress = (Integer) evt.getNewValue();
-					System.err.println(progress + "%");
-				} 
-			}
-		});
-		worker.execute();
-		
-	}
-	*/
+
 }
 

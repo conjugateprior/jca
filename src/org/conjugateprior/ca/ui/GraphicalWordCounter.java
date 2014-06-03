@@ -11,6 +11,8 @@ import java.util.SortedMap;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import com.aquafx_project.AquaFx;
+
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -24,7 +26,6 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
@@ -34,9 +35,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.RowConstraints;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
@@ -84,7 +83,8 @@ public class GraphicalWordCounter extends Application {
 			Locale[] locs = Locale.getAvailableLocales();
 			List<LocaleWrap> locWrapList = new ArrayList<LocaleWrap>(locs.length);
 			for (Locale locale : locs) 
-				locWrapList.add(new LocaleWrap(locale));
+				if (locale.getLanguage().length() != 0) // weird locale first
+					locWrapList.add(new LocaleWrap(locale));
 			Collections.sort(locWrapList);
 			return locWrapList;
 		}		
@@ -102,8 +102,11 @@ public class GraphicalWordCounter extends Application {
 			List<String> sortedNames = new ArrayList<String>(names);
 			Collections.sort(sortedNames);
 			List<CharsetWrap> charsetWrapList = new ArrayList<CharsetWrap>(sortedNames.size());
-			for (String cs : sortedNames) 
-				charsetWrapList.add(new CharsetWrap(smap.get(cs)));
+			for (String cs : sortedNames) {
+				Charset ch = smap.get(cs);
+				if (ch.displayName() != null)
+					charsetWrapList.add(new CharsetWrap(ch));
+			}
 			return charsetWrapList;
 		}
 	}
@@ -130,8 +133,7 @@ public class GraphicalWordCounter extends Application {
 	protected TextField stopsDesc = new TextField();
 	
 	// go
-	protected Button goButton = new Button("GO");
-	protected ProgressBar progressBar = new ProgressBar(0.0);
+	protected Button goButton = new Button("PROCESS");
 	
 	protected ListView<File> list;
 	
@@ -208,38 +210,7 @@ public class GraphicalWordCounter extends Application {
 			}
 		});
 		
-		SplitPane sp = new SplitPane();
 		
-		// left hand side
-        Label lab1 = new Label("Document Properties");
-        lab1.setFont(Font.font(null, FontWeight.BOLD, 20));
-        lab1.setPadding(new Insets(20,10,20,10));
-        lab1.setAlignment(Pos.CENTER);
-        
-        BorderPane propertiespane = new BorderPane();
-        propertiespane.setTop(lab1);
-        BorderPane.setAlignment(lab1, Pos.CENTER);
-        
-        propertiespane.setCenter(grid);
-        BorderPane.setAlignment(grid, Pos.TOP_CENTER);
-
-        // right hand side
-        BorderPane listpane = new BorderPane();
-        listpane.setCenter(list);
-        Label lab = new Label("Documents");
-        lab.setFont(Font.font(null, FontWeight.BOLD, 20));
-        lab.setPadding(new Insets(20,10,20,10));
-        listpane.setTop(lab);
-        BorderPane.setAlignment(lab, Pos.CENTER);
-		
-        // add them
-        sp.getItems().addAll(propertiespane, listpane);
-        
-        BorderPane borderPane = new BorderPane();
-        borderPane.setCenter(sp);
-        
-		//grid.setGridLinesVisible(true);
-		Scene scene = new Scene(borderPane, 1000, 550); 
 
 		// lowercase
 		Label labLowercase = new Label("Lowercase:");
@@ -259,6 +230,8 @@ public class GraphicalWordCounter extends Application {
 		LocaleWrap here = new LocaleWrap(Locale.getDefault());
 		listLocale.getSelectionModel().select(here);
 		Label labLocale = new Label("Locale:");
+		
+		System.err.println(listLocale.getItems().get(0).locale);
 		
 		// charsets
 		List<CharsetWrap> cs = CharsetWrap.getAllCharsetWraps();
@@ -370,11 +343,52 @@ public class GraphicalWordCounter extends Application {
 		grid.add(labGzip, 0, 9);
 		grid.add(cbGzip, 1, 9);	
 		
+		// make the splitpane
+		SplitPane sp = new SplitPane();
+		
+		// left hand side
+        Label lab1 = new Label("Document Properties");
+        lab1.setFont(Font.font(null, FontWeight.BOLD, 20));
+        lab1.setPadding(new Insets(20,10,20,10));
+        lab1.setAlignment(Pos.CENTER);
+        
+        BorderPane propertiespane = new BorderPane();
+        propertiespane.setTop(lab1);
+        BorderPane.setAlignment(lab1, Pos.CENTER);
+        
+        propertiespane.setCenter(grid);
+        BorderPane.setAlignment(grid, Pos.TOP_CENTER);
+
+        // right hand side
+        BorderPane listpane = new BorderPane();
+        listpane.setCenter(list);
+        Label lab = new Label("Documents");
+        lab.setFont(Font.font(null, FontWeight.BOLD, 20));
+        lab.setPadding(new Insets(20,10,20,10));
+        listpane.setTop(lab);
+        BorderPane.setAlignment(lab, Pos.CENTER);
+		
+        listpane.setBottom(goButton);
+        BorderPane.setMargin(goButton, new Insets(10));
+        BorderPane.setAlignment(goButton, Pos.CENTER);
+        
+        // add them
+        sp.getItems().addAll(propertiespane, listpane);
+        
+        
+        
+		//grid.setGridLinesVisible(true);
+		Scene scene = new Scene(sp, 1000, 550); 
+		
+		/*
 		progressBar.setMaxWidth(Double.MAX_VALUE);
 		grid.add(progressBar, 0, 10, 3, 1);
 		grid.add(goButton, 3, 10);
-		
+		*/
 		primaryStage.setScene(scene);
+		
+		//AquaFx.style();
+		
 		primaryStage.show();
 	}
 	
