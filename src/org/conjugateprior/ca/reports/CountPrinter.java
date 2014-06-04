@@ -77,6 +77,7 @@ public abstract class CountPrinter implements ICountPrinter {
 						doc = new SimpleYoshikoderDocument(file.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(file, charset),
 							null, tokenizer);		
+						updateMessage("Processing " + doc.getTitle());
 						
 						// subclasses override this
 						String s = makeLineFromDocument(doc);

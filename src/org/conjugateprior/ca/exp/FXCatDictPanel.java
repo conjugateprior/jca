@@ -2,6 +2,7 @@ package org.conjugateprior.ca.exp;
 
 
 import java.util.List;
+import java.util.Optional;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -35,6 +36,7 @@ import org.controlsfx.control.ButtonBar.ButtonType;
 import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
+import org.controlsfx.dialog.DialogStyle;
 import org.controlsfx.dialog.Dialogs;
 
 
@@ -142,7 +144,7 @@ public class FXCatDictPanel {
 		String message = "There is already a subcategory of " + parentName +
 				" called \"" + duplicatedName + "\"";
 		Dialogs.create().owner(borderPane).message(message)
-			.title(duplicateErrorMessageTitle).masthead(null).nativeTitleBar()
+			.title(duplicateErrorMessageTitle).masthead(null)
 			.showInformation();
 	}
 	
@@ -263,10 +265,10 @@ public class FXCatDictPanel {
         	@Override
         	public void handle(ActionEvent event) {
         		TreeItem<DCat> sel = tree.getSelectionModel().getSelectedItem();
-        		String s = Dialogs.create().owner(borderPane).message("Name")
-        				.title("New Pattern").masthead(null).nativeTitleBar().showTextInput();
-        		if (s != null){
-        			String val = s.trim();
+        		Optional<String> s = Dialogs.create().owner(borderPane).message("Name")
+        				.title("New Pattern").masthead(null).showTextInput();
+        		if (s.isPresent()){
+        			String val = s.get().trim();
         			if (val.length()>0){
         				try {
         					addPatternToCategory(val, sel);
@@ -323,15 +325,16 @@ public class FXCatDictPanel {
 	
 	private DCat showNewCategoryDialog(DCat dcat) {			
 		if (newCategoryDialog == null){
-			newCategoryDialog = new Dialog(null, "New Category", false, true);
+			newCategoryDialog = new Dialog(null, "New Category", false, DialogStyle.NATIVE);
 			final Action actionLogin = new AbstractAction("Create") {
 				{  ButtonBar.setType(this, ButtonType.OK_DONE); }
-				public void execute(ActionEvent ae) {
+				@Override
+				public void handle(ActionEvent ae) {
 					Dialog dlg = (Dialog) ae.getSource();
 					String newcat = diaCategoryName.getText();
 					Color c = diaColorPicker.getValue();
 					editedDcat = new DCat(newcat, c); // override the the thing
-					dlg.hide();
+					dlg.hide();	
 				}
 			};
 			ChangeListener<String> changeListener = new ChangeListener<String>() {
