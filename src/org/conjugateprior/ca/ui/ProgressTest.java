@@ -35,7 +35,6 @@ import org.controlsfx.dialog.DefaultDialogAction;
 import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.Dialog.ActionTrait;
 import org.controlsfx.dialog.DialogStyle;
-import org.controlsfx.dialog.Dialogs;
 
 public class ProgressTest extends Application {
 	 
@@ -51,18 +50,25 @@ public class ProgressTest extends Application {
         stage.setScene(scene);
         stage.setTitle("Progress Controls");
         
-        final Button button = new Button("Go!");
+        final Button button = new Button("Go	!");
         //button.setPadding(new Insets(100));
         button.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
 				try {
 					Task<Void> task = getTask();
-					Dialogs.create().owner(stage).style(DialogStyle.NATIVE).showWorkerProgress(task);
-				
+					//Dialogs.create().owner(stage).style(DialogStyle.NATIVE).showWorkerProgress(task);
+					
 					//bar.progressProperty().unbind(); // last task
 					//bar.progressProperty().bind(task.progressProperty());
-					new Thread(task).start();
+					Thread th = new Thread(task);
+	                th.setDaemon(true);
+	               	th.start();
+	               	
+	               	Throwable thro = task.getException();
+	                if (thro != null)
+	                	thro.printStackTrace();
+	               	
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}

@@ -107,6 +107,25 @@ public abstract class CountPrinter implements ICountPrinter {
 			return interrupted;
 		}
 		
+		@Override protected void succeeded() {
+            super.succeeded();
+            System.err.println("succeeded");
+
+            updateMessage("Done!");
+        }
+
+        @Override protected void cancelled() {
+            super.cancelled();
+            System.err.println("cancelled");
+            updateMessage("Cancelled!");
+        }
+
+        @Override protected void failed() {
+            super.failed();
+            System.err.println("failed");
+            updateMessage("Failed!");
+        }
+		
 		@Override
 		protected Void call() throws Exception {
 			double max = (double)getMaxProgress();
@@ -209,8 +228,10 @@ public abstract class CountPrinter implements ICountPrinter {
 	
 	// makes folder
 	protected void preProcess() throws Exception {
-		if (folder.exists())
+		if (folder.exists()){
+			System.err.println("Folder already exists");
 			throw new Exception("Folder " + folder.getAbsolutePath() + " already exists.");
+		}
 		boolean b = folder.mkdirs();
 		if (!b) throw new Exception("Could not create all the folder elements in " + 
 				folder.getAbsolutePath());
