@@ -9,6 +9,7 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -18,10 +19,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import org.conjugateprior.ca.exp.FXCatDict;
@@ -33,15 +36,13 @@ import org.controlsfx.control.ButtonBar.ButtonType;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.DefaultDialogAction;
 import org.controlsfx.dialog.Dialog;
-import org.controlsfx.dialog.Dialog.ActionTrait;
 import org.controlsfx.dialog.DialogStyle;
+import org.controlsfx.dialog.Dialogs;
 
 public class ProgressTest extends Application {
 	 
 	Stage stage;
-	
-	
-	
+		
     @Override
     public void start(Stage st) {
         stage = st;
@@ -57,7 +58,7 @@ public class ProgressTest extends Application {
 			public void handle(ActionEvent e) {
 				try {
 					Task<Void> task = getTask();
-					//Dialogs.create().owner(stage).style(DialogStyle.NATIVE).showWorkerProgress(task);
+					Dialogs.create().owner(stage).style(DialogStyle.NATIVE).showWorkerProgress(task);
 					
 					//bar.progressProperty().unbind(); // last task
 					//bar.progressProperty().bind(task.progressProperty());
@@ -75,15 +76,14 @@ public class ProgressTest extends Application {
 			}
 		});
         
-        final Button Hyperlink14 = new Button("Show");
-        Hyperlink14.setOnAction(new EventHandler<ActionEvent>() {
- 
-        	
-            final TextField txUserName = new TextField();
-            final PasswordField txPassword = new PasswordField();
-            final DefaultDialogAction actionLogin = new DefaultDialogAction("Login",
-                    ActionTrait.CLOSING, ActionTrait.DEFAULT) {
- 
+        final Button btn = new Button("Show");
+        btn.setOnAction(new EventHandler<ActionEvent>() {
+
+        	final ProgressBar bar = new ProgressBar();
+            final Task<Void> task = getTask();
+            //Text updating = new Text("");
+            
+            final DefaultDialogAction actionLogin = new DefaultDialogAction("Login") {
                 {
                     ButtonBar.setType(this, ButtonType.OK_DONE);
                 }
@@ -91,72 +91,86 @@ public class ProgressTest extends Application {
                 @Override
                 public void handle(ActionEvent ae) {
                     Dialog dlg = (Dialog) ae.getSource();
-                    // real login code here
-                    dlg.setResult(this);
+                    System.err.println("cancelling the task");
+                    task.cancel();
+                    
+                    dlg.hide();
                 }
  
                 public String toString() {
-                    return "LOGIN";
+                    return "CANCELLED";
                 }
             };
- 
+            /*
             private void validate() {
                 actionLogin.disabledProperty().set(
                         txUserName.getText().trim().isEmpty()
                                 || txPassword.getText().trim().isEmpty());
             }
+ 	         */
  
             @Override
             public void handle(ActionEvent arg0) {
                 Dialog dlg = new Dialog(stage, "Login Dialog", false, DialogStyle.NATIVE); // native
                 
+                /*
                 ChangeListener<String> changeListener = new ChangeListener<String>() {
                     @Override
                     public void changed(
                             ObservableValue<? extends String> observable,
                             String oldValue, String newValue) {
-                        validate();
+                        //validate();
                     }
                 };
  
                 txUserName.textProperty().addListener(changeListener);
                 txPassword.textProperty().addListener(changeListener);
+ 				*/
  
                 final GridPane content = new GridPane();
                 content.setHgap(10);
                 content.setVgap(10);
  
-                content.add(new Label("User name"), 0, 0);
-                content.add(txUserName, 1, 0);
-                GridPane.setHgrow(txUserName, Priority.ALWAYS);
-                content.add(new Label("Password"), 0, 1);
-                content.add(txPassword, 1, 1);
-                GridPane.setHgrow(txPassword, Priority.ALWAYS);
- 
+                content.add(new Label("Progress"), 0, 0);
+                content.add(bar, 1, 0);
+                GridPane.setHgrow(bar, Priority.ALWAYS);
+                
                 dlg.setResizable(false);
                 dlg.setIconifiable(false);
                 //dlg.setGraphic(new ImageView(HelloDialog.class.getResource(
                 //        "login.png").toString()));
                 dlg.setContent(content);
-                dlg.getActions().addAll(actionLogin, Dialog.Actions.CANCEL);
-                validate();
- 
+                dlg.getActions().addAll(actionLogin);
+                //validate();
+                /*
                 Platform.runLater(new Runnable(){ 
                 	public void run() { txUserName.requestFocus(); } ;	
                 });
+                */
  
+                
+                bar.progressProperty().bind(task.progressProperty());
+                
+                Thread th = new Thread(task);
+                th.setDaemon(true);
+                th.start();
+
                 Action response = dlg.show();
+                
                 System.out.println("response: " + response);
+                
+                Throwable thro = task.getException();
+                if (thro != null)
+                	thro.printStackTrace();
+                
             }
         });
         
-        
-        // TODO fixme!
         final HBox hb = new HBox();
         hb.setPadding(new Insets(200));
         hb.setSpacing(5);
         hb.setAlignment(Pos.CENTER);
-        hb.getChildren().addAll(button);
+        hb.getChildren().addAll(btn);
         
         scene.setRoot(hb);
         
@@ -182,6 +196,15 @@ public class ProgressTest extends Application {
 				Charset.forName("UTF8"), Locale.ENGLISH);
 		
         CountingTask task = printer.getNewCountingTask();
+        task.setOnFailed(new EventHandler<WorkerStateEvent>() {
+        	   @Override public void handle(WorkerStateEvent t) {
+        		     Throwable ouch = task.getException();
+        		     Dialogs.create().owner(stage)
+        		        .title("Error").style(DialogStyle.NATIVE)
+        		        .showException(ouch);
+        		     System.out.println(ouch.getClass().getName() + " -> " + ouch.getMessage());
+        		   }
+        		 });
         
         return task;
     }

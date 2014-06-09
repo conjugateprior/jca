@@ -166,15 +166,15 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		printer.addPropertyChangeListener(listener);		
 		printer.processFiles(false);
 		
-		BufferedWriter writer = null;
-		try {
-			String newl = printer.getNewline();
-			File rme = new File(tOutputfile, printer.getReadmefilename());
-			OutputStreamWriter out = new OutputStreamWriter(
+		String newl = printer.getNewline();
+		File rme = new File(tOutputfile, printer.getReadmefilename());
+		try (
+				OutputStreamWriter out = new OutputStreamWriter(
 					new FileOutputStream(rme, true), /* appending */
-					printer.getOutputCharset());
-			writer = new BufferedWriter(out);
-			writer.write(newl);
+						printer.getOutputCharset());
+				BufferedWriter writer = new BufferedWriter(out);
+			){
+				writer.write(newl);
 			writer.write("Settings:");
 			writer.write(newl + newl);
 			writer.write("File enc:\t" + printer.getOutputCharset());
@@ -190,11 +190,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 					(onWindows() ? "'\\r\\n' (Windows style)" : "'\\n' (Unix style)"));
 			writer.write(newl);
 			
-		} finally {
-			if (writer != null)
-				writer.close();
 		}
-
 	}
 
 	public static void main(String[] args) {

@@ -12,6 +12,7 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.Locale;
 
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
@@ -60,12 +61,12 @@ public abstract class CountPrinter implements ICountPrinter {
 		private boolean writeDF() throws Exception {
 			boolean interrupted = false;
 			
-			BufferedWriter writer = null;
-			try {
-				OutputStreamWriter osw = new OutputStreamWriter(
+			//BufferedWriter writer = null;
+			try (
+					OutputStreamWriter osw = new OutputStreamWriter(
 						new FileOutputStream(new File(folder, datafilename)), outputCharset);
-				writer = new BufferedWriter(osw);
-				
+					BufferedWriter writer = new BufferedWriter(osw);
+				){
 				String dh = getDataHeader();
 				if (dh != null)
 					writer.write(dh); // nothing usually
@@ -100,9 +101,9 @@ public abstract class CountPrinter implements ICountPrinter {
 					}
 				}
 				
-			} finally {
-				if (writer != null)
-					writer.close();
+			} catch (Exception ex){
+				ex.printStackTrace();
+				throw ex;
 			}
 			return interrupted;
 		}
@@ -242,11 +243,11 @@ public abstract class CountPrinter implements ICountPrinter {
 	protected String getDataHeader(){ return null; };
 	
 	protected void writeDataFile(boolean showProgress) throws Exception {	
-		BufferedWriter writer = null;
-		try {
-			OutputStreamWriter osw = new OutputStreamWriter(
+		try (
+				OutputStreamWriter osw = new OutputStreamWriter(
 					new FileOutputStream(new File(folder, datafilename)), outputCharset);
-			writer = new BufferedWriter(osw);
+				BufferedWriter writer = new BufferedWriter(osw);
+			){
 			
 			String dh = getDataHeader();
 			if (dh != null)
@@ -277,9 +278,10 @@ public abstract class CountPrinter implements ICountPrinter {
 				}
 			}
 			
-		} finally {
-			if (writer != null)
-				writer.close();
+		} catch (Exception ex){
+			Platform.runLater(new Runnable(){ 
+            	public void run() { ex.printStackTrace(); } ;	
+            });
 		}
 	}
 

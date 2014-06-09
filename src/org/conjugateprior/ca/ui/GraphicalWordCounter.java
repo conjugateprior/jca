@@ -6,12 +6,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-
-import com.aquafx_project.AquaFx;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -20,6 +19,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -38,12 +38,14 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class GraphicalWordCounter extends Application {
 
-	static class Wrapper implements Comparable<Wrapper> {
+	public static class Wrapper implements Comparable<Wrapper> {
 		String name; // for sorting
 		public Wrapper(String n) {
 			name = n;
@@ -90,14 +92,14 @@ public class GraphicalWordCounter extends Application {
 		}		
 	}
 	
-	static private class CharsetWrap extends Wrapper {
+	static class CharsetWrap extends Wrapper {
 		Charset charset;		
 		public CharsetWrap(Charset cs) {
 			super(cs.name());			
 			charset = cs;
 		}
 		static List<CharsetWrap> getAllCharsetWraps(){
-			SortedMap<String, Charset> smap = Charset.availableCharsets();
+			SortedMap<String, Charset> smap = GraphicalWordCounter.getCharsetMap();
 			Set<String> names = smap.keySet();
 			List<String> sortedNames = new ArrayList<String>(names);
 			Collections.sort(sortedNames);
@@ -127,6 +129,7 @@ public class GraphicalWordCounter extends Application {
 	protected FileChooser stopwordFileChooser = new FileChooser();
 	protected File stopsFile;
 	protected CheckBox cbStop = new CheckBox();
+	protected Button stopsBtn;
 	protected CheckBox cbGzip = new CheckBox();
 	// output format
 	protected ChoiceBox<String> outputFormat = new ChoiceBox<String>();
@@ -210,28 +213,36 @@ public class GraphicalWordCounter extends Application {
 			}
 		});
 		
-		
-
 		// lowercase
-		Label labLowercase = new Label("Lowercase:");
+		Text labLowercase = new Text("Lowercase:");
 		labLowercase.setDisable(true);
 				
 		// no numbers
 		cbLowercase.setSelected(true);
 		cbLowercase.setDisable(true); 
-		Label labNoNumbers = new Label("No numbers:");
+		Text labNoNumbers = new Text("No numbers:");
 				
 		// no currency
-		Label labNoCurrency = new Label("No currency:");
+		Text labNoCurrency = new Text("No currency:");
 
 		// locale
 		List<LocaleWrap> locs = LocaleWrap.getAllLocaleWraps();
 		listLocale = new ChoiceBox<LocaleWrap>(FXCollections.observableArrayList(locs));
 		LocaleWrap here = new LocaleWrap(Locale.getDefault());
 		listLocale.getSelectionModel().select(here);
-		Label labLocale = new Label("Locale:");
+		listLocale.setMaxWidth(Double.MAX_VALUE);
 		
-		System.err.println(listLocale.getItems().get(0).locale);
+		
+		// resize to maximum element (not a default behaviour)
+		double maxWidth = 0;
+	    for (Node n: listLocale.lookupAll(".text"))
+	    	maxWidth = Math.max(maxWidth, n.getBoundsInParent().getWidth() + 8);
+	    	
+	    listLocale.setPrefWidth(maxWidth);
+		
+		Text labLocale = new Text("Locale:");
+		
+		//System.err.println(listLocale.getItems().get(0).locale);
 		
 		// charsets
 		List<CharsetWrap> cs = CharsetWrap.getAllCharsetWraps();
@@ -239,11 +250,11 @@ public class GraphicalWordCounter extends Application {
 		Charset mine = Charset.defaultCharset();
 		CharsetWrap mywrap = new CharsetWrap(mine);
 		listCharset.getSelectionModel().select(mywrap);
-		Label labCharset = new Label("Encoding:");
+		Text labCharset = new Text("Encoding:");
 
 		// stem 
 		listStemming = new ChoiceBox<String>();
-		Label labStemming = new Label("Stem:");
+		Text labStemming = new Text("Stem:");
 		for (String lang : stemLangs)
 			listStemming.getItems().add(lang);
 		listStemming.getSelectionModel().select("English");
@@ -258,7 +269,7 @@ public class GraphicalWordCounter extends Application {
 		// output folder
 		final TextField dirDesc = new TextField();
 		dirDesc.setEditable(false);
-		Label labFolder = new Label("Output folder:");
+		Text labFolder = new Text("Output folder:");
 		Button btn = new Button("Choose");
 		btn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
@@ -272,17 +283,17 @@ public class GraphicalWordCounter extends Application {
 		});
 			
 		// output format
-		Label labFormat = new Label("Output format:");		
+		Text labFormat = new Text("Output format:");		
 		outputFormat.getItems().addAll("LDA-C", "Matrix Market");
 		outputFormat.getSelectionModel().select(0);
 		
 		// gzip output file
-		Label labGzip = new Label("GZIP data file:");
+		Text labGzip = new Text("GZIP data file:");
 			
 		// stopwords
 		stopsDesc.setEditable(false);
-		Label labStops = new Label("Remove stopwords:");
-		final Button stopsBtn = new Button("Choose");
+		Text labStops = new Text("Remove stopwords:");
+		stopsBtn = new Button("Choose");
 		stopsBtn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
@@ -340,8 +351,8 @@ public class GraphicalWordCounter extends Application {
 		outputFormat.setMaxWidth(150);
 		grid.add(outputFormat, 1, 8, 3, 1);
 		
-		grid.add(labGzip, 0, 9);
-		grid.add(cbGzip, 1, 9);	
+		//grid.add(labGzip, 0, 9);
+		//grid.add(cbGzip, 1, 9);	
 		
 		// make the splitpane
 		SplitPane sp = new SplitPane();
@@ -386,27 +397,50 @@ public class GraphicalWordCounter extends Application {
 		grid.add(goButton, 3, 10);
 		*/
 		primaryStage.setScene(scene);
+		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+			public void handle(WindowEvent wev) {
+				try {
+					saveGUIStateToPreferences();
+				} catch (BackingStoreException bse){
+					System.err.println("Could not save preferences");
+					bse.printStackTrace();
+				}
+			};
+		});
 		
 		//AquaFx.style();
 		
+		configureGUIFromPreferences();
 		primaryStage.show();
 	}
+	
+	
 	
 	protected void saveGUIStateToPreferences() throws BackingStoreException {
 		Preferences prefs = 
 				Preferences.userRoot().node("org.conjugateprior.jfreq");
 		prefs.putBoolean("remove_currency", cbNoCurrency.isSelected());
 		prefs.putBoolean("remove_numbers", cbNoNumbers.isSelected());
-		prefs.putBoolean("gzip_file_data", cbGzip.isSelected());
+		//prefs.putBoolean("gzip_file_data", cbGzip.isSelected());
 		prefs.putBoolean("remove_stopwords", cbStop.isSelected());
 		prefs.put("stopword_file", 
-			(stopsFile == null ? null : stopsFile.getAbsolutePath()));
+			(stopsFile == null ? "" : stopsFile.getAbsolutePath()));
 		prefs.putBoolean("stem", cbStem.isSelected());
 		String wrap = listStemming.getSelectionModel().getSelectedItem();
 		prefs.put("stem_language", wrap);
 		String oformat = outputFormat.getSelectionModel().getSelectedItem();
 		prefs.put("output_format", oformat);
+		String loc = listLocale.getSelectionModel().getSelectedItem().locale.toString();
+		prefs.put("locale", loc);
+		String cs = listCharset.getSelectionModel().getSelectedItem().charset.name();
+		prefs.put("charset", cs);
+		
 		prefs.flush();
+		/*
+		for (String k : prefs.keys()) {
+			System.err.println(k + " -> " + prefs.get(k, "NOTHING STORED"));
+		}
+		*/
 	}
 	
 	protected void configureGUIFromPreferences(){
@@ -414,28 +448,60 @@ public class GraphicalWordCounter extends Application {
 				Preferences.userRoot().node("org.conjugateprior.jfreq");
 		cbNoCurrency.setSelected(prefs.getBoolean("remove_currency", true));
 		cbNoNumbers.setSelected(prefs.getBoolean("remove_numbers", true));
-		cbGzip.setSelected(prefs.getBoolean("gzip_data_file", false));
-		cbStop.setSelected(prefs.getBoolean("remove_stopwords", false));
-		String sfile = prefs.get("stopword_file", null);
-		if (sfile != null){
+		//cbGzip.setSelected(prefs.getBoolean("gzip_data_file", false));
+		boolean removeStops = prefs.getBoolean("remove_stopwords", false);
+		cbStop.setSelected(removeStops);
+		stopsBtn.setDisable(!removeStops);
+		stopsDesc.setDisable(!removeStops);
+		
+		String sfile = prefs.get("stopword_file", "");
+		if (!sfile.equals("")){
 			File sf = new File(sfile);
 			if (sf.exists()){
 				stopsFile = sf;
 				stopsDesc.setText(stopsFile.getAbsolutePath());
 			}
 		}
-		cbStem.setSelected(prefs.getBoolean("stem", false));
-		sfile = prefs.get("stem_language", "English");		
-		if (sfile != null)
-			listStemming.getSelectionModel().select(sfile);
-		sfile = prefs.get("output_format", "LDA-C");		
-		if (sfile != null)
-			outputFormat.getSelectionModel().select("LDA-C");
+		boolean val = prefs.getBoolean("stem", false);
+		cbStem.setSelected(val);
+		listStemming.setDisable(!val);
+		String slang = prefs.get("stem_language", "English");		
+		listStemming.getSelectionModel().select(slang);
+		listStemming.setDisable(!val);
+		
+		String out = prefs.get("output_format", "LDA-C");			
+		outputFormat.getSelectionModel().select(out);
+		
 		// don't remember the output folder
+		String loc = prefs.get("locale", Locale.getDefault().toString());
+		for (Locale locale : Locale.getAvailableLocales()) {
+			if (loc.equals(locale.toString())){
+				listLocale.getSelectionModel().select(new LocaleWrap(locale));
+				break;
+			}
+		}
+		String enc = prefs.get("charset", Charset.defaultCharset().name());
+		Map<String,Charset> sets = GraphicalWordCounter.getCharsetMap();
+		for (String csname : sets.keySet()) {
+			if (csname.equals(enc)){
+				Charset theone = sets.get(csname);
+				listCharset.getSelectionModel().select(new CharsetWrap(theone));
+				break;
+			}
+		}
+		
 	}
 	
 	public static void main(String[] args) {
 		launch(args);
+	}
+	
+	// cached copy of this
+	static SortedMap <String, Charset> charsetMap;
+	static protected SortedMap<String, Charset> getCharsetMap(){
+		if (charsetMap == null)
+			charsetMap = Charset.availableCharsets();
+		return charsetMap;
 	}
 	
 	protected File[] getRecursiveDepthOneFileArray(String[] files) throws Exception {
