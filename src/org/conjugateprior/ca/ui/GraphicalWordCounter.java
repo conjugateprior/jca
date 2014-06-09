@@ -12,9 +12,21 @@ import java.util.SortedMap;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.reports.CSVFXCatDictCategoryCountPrinter;
+import org.conjugateprior.ca.reports.CountPrinter;
+import org.conjugateprior.ca.reports.MTXWordCountPrinter;
+import org.conjugateprior.ca.reports.WordCountPrinter;
+import org.conjugateprior.ca.reports.CountPrinter.CountingTask;
+import org.conjugateprior.ca.reports.LDACWordCountPrinter;
+import org.conjugateprior.ca.reports.WordCounter;
+import org.controlsfx.dialog.DialogStyle;
+import org.controlsfx.dialog.Dialogs;
+
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -278,6 +290,7 @@ public class GraphicalWordCounter extends Application {
 				if (f != null){
 					directory = f;
 					dirDesc.setText(directory.getAbsolutePath());
+					dirDesc.positionCaret(dirDesc.getText().length());
 				}
 			}
 		});
@@ -301,6 +314,7 @@ public class GraphicalWordCounter extends Application {
 				if (f != null){
 					stopsFile = f;
 					stopsDesc.setText(stopsFile.getAbsolutePath());
+					stopsDesc.positionCaret(stopsDesc.getText().length());
 				}
 			}
 		});
@@ -383,6 +397,13 @@ public class GraphicalWordCounter extends Application {
         BorderPane.setMargin(goButton, new Insets(10));
         BorderPane.setAlignment(goButton, Pos.CENTER);
         
+        goButton.setOnAction(new EventHandler<ActionEvent>() {
+        	@Override
+        	public void handle(ActionEvent ae) {
+        		processTheFiles();
+        	}
+        });
+        
         // add them
         sp.getItems().addAll(propertiespane, listpane);
         
@@ -414,6 +435,92 @@ public class GraphicalWordCounter extends Application {
 		primaryStage.show();
 	}
 	
+	protected void processTheFiles() {
+		if (directory.exists()){
+			Dialogs.create().style(DialogStyle.NATIVE).title("Output folder already exists")
+			.message("Please choose another output folder. This one already exists").showError();
+			return;
+		}
+		if (directory == null){
+			Dialogs.create().style(DialogStyle.NATIVE).title("No output folder")
+			.message("Please choose an output folder").showError();
+			return;
+		}
+		if (list.getItems().size() < 1)
+			return; // just don't do anything
+		
+		WordCounter counter = new WordCounter();
+		if (cbNoNumbers.isSelected())
+			counter.addNoNumberFilter();
+		if (cbNoCurrency.isSelected())
+			counter.addNoCurrencyFilter();
+		if (cbStop.isSelected()){
+			if (stopsFile == null){
+				Dialogs.create().style(DialogStyle.NATIVE).title("No stop word file")
+				.message("Please choose a file of stopwords or uncheck this option")
+				.showError();
+				return;
+			} else {
+				try {
+					counter.addStopwordFilter(stopsFile);
+				} catch (Exception ex){
+					Dialogs.create().style(DialogStyle.NATIVE).title("No stop word file")
+					.message("Please choose a file of stopwords or uncheck this option")
+					.showException(ex);
+					return;
+				}
+			}
+		}
+		if (cbStem.isSelected()){
+			try {
+				String stemWord = listStemming
+						.getSelectionModel().getSelectedItem();
+				counter.addStemmingFilter(stemWord.toLowerCase());
+			} catch (Exception ex){
+				Dialogs.create().style(DialogStyle.NATIVE).title("Problem with stemmer")
+				.message("There was a problem with the stemmer")
+				.showException(ex);
+				return;
+			}
+		}
+		CountPrinter printer = null;
+		if (outputFormat.getSelectionModel().selectedItemProperty().get().equals("LDA-C"))
+			printer = new LDACWordCountPrinter(counter, 
+					directory, 
+					listCharset.getSelectionModel().getSelectedItem().charset, 
+					listLocale.getSelectionModel().getSelectedItem().locale, 
+					list.getItems().toArray(new File[0]));
+		else if (outputFormat.getSelectionModel().selectedItemProperty().get().equals("Matrix Market")){
+			printer = new MTXWordCountPrinter(counter, 
+					directory, 
+					listCharset.getSelectionModel().getSelectedItem().charset, 
+					listLocale.getSelectionModel().getSelectedItem().locale, 
+					list.getItems().toArray(new File[0]));
+		}
+		CountingTask task = printer.getNewCountingTask();
+        /*
+		task.setOnFailed(new EventHandler<WorkerStateEvent>() {
+        	   @Override public void handle(WorkerStateEvent t) {
+        		     Throwable ouch = task.getException();
+        		     Dialogs.create()
+        		        .title("Error").style(DialogStyle.NATIVE)
+        		        .showException(ouch);
+        		     System.out.println(ouch.getClass().getName() + " -> " + ouch.getMessage());
+        		   }
+        		 });
+        */
+        Dialogs.create().style(DialogStyle.NATIVE).showWorkerProgress(task);
+		
+		Thread th = new Thread(task);
+        th.setDaemon(true);
+       	th.start();
+       	
+       	Throwable thro = task.getException();
+        if (thro != null)
+        	Dialogs.create()
+	        .title("Error").style(DialogStyle.NATIVE)
+	        .showException(thro);
+	}
 	
 	
 	protected void saveGUIStateToPreferences() throws BackingStoreException {
