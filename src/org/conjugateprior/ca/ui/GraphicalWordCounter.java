@@ -12,17 +12,6 @@ import java.util.SortedMap;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import org.conjugateprior.ca.IYoshikoderDocument;
-import org.conjugateprior.ca.reports.CSVFXCatDictCategoryCountPrinter;
-import org.conjugateprior.ca.reports.CountPrinter;
-import org.conjugateprior.ca.reports.MTXWordCountPrinter;
-import org.conjugateprior.ca.reports.WordCountPrinter;
-import org.conjugateprior.ca.reports.CountPrinter.CountingTask;
-import org.conjugateprior.ca.reports.LDACWordCountPrinter;
-import org.conjugateprior.ca.reports.WordCounter;
-import org.controlsfx.dialog.DialogStyle;
-import org.controlsfx.dialog.Dialogs;
-
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -30,7 +19,9 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -38,7 +29,10 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Separator;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.DragEvent;
@@ -48,12 +42,23 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+
+import org.conjugateprior.ca.exp.FXCatDict;
+import org.conjugateprior.ca.reports.CSVFXCatDictCategoryCountPrinter;
+import org.conjugateprior.ca.reports.CountPrinter;
+import org.conjugateprior.ca.reports.CountPrinter.CountingTask;
+import org.conjugateprior.ca.reports.LDACWordCountPrinter;
+import org.conjugateprior.ca.reports.MTXWordCountPrinter;
+import org.conjugateprior.ca.reports.WordCounter;
+import org.controlsfx.dialog.DialogStyle;
+import org.controlsfx.dialog.Dialogs;
 
 public class GraphicalWordCounter extends Application {
 
@@ -125,9 +130,10 @@ public class GraphicalWordCounter extends Application {
 		}
 	}
 	
-	// TODO
-	protected String[] stemLangs = new String[]{"English", 
-		"French", "German", "Russian", "Dutch"};
+	protected String[] stemLangs = new String[]{
+		"Danish", "Dutch", "English", "Finnish", "German", "Hungarian", "Italian",
+		"Norwegian", "Portuguese", "Romanian", "Russian", 
+		"Spanish", "Swedish", "Turkish"};
 	
 	protected CheckBox cbLowercase = new CheckBox();
 	protected CheckBox cbNoNumbers = new CheckBox();
@@ -142,11 +148,23 @@ public class GraphicalWordCounter extends Application {
 	protected File stopsFile;
 	protected CheckBox cbStop = new CheckBox();
 	protected Button stopsBtn;
+	
+	protected FXCatDict dictionary;
+	
+	// dict stuff 
+	protected FileChooser dictFileChooser = new FileChooser();
+	protected File dictFile;
+	protected CheckBox cbDict = new CheckBox();
+	protected Button dictBtn;
+	
 	protected CheckBox cbGzip = new CheckBox();
 	// output format
 	protected ChoiceBox<String> outputFormat = new ChoiceBox<String>();
-	protected TextField stopsDesc = new TextField();
 	
+	protected TextField stopsDesc = new TextField();
+	protected TextField dictDesc = new TextField();
+	
+	protected Text labStops, labStemming, labNoNumbers, labNoCurrency;
 	// go
 	protected Button goButton = new Button("PROCESS");
 	
@@ -232,10 +250,10 @@ public class GraphicalWordCounter extends Application {
 		// no numbers
 		cbLowercase.setSelected(true);
 		cbLowercase.setDisable(true); 
-		Text labNoNumbers = new Text("No numbers:");
+		labNoNumbers = new Text("No numbers:");
 				
 		// no currency
-		Text labNoCurrency = new Text("No currency:");
+		labNoCurrency = new Text("No currency:");
 
 		// locale
 		List<LocaleWrap> locs = LocaleWrap.getAllLocaleWraps();
@@ -243,18 +261,14 @@ public class GraphicalWordCounter extends Application {
 		LocaleWrap here = new LocaleWrap(Locale.getDefault());
 		listLocale.getSelectionModel().select(here);
 		listLocale.setMaxWidth(Double.MAX_VALUE);
-		
-		
+				
 		// resize to maximum element (not a default behaviour)
 		double maxWidth = 0;
 	    for (Node n: listLocale.lookupAll(".text"))
 	    	maxWidth = Math.max(maxWidth, n.getBoundsInParent().getWidth() + 8);
 	    	
 	    listLocale.setPrefWidth(maxWidth);
-		
 		Text labLocale = new Text("Locale:");
-		
-		//System.err.println(listLocale.getItems().get(0).locale);
 		
 		// charsets
 		List<CharsetWrap> cs = CharsetWrap.getAllCharsetWraps();
@@ -266,7 +280,7 @@ public class GraphicalWordCounter extends Application {
 
 		// stem 
 		listStemming = new ChoiceBox<String>();
-		Text labStemming = new Text("Stem:");
+		labStemming = new Text("Stem:");
 		for (String lang : stemLangs)
 			listStemming.getItems().add(lang);
 		listStemming.getSelectionModel().select("English");
@@ -277,7 +291,7 @@ public class GraphicalWordCounter extends Application {
 		    }
 		});
 		listStemming.setDisable(!cbStem.isSelected());
-
+		
 		// output folder
 		final TextField dirDesc = new TextField();
 		dirDesc.setEditable(false);
@@ -299,13 +313,10 @@ public class GraphicalWordCounter extends Application {
 		Text labFormat = new Text("Output format:");		
 		outputFormat.getItems().addAll("LDA-C", "Matrix Market");
 		outputFormat.getSelectionModel().select(0);
-		
-		// gzip output file
-		Text labGzip = new Text("GZIP data file:");
 			
 		// stopwords
 		stopsDesc.setEditable(false);
-		Text labStops = new Text("Remove stopwords:");
+		labStops = new Text("Remove stopwords:");
 		stopsBtn = new Button("Choose");
 		stopsBtn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
@@ -330,40 +341,112 @@ public class GraphicalWordCounter extends Application {
 		stopsBtn.setDisable(sel);
 		stopsDesc.setDisable(sel);
 		
-		grid.add(labLocale, 0, 0);
+		// dictionary
+		Text labDict = new Text("Apply dictionary:");
+		
+		dictBtn = new Button("Choose");
+		dictBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				File f = dictFileChooser.showOpenDialog(primaryStage);
+				if (f != null){
+					try {
+						dictionary = getCategoryDictionaryFromFile(f);
+						dictDesc.setText(f.getAbsolutePath());
+						dictDesc.positionCaret(dictDesc.getText().length());
+					} catch (Exception ex){
+						Dialogs.create().style(DialogStyle.NATIVE)
+						.title("Could not read dictionary file")
+						.message(ex.getMessage())
+						.showException(ex);
+					}
+				}
+			}
+		});
+		cbDict.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent arg0) {
+				boolean sel = !cbDict.isSelected();
+				dictBtn.setDisable(sel);
+				dictDesc.setDisable(sel);
+			}
+		});
+		sel = !cbDict.isSelected();
+		dictBtn.setDisable(sel);
+		dictDesc.setDisable(sel);
+
+		cbDict.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent arg0) {
+				boolean sel = !cbDict.isSelected();
+				setWordsRatherThanCategories(sel);
+			}
+		});
+		sel = !cbDict.isSelected();
+		setWordsRatherThanCategories(sel);
+		
+		//////////////////////
+		int row = 0;
+		
+		grid.add(labLocale, 0, row);
 		listLocale.setMaxWidth(Double.MAX_VALUE);
-		grid.add(listLocale, 1, 0, 3, 1);
-
-		grid.add(labCharset, 0, 1);
+		grid.add(listLocale, 1, row, 3, 1);
+		row++;
+		
+		grid.add(labCharset, 0, row);
 		listCharset.setMaxWidth(Double.MAX_VALUE);
-		grid.add(listCharset, 1, 1, 3, 1);
-
-		grid.add(labLowercase, 0, 2);
-		grid.add(cbLowercase, 1, 2);
-
-		grid.add(labNoNumbers, 0, 3);
-		grid.add(cbNoNumbers, 1, 3);
-
-		grid.add(labNoCurrency, 0, 4);
-		grid.add(cbNoCurrency, 1, 4);
-	
-		grid.add(labStops, 0, 5);
-		grid.add(cbStop, 1, 5);
-		grid.add(stopsDesc, 2, 5);
-		grid.add(stopsBtn, 3, 5);	
-				
-		grid.add(labStemming, 0, 6);
-		grid.add(cbStem, 1, 6);
+		grid.add(listCharset, 1, row, 3, 1);
+		row++;
+		
+		grid.add(new Separator(Orientation.HORIZONTAL), 0, row, 5, 1);
+		row++;
+		
+		// dictionary
+		grid.add(labDict, 0, row);
+		grid.add(cbDict, 1, row);
+		grid.add(dictDesc, 2, row);
+		grid.add(dictBtn, 3, row);
+		row++;
+		
+		grid.add(new Separator(Orientation.HORIZONTAL), 0, row, 5, 1);
+		row++;
+		
+		grid.add(labLowercase, 0, row);
+		grid.add(cbLowercase, 1, row);
+		row++;
+		
+		grid.add(labNoNumbers, 0, row);
+		grid.add(cbNoNumbers, 1, row);
+		row++;
+		
+		grid.add(labNoCurrency, 0, row);
+		grid.add(cbNoCurrency, 1, row);
+		row++;
+		
+		grid.add(labStops, 0, row);
+		grid.add(cbStop, 1, row);
+		grid.add(stopsDesc, 2, row);
+		grid.add(stopsBtn, 3, row);	
+		row++;
+		
+		grid.add(labStemming, 0, row);
+		grid.add(cbStem, 1, row);
 		//listStemming.setMaxWidth(Double.MAX_VALUE);
-		grid.add(listStemming, 2, 6, 3, 1);
+		grid.add(listStemming, 2, row, 3, 1);
+		row++;
 		
-		grid.add(labFolder, 0, 7);
-		grid.add(dirDesc, 1, 7, 2, 1);
-		grid.add(btn, 3, 7);	
-		
-		grid.add(labFormat, 0, 8);
+		grid.add(labFormat, 0, row);
 		outputFormat.setMaxWidth(150);
-		grid.add(outputFormat, 1, 8, 3, 1);
+		grid.add(outputFormat, 1, row, 3, 1);
+		row++;
+			
+		grid.add(new Separator(Orientation.HORIZONTAL), 0, row, 5, 1);
+		row++;
+		
+		grid.add(labFolder, 0, row);
+		grid.add(dirDesc, 1, row, 2, 1);
+		grid.add(btn, 3, row);	
+		row++;
 		
 		//grid.add(labGzip, 0, 9);
 		//grid.add(cbGzip, 1, 9);	
@@ -372,12 +455,14 @@ public class GraphicalWordCounter extends Application {
 		SplitPane sp = new SplitPane();
 		
 		// left hand side
-        Label lab1 = new Label("Document Properties");
+        
+		Label lab1 = new Label("Processing");
         lab1.setFont(Font.font(null, FontWeight.BOLD, 20));
         lab1.setPadding(new Insets(20,10,20,10));
         lab1.setAlignment(Pos.CENTER);
-        
+                
         BorderPane propertiespane = new BorderPane();
+        
         propertiespane.setTop(lab1);
         BorderPane.setAlignment(lab1, Pos.CENTER);
         
@@ -408,15 +493,26 @@ public class GraphicalWordCounter extends Application {
         sp.getItems().addAll(propertiespane, listpane);
         
         
-        
+        final BorderPane rootGroup = new BorderPane();
+        //rootGroup.setPadding(new Insets(0));
 		//grid.setGridLinesVisible(true);
-		Scene scene = new Scene(sp, 1000, 550); 
+		
+		MenuBar mbar = new MenuBar();
+		final Menu menu1 = new Menu("File");
+		final Menu menu2 = new Menu("Edit");
+		final Menu menu3 = new Menu("Help");
+		mbar.getMenus().addAll(menu1, menu2, menu3);
+		//mbar.setUseSystemMenuBar(true);
+		rootGroup.setTop(mbar); 
+        rootGroup.setCenter(sp);
+        Scene scene = new Scene(rootGroup, 1000, 550);
 		
 		/*
 		progressBar.setMaxWidth(Double.MAX_VALUE);
 		grid.add(progressBar, 0, 10, 3, 1);
 		grid.add(goButton, 3, 10);
 		*/
+        
 		primaryStage.setScene(scene);
 		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			public void handle(WindowEvent wev) {
@@ -432,15 +528,106 @@ public class GraphicalWordCounter extends Application {
 		//AquaFx.style();
 		
 		configureGUIFromPreferences();
+		
 		primaryStage.show();
 	}
 	
+	protected Label makeLabel(String s){
+        Label tt = new Label(s);
+        tt.setFont(Font.font(null, FontWeight.BOLD, 12));
+        tt.setPadding(new Insets(10,0,0,0));
+        return tt;
+	}
+	
+	protected FXCatDict getCategoryDictionaryFromFile(File sf) throws Exception {
+		if (!sf.exists()){
+			throw new Exception("Dictionary file cannot be found at"
+					+ sf.getAbsolutePath());
+		}
+		FXCatDict dict = null;
+		String fname = sf.getName();
+		if (fname.toLowerCase().endsWith(".ykd") || 
+			fname.toLowerCase().endsWith(".lcd")){
+			dict = FXCatDict.readXmlCategoryDictionaryFromFile(sf); 	
+		
+		} else if (fname.toLowerCase().endsWith(".vbpro")){
+			dict = FXCatDict.importCategoryDictionaryFromFileVBPRO(sf); 
+		
+		} else if (fname.toLowerCase().endsWith(".cat")){
+			dict = FXCatDict.importCategoryDictionaryFromFileWordstat(sf);
+		
+		} else if (fname.toLowerCase().endsWith(".xml")) {
+			// windows or server .xml addition?
+			dict = FXCatDict.readXmlCategoryDictionaryFromFile(sf); 
+				
+		} else {
+			throw new Exception(
+					"Dictionary file format could not be identified." +
+				    "It must be a Yoshikoder ('.ykd'), Lexicoder ('.lcd'), " +
+				    "Wordstat ('.CAT'), or VBPro ('.vbpro') file");
+		}
+		return dict;
+	}
+	
+	protected void setWordsRatherThanCategories(boolean onoff){
+		if (onoff){
+			// doesn't quite work as expected, ah well
+			labStops.setDisable(false);
+			labStemming.setDisable(false);
+			labNoCurrency.setDisable(false);
+			labNoNumbers.setDisable(false);
+			
+			cbNoCurrency.setDisable(false);
+			cbNoNumbers.setDisable(false);
+			
+			cbStem.setDisable(false);
+			if (cbStem.isSelected())
+				listStemming.setDisable(false);
+			
+			cbStop.setDisable(false);
+			if (cbStop.isSelected()){
+			  stopsBtn.setDisable(false);
+			  stopsDesc.setDisable(false);
+			}
+			// cbDict is off
+			dictDesc.setDisable(true);
+			dictBtn.setDisable(true);
+			
+			outputFormat.setDisable(false);
+			
+		} else {
+			labStops.setDisable(true);
+			labStemming.setDisable(true);
+			labNoCurrency.setDisable(true);
+			labNoNumbers.setDisable(true);
+			
+			cbNoCurrency.setDisable(true);
+			cbNoNumbers.setDisable(true);
+			
+			cbStem.setDisable(true);
+			listStemming.setDisable(true);
+			
+			cbStop.setDisable(true);
+			stopsBtn.setDisable(true);
+			stopsDesc.setDisable(true);
+			
+			// cbDict is off
+			dictDesc.setDisable(false);
+			dictBtn.setDisable(false);
+
+			outputFormat.setDisable(true);
+
+		}
+	}
+	
 	protected void processTheFiles() {
+		/*
 		if (directory.exists()){
 			Dialogs.create().style(DialogStyle.NATIVE).title("Output folder already exists")
 			.message("Please choose another output folder. This one already exists").showError();
 			return;
 		}
+		*/
 		if (directory == null){
 			Dialogs.create().style(DialogStyle.NATIVE).title("No output folder")
 			.message("Please choose an output folder").showError();
@@ -449,77 +636,87 @@ public class GraphicalWordCounter extends Application {
 		if (list.getItems().size() < 1)
 			return; // just don't do anything
 		
-		WordCounter counter = new WordCounter();
-		if (cbNoNumbers.isSelected())
-			counter.addNoNumberFilter();
-		if (cbNoCurrency.isSelected())
-			counter.addNoCurrencyFilter();
-		if (cbStop.isSelected()){
-			if (stopsFile == null){
-				Dialogs.create().style(DialogStyle.NATIVE).title("No stop word file")
-				.message("Please choose a file of stopwords or uncheck this option")
-				.showError();
-				return;
-			} else {
-				try {
-					counter.addStopwordFilter(stopsFile);
-				} catch (Exception ex){
+		CountPrinter printer = null;
+		if (!cbDict.isSelected()){
+
+			WordCounter counter = new WordCounter();
+			if (cbNoNumbers.isSelected())
+				counter.addNoNumberFilter();
+			if (cbNoCurrency.isSelected())
+				counter.addNoCurrencyFilter();
+			if (cbStop.isSelected()){
+				if (stopsFile == null){
 					Dialogs.create().style(DialogStyle.NATIVE).title("No stop word file")
 					.message("Please choose a file of stopwords or uncheck this option")
+					.showError();
+					return;
+				} else {
+					try {
+						counter.addStopwordFilter(stopsFile);
+					} catch (Exception ex){
+						Dialogs.create().style(DialogStyle.NATIVE).title("No stop word file")
+						.message("Please choose a file of stopwords or uncheck this option")
+						.showException(ex);
+						return;
+					}
+				}
+			}
+			if (cbStem.isSelected()){
+				try {
+					String stemWord = listStemming
+							.getSelectionModel().getSelectedItem();
+					counter.addStemmingFilter(stemWord.toLowerCase());
+				} catch (Exception ex){
+					Dialogs.create().style(DialogStyle.NATIVE).title("Problem with stemmer")
+					.message("There was a problem with the stemmer")
 					.showException(ex);
 					return;
 				}
 			}
-		}
-		if (cbStem.isSelected()){
-			try {
-				String stemWord = listStemming
-						.getSelectionModel().getSelectedItem();
-				counter.addStemmingFilter(stemWord.toLowerCase());
-			} catch (Exception ex){
-				Dialogs.create().style(DialogStyle.NATIVE).title("Problem with stemmer")
-				.message("There was a problem with the stemmer")
-				.showException(ex);
+			if (outputFormat.getSelectionModel().selectedItemProperty().get().equals("LDA-C"))
+				printer = new LDACWordCountPrinter(counter, 
+						directory, 
+						listCharset.getSelectionModel().getSelectedItem().charset, 
+						listLocale.getSelectionModel().getSelectedItem().locale, 
+						list.getItems().toArray(new File[0]));
+			else if (outputFormat.getSelectionModel().selectedItemProperty().get().equals("Matrix Market")){
+				printer = new MTXWordCountPrinter(counter, 
+						directory, 
+						listCharset.getSelectionModel().getSelectedItem().charset, 
+						listLocale.getSelectionModel().getSelectedItem().locale, 
+						list.getItems().toArray(new File[0]));
+			}
+		} else {
+			if (dictionary == null){
+				Dialogs.create().style(DialogStyle.NATIVE).title("No dictionary")
+				.message("Please choose a dictionary to apply").showError();
 				return;
 			}
+			
+			Charset cs = listCharset.getSelectionModel().getSelectedItem().charset;
+			Locale ll = listLocale.getSelectionModel().getSelectedItem().locale;
+			printer = new CSVFXCatDictCategoryCountPrinter(dictionary, 
+				directory, "data.csv", list.getItems().toArray(new File[0]),
+				cs, ll);
+			
 		}
-		CountPrinter printer = null;
-		if (outputFormat.getSelectionModel().selectedItemProperty().get().equals("LDA-C"))
-			printer = new LDACWordCountPrinter(counter, 
-					directory, 
-					listCharset.getSelectionModel().getSelectedItem().charset, 
-					listLocale.getSelectionModel().getSelectedItem().locale, 
-					list.getItems().toArray(new File[0]));
-		else if (outputFormat.getSelectionModel().selectedItemProperty().get().equals("Matrix Market")){
-			printer = new MTXWordCountPrinter(counter, 
-					directory, 
-					listCharset.getSelectionModel().getSelectedItem().charset, 
-					listLocale.getSelectionModel().getSelectedItem().locale, 
-					list.getItems().toArray(new File[0]));
-		}
+		
 		CountingTask task = printer.getNewCountingTask();
-        /*
+     
 		task.setOnFailed(new EventHandler<WorkerStateEvent>() {
-        	   @Override public void handle(WorkerStateEvent t) {
-        		     Throwable ouch = task.getException();
-        		     Dialogs.create()
-        		        .title("Error").style(DialogStyle.NATIVE)
-        		        .showException(ouch);
-        		     System.out.println(ouch.getClass().getName() + " -> " + ouch.getMessage());
-        		   }
-        		 });
-        */
-        Dialogs.create().style(DialogStyle.NATIVE).showWorkerProgress(task);
+			@Override public void handle(WorkerStateEvent t) {
+				Throwable ouch = task.getException();
+				Dialogs.create()
+				.title("Error").style(DialogStyle.NATIVE)
+				.showException(ouch);
+			}
+		});
+        		
+		Dialogs.create().style(DialogStyle.NATIVE).showWorkerProgress(task);
 		
 		Thread th = new Thread(task);
         th.setDaemon(true);
        	th.start();
-       	
-       	Throwable thro = task.getException();
-        if (thro != null)
-        	Dialogs.create()
-	        .title("Error").style(DialogStyle.NATIVE)
-	        .showException(thro);
 	}
 	
 	
@@ -541,6 +738,10 @@ public class GraphicalWordCounter extends Application {
 		prefs.put("locale", loc);
 		String cs = listCharset.getSelectionModel().getSelectedItem().charset.name();
 		prefs.put("charset", cs);
+		
+		prefs.putBoolean("dictionary", cbDict.isSelected());
+		prefs.put("dictionary_file", 
+			(dictDesc.getText() == null ? "" : dictDesc.getText()));
 		
 		prefs.flush();
 		/*
@@ -569,6 +770,7 @@ public class GraphicalWordCounter extends Application {
 				stopsDesc.setText(stopsFile.getAbsolutePath());
 			}
 		}
+				
 		boolean val = prefs.getBoolean("stem", false);
 		cbStem.setSelected(val);
 		listStemming.setDisable(!val);
@@ -596,6 +798,24 @@ public class GraphicalWordCounter extends Application {
 				break;
 			}
 		}
+		
+		// finally, do the dictionary and switchoff anything that
+		// ought to be switched off
+		boolean usedict = prefs.getBoolean("dictionary", false);
+		String dfile = prefs.get("dictionary_file", "");
+		if (!dfile.equals("")){
+			try {
+				File sf = new File(dfile);
+				dictionary = getCategoryDictionaryFromFile(sf);
+				dictDesc.setText(sf.getAbsolutePath());
+			} catch (Exception ex){
+				//
+			}
+		}
+		if (usedict)
+			cbDict.setSelected(true);
+		setWordsRatherThanCategories(!usedict);
+
 		
 	}
 	

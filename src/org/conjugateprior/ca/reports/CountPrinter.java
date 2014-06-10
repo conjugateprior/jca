@@ -127,10 +127,19 @@ public abstract class CountPrinter implements ICountPrinter {
             updateMessage("Failed!");
         }
 		
+        protected void overwritingPreprocess() throws Exception {
+        	if (!folder.exists()){
+        		boolean b = folder.mkdir();
+    			if (!b) throw new Exception("Could not create all the folder elements in " + 
+    				folder.getAbsolutePath());
+        	}
+        }
+        
 		@Override
 		protected Void call() throws Exception {
 			double max = (double)getMaxProgress();
-			preProcess();
+			//preProcess();
+			overwritingPreprocess(); // bc the interface will have checked
 			updateProgress(1.0, max);
 			
 			boolean interrupted = writeDF();

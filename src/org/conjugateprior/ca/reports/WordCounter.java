@@ -21,6 +21,7 @@ import org.tartarus.snowball.ext.danishStemmer;
 import org.tartarus.snowball.ext.dutchStemmer;
 import org.tartarus.snowball.ext.englishStemmer;
 import org.tartarus.snowball.ext.finnishStemmer;
+import org.tartarus.snowball.ext.frenchStemmer;
 import org.tartarus.snowball.ext.germanStemmer;
 import org.tartarus.snowball.ext.hungarianStemmer;
 import org.tartarus.snowball.ext.italianStemmer;
@@ -100,6 +101,7 @@ public class WordCounter {
 	
 	protected Stemmer getStemmerByName(String name){
 		if (name.equals("english")) return new Stemmer(new englishStemmer());
+		else if (name.equals("french")) return new Stemmer(new frenchStemmer());
 		else if (name.equals("dutch")) return new Stemmer(new dutchStemmer()); 
 		else if (name.equals("danish")) return new Stemmer(new danishStemmer()); 
 		else if (name.equals("finnish")) return new Stemmer(new finnishStemmer()); 
