@@ -553,6 +553,9 @@ public class GraphicalWordCounter extends Application {
 		} else if (fname.toLowerCase().endsWith(".vbpro")){
 			dict = FXCatDict.importCategoryDictionaryFromFileVBPRO(sf); 
 		
+		} else if (fname.toLowerCase().endsWith(".dic")){
+			dict = FXCatDict.importCategoryDictionaryFromFileLIWC(sf); 
+		
 		} else if (fname.toLowerCase().endsWith(".cat")){
 			dict = FXCatDict.importCategoryDictionaryFromFileWordstat(sf);
 		
@@ -562,9 +565,9 @@ public class GraphicalWordCounter extends Application {
 				
 		} else {
 			throw new Exception(
-					"Dictionary file format could not be identified." +
+					"Dictionary file format could not be read." +
 				    "It must be a Yoshikoder ('.ykd'), Lexicoder ('.lcd'), " +
-				    "Wordstat ('.CAT'), or VBPro ('.vbpro') file");
+				    "Wordstat ('.CAT'), LIWC (.dic), or VBPro ('.vbpro') file");
 		}
 		return dict;
 	}

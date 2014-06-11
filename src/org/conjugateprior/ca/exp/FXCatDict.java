@@ -9,8 +9,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -185,15 +187,57 @@ public class FXCatDict {
 		}
 	}
 	
+	// the .dic files that LIWC uses
+	public static FXCatDict importCategoryDictionaryFromFileLIWC(File f) throws Exception {
+		
+		Matcher pm = Pattern.compile("(\\d+)\\t(\\w+)\\t*").matcher("");
+		Matcher en = Pattern.compile("([\\w*]+)([\\t\\d+]+)").matcher("");
+
+		FXCatDict dict = new FXCatDict(f.getName());
+		try (
+				InputStreamReader osw = new InputStreamReader(
+						new FileInputStream(f), Charset.forName("UTF8"));
+				BufferedReader reader = new BufferedReader(osw);
+			){
+
+			Map<Integer,TreeItem<DCat>> id2cat = 
+					new HashMap<Integer,TreeItem<DCat>>();
+			String line = null;
+			while ((line = reader.readLine()) != null){
+				pm.reset(line);
+				en.reset(line);
+
+				if (pm.matches()){
+					TreeItem<DCat> cat = new TreeItem<DCat>(new DCat(pm.group(2), null));
+					id2cat.put(Integer.parseInt(pm.group(1)), cat);
+					dict.addCategoryToParentCategory(cat,
+							dict.getCategoryRoot());
+				} else if (en.matches()){					
+					String wd = en.group(1);
+					String[] ids = en.group(2).split("\t");
+					for (String str : ids) {
+						if (!str.equals("")){
+							TreeItem<DCat> cat = id2cat.get(Integer.parseInt(str));
+							dict.addPatternToCategory(wd, cat);
+						}
+					}
+				} else {
+					//
+				}
+			}
+		} 
+		return dict;
+	}
+	
 	public static FXCatDict importCategoryDictionaryFromFileVBPRO(File f) throws Exception {
 		
-		BufferedReader reader = null;
 		FXCatDict d = null;
-		try {
+		try (
 			InputStreamReader osw = new InputStreamReader(
 					new FileInputStream(f), Charset.forName("UTF8"));
-			reader = new BufferedReader(osw);
-			d = new FXCatDict("New Dictionary");
+			BufferedReader reader = new BufferedReader(osw);
+		){
+			d = new FXCatDict(f.getName());
 			String line = null;
 			d.getCategoryRoot().getValue().setName("Dictionary");
 			TreeItem<DCat> currentCat = d.getCategoryRoot();
@@ -209,23 +253,20 @@ public class FXCatDict {
 					d.addPatternToCategory(line.trim(), currentCat);
 				}
 			}
-		} finally {
-			if (reader != null)
-				reader.close();
 		}
 		return d;
 	}
 
 	public static FXCatDict importCategoryDictionaryFromFileWordstat(File f) throws Exception {
 		
-		BufferedReader reader = null;
 		FXCatDict d = null;
-		try {
+		try (
 			InputStreamReader osw = new InputStreamReader(
 					new FileInputStream(f), Charset.forName("UTF8"));
-			reader = new BufferedReader(osw);
+			BufferedReader reader = new BufferedReader(osw);
+		){
 			reader.read(); // BOM
-			d = new FXCatDict("New Dictionary");
+			d = new FXCatDict(f.getName());
 			String line = null;
 			d.getCategoryRoot().getValue().setName("Dictionary");
 			TreeItem<DCat> currentCat = d.getCategoryRoot();
@@ -246,9 +287,6 @@ public class FXCatDict {
 							d.getCategoryRoot());
 				}
 			}
-		} finally {
-			if (reader != null)
-				reader.close();
 		}
 		return d;
 	}
@@ -509,7 +547,12 @@ public class FXCatDict {
 	public static void main(String[] args) throws Exception {
 		File f = new File("/Users/will/Documents/scratch/2007_abortion_dictionary.ykd");
 		FXCatDict dict = FXCatDict.readXmlCategoryDictionaryFromFile(f);
-        System.out.println(dict);
+        //System.out.println(dict);
+        
+        f = new File("/Applications/LIWC2007/Dictionaries/LIWC2001_German.dic");
+		dict = FXCatDict.importCategoryDictionaryFromFileLIWC(f);
+        //System.out.println(dict);
+        
 	}
 
 }

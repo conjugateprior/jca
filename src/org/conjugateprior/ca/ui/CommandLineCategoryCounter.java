@@ -12,9 +12,10 @@ import java.util.Locale;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-import org.conjugateprior.ca.CategoryDictionary;
-import org.conjugateprior.ca.reports.CSVCategoryCountPrinter;
-import org.conjugateprior.ca.reports.CSVOldCategoryCountPrinter;
+import org.conjugateprior.ca.exp.FXCatDict;
+import org.conjugateprior.ca.reports.CSVFXCatDictCategoryCountPrinter;
+import org.conjugateprior.ca.reports.CSVOldFXCatDictCategoryCountPrinter;
+import org.conjugateprior.ca.reports.CountPrinter;
 
 public class CommandLineCategoryCounter extends CommandLineApplication {
 
@@ -24,7 +25,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 	protected boolean oldMatchStrategy = false;
 	protected File[] filesToProcess;
 	
-	protected CategoryDictionary dict;
+	protected FXCatDict dict;
 		
 	@Override
 	protected String getUsageString() {
@@ -99,23 +100,26 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 			
 			if (fname.toLowerCase().endsWith(".ykd") || 
 				fname.toLowerCase().endsWith(".lcd")){
-				dict = CategoryDictionary.readXmlCategoryDictionaryFromFile(sf); 	
+				dict = FXCatDict.readXmlCategoryDictionaryFromFile(sf); 	
 			
 			} else if (fname.toLowerCase().endsWith(".vbpro")){
-				dict = CategoryDictionary.importCategoryDictionaryFromFileVBPRO(sf); 
+				dict = FXCatDict.importCategoryDictionaryFromFileVBPRO(sf); 
 			
 			} else if (fname.toLowerCase().endsWith(".cat")){
-				dict = CategoryDictionary.importCategoryDictionaryFromFileWordstat(sf);
+				dict = FXCatDict.importCategoryDictionaryFromFileWordstat(sf);
+			
+			} else if (fname.toLowerCase().endsWith(".dic")){
+				dict = FXCatDict.importCategoryDictionaryFromFileLIWC(sf);
 			
 			} else if (fname.toLowerCase().endsWith(".xml")) {
 				// windows or server .xml addition?
-				dict = CategoryDictionary.readXmlCategoryDictionaryFromFile(sf); 
+				dict = FXCatDict.readXmlCategoryDictionaryFromFile(sf); 
 					
 			} else {
 				throw new Exception(
 						"Dictionary file format could not be identified.\n" +
 					    "It must be a Yoshikoder ('.ykd'), Lexicoder ('.lcd'), " +
-					    "Wordstat ('.CAT'), or VBPro ('.vbpro') file\n");
+					    "Wordstat ('.CAT'), LIWC (.dic), or VBPro ('.vbpro') file\n");
 			}
 		}
 		oldMatchStrategy = line.hasOption("oldmatching");
@@ -136,22 +140,23 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		System.out.println("  Dictionary file: " + 
 				line.getOptionValue("dictionary"));
 		System.err.println("  Using old pattern matching strategy? " + oldMatchStrategy);
-		System.err.println("  Output CSV file encoding: " + 
-				(onWindows() ? "windows-1252 ('Latin 1')" : "UTF8"));
-		System.err.println("  Output file line endings: " + 
-				(onWindows() ? "\\r\\n (Windows style)" : "\\n (Unix style)"));
+		//System.err.println("  Output CSV file encoding: " + 
+		//		(onWindows() ? "windows-1252 ('Latin 1')" : "UTF8"));
+		//System.err.println("  Output file line endings: " + 
+		//		(onWindows() ? "\\r\\n (Windows style)" : "\\n (Unix style)"));
 
-		CSVCategoryCountPrinter printer = null;
+		CountPrinter printer = null;
 		if (oldMatchStrategy){
-			printer = new CSVOldCategoryCountPrinter(dict, 
-				tOutputfile, tEncoding, tLocale, filesToProcess);
+			printer = new CSVOldFXCatDictCategoryCountPrinter(dict, 
+				tOutputfile, "data.csv", filesToProcess, tEncoding, tLocale);
 		} else {
-			printer = new CSVCategoryCountPrinter(dict, 
-				tOutputfile, tEncoding, tLocale, filesToProcess);
+			printer = new CSVFXCatDictCategoryCountPrinter(dict, 
+				tOutputfile, "data.csv", filesToProcess, tEncoding, tLocale);
 		}
+		/*
 		if (onWindows())
 			printer.setWindowsOutput(); // \r\n and Latin 1 (FFS...)
-		
+		*/
 		final float maxProg = (float)printer.getMaxProgress();
 		final DecimalFormat df = new DecimalFormat("#.##");
 		PropertyChangeListener listener = new PropertyChangeListener() {
@@ -179,16 +184,15 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 			writer.write(newl + newl);
 			writer.write("File enc:\t" + printer.getOutputCharset());
 			writer.write(newl);
-			writer.write("Output enc:\t" + 
-					(onWindows() ? "windows-1252 ('Latin 1')" : "UTF-8"));
-			writer.write(newl);
+			//writer.write("Output enc:\t" + 
+			//		(onWindows() ? "windows-1252 ('Latin 1')" : "UTF-8"));
+			//writer.write(newl);
 			writer.write("Dict:\t" + line.getOptionValue("dictionary") + " (source file)");
 			writer.write(newl);
 			writer.write("Matching:\t" + (oldMatchStrategy ? "old" : "new"));
 			writer.write(newl);
-			writer.write("Line endings:\t" + 
-					(onWindows() ? "'\\r\\n' (Windows style)" : "'\\n' (Unix style)"));
-			writer.write(newl);
+			writer.write("Line endings:\t \\n (Unix style)");
+			//writer.write(newl);
 			
 		}
 	}
