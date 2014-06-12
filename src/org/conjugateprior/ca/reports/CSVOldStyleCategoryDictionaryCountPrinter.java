@@ -8,15 +8,15 @@ import java.util.Set;
 
 import javafx.scene.control.TreeItem;
 
+import org.conjugateprior.ca.DCat;
+import org.conjugateprior.ca.DPat;
+import org.conjugateprior.ca.FXCategoryDictionary;
 import org.conjugateprior.ca.IYoshikoderDocument;
-import org.conjugateprior.ca.exp.DCat;
-import org.conjugateprior.ca.exp.DPat;
-import org.conjugateprior.ca.exp.FXCatDict;
 
-public class CSVOldFXCatDictCategoryCountPrinter extends
-		CSVFXCatDictCategoryCountPrinter {
+public class CSVOldStyleCategoryDictionaryCountPrinter extends
+		CSVFXCategoryDictionaryCountPrinter {
 
-	public CSVOldFXCatDictCategoryCountPrinter(FXCatDict dict, File f,
+	public CSVOldStyleCategoryDictionaryCountPrinter(FXCategoryDictionary dict, File f,
 			String df, File[] fs, Charset chset, Locale loc) {
 		super(dict, f, df, fs, chset, loc);
 	}

@@ -1,4 +1,4 @@
-package org.conjugateprior.ca.exp;
+package org.conjugateprior.ca;
 
 import java.util.regex.Pattern;
 
@@ -10,7 +10,7 @@ public class DPat implements Comparable<DPat>{
 	
 	public DPat(String s){
 		elements = s.split("[ ]+");
-		regexps = FXCatDict.patternEngine.makeRegexp(elements);
+		regexps = FXCategoryDictionary.patternEngine.makeRegexp(elements);
 		fixName();
 	}
 

@@ -2,6 +2,9 @@ package org.conjugateprior.ca.exp;
 
 import java.io.File;
 
+import org.conjugateprior.ca.DCat;
+import org.conjugateprior.ca.FXCategoryDictionary;
+
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.TreeView;
@@ -19,7 +22,7 @@ public class FXCatDictApp extends Application {
 		Scene scene = new Scene(border, 600, 550); 
 		
 		File f = new File("/Users/will/Documents/scratch/2007_abortion_dictionary.ykd");
-		FXCatDict dict = FXCatDict.readXmlCategoryDictionaryFromFile(f);
+		FXCategoryDictionary dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(f);
 		TreeView<DCat> tree = new TreeView<DCat>();
 		tree.setRoot(dict.getCategoryRoot());
 		border.setCenter(tree);
@@ -30,7 +33,7 @@ public class FXCatDictApp extends Application {
 	
 	public static void main(String[] args) throws Exception {
 		File f = new File("/Users/will/Documents/scratch/2007_abortion_dictionary.ykd");
-		FXCatDict dict = FXCatDict.readXmlCategoryDictionaryFromFile(f);
+		FXCategoryDictionary dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(f);
         
 		
 		System.out.println(dict);

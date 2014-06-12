@@ -1,4 +1,4 @@
-package org.conjugateprior.ca.exp;
+package org.conjugateprior.ca;
 
 
 import java.util.ArrayList;

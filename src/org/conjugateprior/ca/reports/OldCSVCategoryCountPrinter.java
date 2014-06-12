@@ -9,26 +9,31 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import javafx.scene.control.TreeItem;
-
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.conjugateprior.ca.OldCategoryDictionary;
+import org.conjugateprior.ca.OldCategoryDictionary.DictionaryCategory;
+import org.conjugateprior.ca.OldCategoryDictionary.DictionaryPattern;
 import org.conjugateprior.ca.IYoshikoderDocument;
-import org.conjugateprior.ca.exp.DCat;
-import org.conjugateprior.ca.exp.DPat;
-import org.conjugateprior.ca.exp.FXCatDict;
 
-public class CSVFXCatDictCategoryCountPrinter extends CountPrinter {
+
+/**
+ * @deprecated
+ * @author will
+ *
+ */
+public class OldCSVCategoryCountPrinter extends CountPrinter {
 
     protected String wordCountHeader = "WordCount";
     protected String dictfilename = "dict.ykd";
 	
-	protected FXCatDict hdict; // instead of the WordCounter
-	protected List<TreeItem<DCat>> categoryNodesInPrintOrder;
+	protected OldCategoryDictionary hdict; // instead of the WordCounter
+	protected DictionaryCategory[] categoryNodesInPrintOrder;
 	
 	protected String fieldSeparator = ",";
 	protected String categorySeparator = ">";
@@ -41,9 +46,9 @@ public class CSVFXCatDictCategoryCountPrinter extends CountPrinter {
 	@Override
 	protected String getDataHeader() {
 		StringBuffer sb = new StringBuffer();
-		for (TreeItem<DCat> cat : categoryNodesInPrintOrder) {
+		for (DictionaryCategory cat : categoryNodesInPrintOrder) {
 			sb.append(fieldSeparator);
-			sb.append(excelEscape(FXCatDict.getNodePathAsString(cat, categorySeparator)));
+			sb.append(excelEscape(cat.getPathAsString(categorySeparator)));
 		}
 		sb.append(fieldSeparator);
 		sb.append(excelEscape(wordCountHeader));
@@ -51,30 +56,31 @@ public class CSVFXCatDictCategoryCountPrinter extends CountPrinter {
 		return sb.toString();
 	}
 	
-	private void recurseCategories(List<TreeItem<DCat>> sb, TreeItem<DCat> n){
+	private void recurseCategories(List<DictionaryCategory> sb, DictionaryCategory n){
 		sb.add(n);
-		for (TreeItem<DCat> treeItem : n.getChildren()) {
-			recurseCategories(sb, treeItem);
+		@SuppressWarnings("unchecked")
+		Enumeration<DictionaryCategory> enumeration=n.children();
+		while (enumeration.hasMoreElements()){
+			DictionaryCategory child = enumeration.nextElement();
+			recurseCategories(sb, child);
 		}
 	}
 	
-	protected List<TreeItem<DCat>> getCategoryNodesInPrintOrder(FXCatDict d){
-		TreeItem<DCat> n = d.getCategoryRoot();
-		List<TreeItem<DCat>> list = new ArrayList<TreeItem<DCat>>();
+	protected DictionaryCategory[] getCategoryNodesInPrintOrder(OldCategoryDictionary d){
+		DictionaryCategory n = d.getCategoryRoot();
+		List<DictionaryCategory> list = new ArrayList<DictionaryCategory>();
 		recurseCategories(list, n);
-		return list;
+		return list.toArray(new DictionaryCategory[list.size()]);
 	}	
-
-	public CSVFXCatDictCategoryCountPrinter(FXCatDict dict,
-			File f, String df, File[] fs,
-			Charset chset, Locale loc) {
-		super(f, "data.csv", fs, chset, loc);
+	
+	public OldCSVCategoryCountPrinter(OldCategoryDictionary dict, 
+			File folder, Charset c, Locale l, File[] f) {
+		super(folder, "data.csv", f, c, l);
 
 		hdict = dict;		
 		categoryNodesInPrintOrder = getCategoryNodesInPrintOrder(dict);
 		//System.err.println("the order");
 		//System.err.println(Arrays.toString(categoryNodesInPrintOrder));
-		
 	}
 
 	public void setFieldSeparator(String fSep){
@@ -98,9 +104,9 @@ public class CSVFXCatDictCategoryCountPrinter extends CountPrinter {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append(excelEscape(doc.getTitle()));
-		for (TreeItem<DCat> cn : categoryNodesInPrintOrder) {
+		for (DictionaryCategory cn : categoryNodesInPrintOrder) {
 			sb.append(fieldSeparator);
-			sb.append(cn.getValue().getMatchedIndices().size());
+			sb.append(cn.getMatchedIndices().size());
 		}
 		sb.append(fieldSeparator);
 		sb.append(doc.getDocumentLength());
@@ -184,55 +190,53 @@ public class CSVFXCatDictCategoryCountPrinter extends CountPrinter {
 	protected void fillTreeWithIndices(IYoshikoderDocument doc){
 		// optimise later
 		//Set<String> vocab = doc.getWordTypes();
-		for (TreeItem<DCat> node : categoryNodesInPrintOrder){
+		for (DictionaryCategory node : categoryNodesInPrintOrder){
 			//System.err.println("filling " + node);
 
 			Set<Integer> indexMatches = new HashSet<Integer>();
-			Set<DPat> pats = node.getValue().getPatterns();
-			for (DPat pat : pats) {
+			Set<DictionaryPattern> pats = node.getPatterns();
+			for (DictionaryPattern pat : pats) {
 				Set<Integer> indices = 
 						doc.getAllMatchingTokenIndexesForPattern(pat.getRegexps());
 				//System.err.println(pat.getName() + " - indices matched: " + indices);
 				indexMatches.addAll(indices);
 			}
-			node.getValue().setMatchedIndices(indexMatches);
+			node.setMatchedIndices(indexMatches);
 		}
 		// testing
 		
 		// percolate
-		for (TreeItem<DCat> node : categoryNodesInPrintOrder){
+		for (DictionaryCategory node : categoryNodesInPrintOrder){
 			if (node.isLeaf()){
-				TreeItem<DCat> current = node;
-				TreeItem<DCat> parent = node.getParent();
+				DictionaryCategory current = node;
+				DictionaryCategory parent = (DictionaryCategory)node.getParent();
 				while (parent != null){
-					parent.getValue().getMatchedIndices().addAll(current.getValue().getMatchedIndices());
+					parent.getMatchedIndices().addAll(current.getMatchedIndices());
 					current = parent;
-					parent = current.getParent();
+					parent = (DictionaryCategory)current.getParent();
 				}
 			}
 		}
 	}
 
 	public static void main(String[] args) throws Exception {
-		FXCatDict dict = new FXCatDict("New dict");
-		dict.getCategoryRoot().getValue().setName("Foo");
-		TreeItem<DCat> ct1 = 
+		OldCategoryDictionary dict = new OldCategoryDictionary();
+		dict.getCategoryRoot().setName("Foo");
+		DictionaryCategory ct1 = 
 				dict.addCategoryToParentCategory("Cat1", dict.getCategoryRoot());
 		dict.addPatternToCategory("mar*", ct1);
 		dict.addPatternToCategory("mar* had", ct1);
 		dict.addPatternToCategory("lamb", ct1);
-		TreeItem<DCat> ct2 = 
+		DictionaryCategory ct2 = 
 				dict.addCategoryToParentCategory("Cat2", dict.getCategoryRoot());
 		dict.addPatternToCategory("every*", ct2);
 		
 		File outf = new File("/Users/will/Desktop/jfreq-folder");
-		CSVFXCatDictCategoryCountPrinter wp = 
-				new CSVFXCatDictCategoryCountPrinter(dict, 
-				outf, "data.csv",
+		OldCSVCategoryCountPrinter wp = new OldCSVCategoryCountPrinter(dict, 
+				outf, 
+				Charset.forName("UTF8"), Locale.ENGLISH, 
 				new File[]{new File("/Users/will/Desktop/jfreqing", "d1.txt"), 
-						   new File("/Users/will/Desktop/jfreqing", "d2.txt")},
-			    Charset.forName("UTF8"), 
-			    Locale.ENGLISH);
+			new File("/Users/will/Desktop/jfreqing", "d2.txt")});
 
 		final int maxProg = wp.getMaxProgress();
 		PropertyChangeListener listener = new PropertyChangeListener() {

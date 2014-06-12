@@ -27,8 +27,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import org.conjugateprior.ca.exp.FXCatDict;
-import org.conjugateprior.ca.reports.CSVFXCatDictCategoryCountPrinter;
+import org.conjugateprior.ca.FXCategoryDictionary;
+import org.conjugateprior.ca.reports.CSVFXCategoryDictionaryCountPrinter;
 import org.conjugateprior.ca.reports.CountPrinter;
 import org.conjugateprior.ca.reports.CountPrinter.CountingTask;
 import org.controlsfx.control.ButtonBar;
@@ -180,14 +180,14 @@ public class ProgressTest extends Application {
     protected Task<Void> getTask(){
     	String fname = "/Users/will/Dropbox/projects/bara-et-al/"
         		+ "2007_abortion_dictionary.ykd";
-        FXCatDict dict = null;
+        FXCategoryDictionary dict = null;
         try {
-        	dict = FXCatDict.readXmlCategoryDictionaryFromFile(new File(fname));
+        	dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(new File(fname));
         } catch (Exception ex){
         	ex.printStackTrace();
         }
         
-        CountPrinter printer = new CSVFXCatDictCategoryCountPrinter(
+        CountPrinter printer = new CSVFXCategoryDictionaryCountPrinter(
         		dict, 
         		new File("/Users/will/Desktop/fold2"),
         		"data.csv",

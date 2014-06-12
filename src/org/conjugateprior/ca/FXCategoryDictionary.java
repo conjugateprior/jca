@@ -1,11 +1,13 @@
-package org.conjugateprior.ca.exp;
+package org.conjugateprior.ca;
 
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,13 +27,11 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.conjugateprior.ca.IPatternEngine;
-import org.conjugateprior.ca.SubstringPatternEngine;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-public class FXCatDict {
+public class FXCategoryDictionary {
 
 	protected static String duplicateMessage = 
 		"There is already a category with that name under this parent category";
@@ -40,6 +40,75 @@ public class FXCatDict {
 	
 	public enum XmlDictionaryType {
 	    LEXICODER, YOSHIKODER_050805 
+	}
+	
+	public static class FXCatDictXMLPrinter {
+		
+		static String xmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+	
+		private FXCategoryDictionary dict;
+		
+		public FXCatDictXMLPrinter(FXCategoryDictionary d) {
+			dict = d;
+		}
+		
+		// always add a header when we print to file
+		public void printToFile050805(File f) throws Exception {			
+			String s = printToString050805(true);
+			try (
+				OutputStreamWriter osw = new OutputStreamWriter(
+					new FileOutputStream(f), Charset.forName("UTF-8"));
+			){
+				osw.write(s);
+			}			
+		}
+		
+		public String printToString050805(boolean addHeader){
+			StringBuffer sb = new StringBuffer();
+			if (addHeader)
+				sb.append(xmlHeader);
+			sb.append("<dictionary style=\"050805\" patternengine=\"substring\">\n");
+			toXmlRecurse(sb, dict.getCategoryRoot());
+			sb.append("</dictionary>");
+			return sb.toString();
+		}
+		
+		private String toXml(TreeItem<DCat> n, boolean close) {
+			if (close)
+				return "</cnode>\n";
+			
+			StringBuilder str = new StringBuilder("<cnode");
+			str.append(" name=\"" + StringEscapeUtils.escapeXml10(n.getValue().getName()) + '"');
+			Color cc = n.getValue().getColor();
+			if (cc != null)
+				str.append(" color=\"" + 
+						cc.getRed() + " " + cc.getGreen() + " " + cc.getBlue() + '"');
+			str.append(">\n");
+			return str.toString();
+		}
+
+		private String patternsToXml(TreeItem<DCat> n) {
+			Set<DPat> pats = n.getValue().getPatterns();
+			StringBuilder str = new StringBuilder();
+			for (DPat dictionaryPattern : pats) {
+				str.append("<pnode name=\"" + 
+						StringEscapeUtils.escapeXml10(dictionaryPattern.getName()) + 
+						"\"/>\n");
+			}
+			return str.toString();
+		}
+		
+		private void toXmlRecurse(StringBuffer sb, TreeItem<DCat> node){
+			sb.append(toXml(node, false));
+			if (node.getValue().getPatterns().size() > 0)
+				sb.append(patternsToXml(node));
+		
+			for (TreeItem<DCat> cat : node.getChildren()) {
+				toXmlRecurse(sb, cat);
+			}
+			sb.append(toXml(node, true));
+		}
+	
 	}
 	
 	// for telling which sort of xml format this is
@@ -67,30 +136,25 @@ public class FXCatDict {
 	public static XmlDictionaryType identifyDictionaryXmlFormat(File f) 
 			throws Exception {
 		SAXParserFactory factory = SAXParserFactory.newInstance();
-		InputStream stream = null;
-		try {
-			SAXParser parser = factory.newSAXParser();
-			XMLDictionaryTypeIdentifier identifier = new XMLDictionaryTypeIdentifier();
-			stream = new FileInputStream(f);
+		SAXParser parser = factory.newSAXParser();
+		XMLDictionaryTypeIdentifier identifier = new XMLDictionaryTypeIdentifier();
+		
+		try (
+			InputStream stream = new FileInputStream(f);
+		){
 			parser.parse(stream, identifier);
-			return identifier.getDictionaryType();
-
-		} catch (Exception e){
-			throw e; // re-throw
-		} finally {
-			if (stream != null)
-				stream.close();
 		}
+		return identifier.getDictionaryType();
 	}
 	
 	public static class LexicoderHandler extends DefaultHandler {
 		private Stack<TreeItem<DCat>> stack = new Stack<TreeItem<DCat>>();
-		private FXCatDict dict;
+		private FXCategoryDictionary dict;
 
 		public void startElement(String uri, String localName, String qName,
 				Attributes attributes) throws SAXException{
 			if (qName.equals("dictionary")){ 
-				dict = new FXCatDict("New Dictionary"); // substring pattern engine by default
+				dict = new FXCategoryDictionary("New Dictionary"); // substring pattern engine by default
 				String name = attributes.getValue("name");
 				
 				dict.getCategoryRoot().getValue().setName(name); 
@@ -124,14 +188,14 @@ public class FXCatDict {
 				stack.pop();
 		}
 		
-		public FXCatDict getCategoryDictionary(){
+		public FXCategoryDictionary getCategoryDictionary(){
 			return dict;
 		}
 	}	
 	
 	public static class YKDHandler050805 extends DefaultHandler {
 		private Stack<TreeItem<DCat>> stack = new Stack<TreeItem<DCat>>();
-		private FXCatDict dict;
+		private FXCategoryDictionary dict;
 
 		private Color parseColor(String s) throws Exception {
 			String[] vv = s.split(" ");
@@ -144,7 +208,7 @@ public class FXCatDict {
 		public void startElement(String uri, String localName, String qName,
 				Attributes attributes) throws SAXException{
 			if (qName.equals("dictionary")){ 
-				dict = new FXCatDict("New Dictionary"); // substring pattern engine by default
+				dict = new FXCategoryDictionary("New Dictionary"); // substring pattern engine by default
 			} else if (qName.equals("cnode")){ 
 				String name = attributes.getValue("name");             
 				String col = attributes.getValue("color");
@@ -182,18 +246,18 @@ public class FXCatDict {
 				stack.pop();
 		}
 		
-		public FXCatDict getCategoryDictionary(){
+		public FXCategoryDictionary getCategoryDictionary(){
 			return dict;
 		}
 	}
 	
 	// the .dic files that LIWC uses
-	public static FXCatDict importCategoryDictionaryFromFileLIWC(File f) throws Exception {
+	public static FXCategoryDictionary importCategoryDictionaryFromFileLIWC(File f) throws Exception {
 		
 		Matcher pm = Pattern.compile("(\\d+)\\t(\\w+)\\t*").matcher("");
 		Matcher en = Pattern.compile("([\\w*]+)([\\t\\d+]+)").matcher("");
 
-		FXCatDict dict = new FXCatDict(f.getName());
+		FXCategoryDictionary dict = new FXCategoryDictionary(f.getName());
 		try (
 				InputStreamReader osw = new InputStreamReader(
 						new FileInputStream(f), Charset.forName("UTF8"));
@@ -229,15 +293,15 @@ public class FXCatDict {
 		return dict;
 	}
 	
-	public static FXCatDict importCategoryDictionaryFromFileVBPRO(File f) throws Exception {
+	public static FXCategoryDictionary importCategoryDictionaryFromFileVBPRO(File f) throws Exception {
 		
-		FXCatDict d = null;
+		FXCategoryDictionary d = null;
 		try (
 			InputStreamReader osw = new InputStreamReader(
 					new FileInputStream(f), Charset.forName("UTF8"));
 			BufferedReader reader = new BufferedReader(osw);
 		){
-			d = new FXCatDict(f.getName());
+			d = new FXCategoryDictionary(f.getName());
 			String line = null;
 			d.getCategoryRoot().getValue().setName("Dictionary");
 			TreeItem<DCat> currentCat = d.getCategoryRoot();
@@ -257,16 +321,16 @@ public class FXCatDict {
 		return d;
 	}
 
-	public static FXCatDict importCategoryDictionaryFromFileWordstat(File f) throws Exception {
+	public static FXCategoryDictionary importCategoryDictionaryFromFileWordstat(File f) throws Exception {
 		
-		FXCatDict d = null;
+		FXCategoryDictionary d = null;
 		try (
 			InputStreamReader osw = new InputStreamReader(
 					new FileInputStream(f), Charset.forName("UTF8"));
 			BufferedReader reader = new BufferedReader(osw);
 		){
 			reader.read(); // BOM
-			d = new FXCatDict(f.getName());
+			d = new FXCategoryDictionary(f.getName());
 			String line = null;
 			d.getCategoryRoot().getValue().setName("Dictionary");
 			TreeItem<DCat> currentCat = d.getCategoryRoot();
@@ -291,23 +355,23 @@ public class FXCatDict {
 		return d;
 	}
 	
-	public static FXCatDict readXmlCategoryDictionaryFromFile(File f) throws Exception {
+	public static FXCategoryDictionary readXmlCategoryDictionaryFromFile(File f) throws Exception {
 		SAXParserFactory factory = SAXParserFactory.newInstance();
-		InputStream stream = null;
-		FXCatDict d = null;
-		try {
-			SAXParser parser = factory.newSAXParser();
-			XmlDictionaryType type = identifyDictionaryXmlFormat(f);
+		SAXParser parser = factory.newSAXParser();
+		XmlDictionaryType type = identifyDictionaryXmlFormat(f);
+		
+		FXCategoryDictionary d = null;
+		try (
+			InputStream stream = new FileInputStream(f)
+		){	
 			if (type != null){
 				if (type.equals(XmlDictionaryType.YOSHIKODER_050805)){
-					YKDHandler050805 h = new YKDHandler050805();
-					stream = new FileInputStream(f);
+					YKDHandler050805 h = new YKDHandler050805();					
 					parser.parse(stream, h);
 					d = h.getCategoryDictionary();
 					
 				} else if (type.equals(XmlDictionaryType.LEXICODER)){
 					LexicoderHandler h = new LexicoderHandler();
-					stream = new FileInputStream(f);
 					parser.parse(stream, h);
 					d = h.getCategoryDictionary();
 				
@@ -317,10 +381,7 @@ public class FXCatDict {
 			} else {
 				throw new Exception("Could not identify the dictionary format");
 			}
-		} finally {
-			if (stream != null)
-				stream.close();
-		}
+		} 
 		return d;
 	}
 		
@@ -328,7 +389,7 @@ public class FXCatDict {
 	
 	protected TreeItem<DCat> root; // need listeners most likely
 	
-	public FXCatDict(String dictName) {
+	public FXCategoryDictionary(String dictName) {
 		DCat dc = new DCat(dictName, null);
 		root = new TreeItem<DCat>(dc);
 		patternEngine = new SubstringPatternEngine();
@@ -398,7 +459,7 @@ public class FXCatDict {
 		parent.getChildren().add(ind, cat);
 	}
 	
-	protected void addCategoryToParentCategory(TreeItem<DCat> cat, 
+	public void addCategoryToParentCategory(TreeItem<DCat> cat, 
 			TreeItem<DCat> parentCat) throws Exception {
 		insertNodeAlphabeticallyInto(cat, parentCat);
 	}
@@ -477,66 +538,6 @@ public class FXCatDict {
 		return patternEngine;
 	}
 	
-	private String getDictionaryXMLHeader(){
-		return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-	}
-	
-	private String escapeXML(String s){
-		return StringEscapeUtils.escapeXml10(s);
-	}
-	
-	private String escapeColorRGB(Color cc){
-		return cc.getRed() + " " + cc.getGreen() + " " + cc.getBlue();
-	}
-
-	private String toXml(TreeItem<DCat> n, boolean close) {
-		if (close)
-			return "</cnode>\n";
-		
-		StringBuilder str = new StringBuilder("<cnode");
-		str.append(" name=\"" + escapeXML(n.getValue().getName()) + '"');
-		Color cc = n.getValue().getColor();
-		if (cc != null)
-			str.append(" color=\"" + escapeColorRGB(cc) + '"');
-		str.append(">\n");
-		return str.toString();
-	}
-
-	private String patternsToXml(TreeItem<DCat> n) {
-		Set<DPat> pats = n.getValue().getPatterns();
-		StringBuilder str = new StringBuilder();
-		for (DPat dictionaryPattern : pats) {
-			str.append("<pnode name=\"" + 
-					escapeXML(dictionaryPattern.getName()) + 
-					"\"/>\n");
-		}
-		return str.toString();
-	}
-	
-	private void toXmlRecurse(StringBuffer sb, TreeItem<DCat> node){
-		sb.append(toXml(node, false));
-		if (node.getValue().getPatterns().size() > 0)
-			sb.append(patternsToXml(node));
-	
-		for (TreeItem<DCat> cat : node.getChildren()) {
-			toXmlRecurse(sb, cat);
-		}
-		sb.append(toXml(node, true));
-	}
-	
-	public String toXml(boolean addHeader){
-		StringBuffer sb = new StringBuffer();
-		
-		if (addHeader)
-			sb.append(getDictionaryXMLHeader());
-		
-		sb.append("<dictionary style=\"050805\" patternengine=\"substring\">\n");
-		toXmlRecurse(sb, getCategoryRoot());
-		sb.append("</dictionary>");
-		
-		return sb.toString();
-	}
-	
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
@@ -546,12 +547,12 @@ public class FXCatDict {
 	
 	public static void main(String[] args) throws Exception {
 		File f = new File("/Users/will/Documents/scratch/2007_abortion_dictionary.ykd");
-		FXCatDict dict = FXCatDict.readXmlCategoryDictionaryFromFile(f);
+		FXCategoryDictionary dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(f);
         //System.out.println(dict);
         
         f = new File("/Applications/LIWC2007/Dictionaries/LIWC2001_German.dic");
-		dict = FXCatDict.importCategoryDictionaryFromFileLIWC(f);
-        //System.out.println(dict);
+		dict = FXCategoryDictionary.importCategoryDictionaryFromFileLIWC(f);
+        System.out.println(dict);
         
 	}
 

@@ -16,7 +16,7 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
-import org.conjugateprior.ca.CategoryDictionary;
+import org.conjugateprior.ca.OldCategoryDictionary;
 import org.conjugateprior.ca.IYoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
@@ -321,11 +321,11 @@ public abstract class CountPrinter implements ICountPrinter {
 		}
 	}
 	
-	public static CountPrinter getCategoryCountPrinter(CategoryDictionary dict,
+	public static CountPrinter getCategoryCountPrinter(OldCategoryDictionary dict,
 			Format out, File folder, Charset c, Locale l, File[] fs) 
 					throws Exception {
 		if (out.equals(Format.CSV))
-			return new CSVCategoryCountPrinter(dict, folder, c, l, fs);
+			return new OldCSVCategoryCountPrinter(dict, folder, c, l, fs);
 		else
 			throw new Exception("No category counters are available for format " + out);
 	}

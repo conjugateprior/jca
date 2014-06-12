@@ -25,13 +25,13 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeSelectionModel;
 
-import org.conjugateprior.ca.CategoryDictionary;
-import org.conjugateprior.ca.CategoryDictionary.DictionaryCategory;
-import org.conjugateprior.ca.CategoryDictionary.DictionaryPattern;
+import org.conjugateprior.ca.OldCategoryDictionary;
+import org.conjugateprior.ca.OldCategoryDictionary.DictionaryCategory;
+import org.conjugateprior.ca.OldCategoryDictionary.DictionaryPattern;
 
 public class CategoryDictionaryPanel extends JPanel {
 	
-	protected CategoryDictionary model;
+	protected OldCategoryDictionary model;
 	protected JTree tree;
 	protected JList list;
 	protected DefaultListModel listModel;
@@ -94,7 +94,7 @@ public class CategoryDictionaryPanel extends JPanel {
 		}
 	}
 	
-	public CategoryDictionaryPanel(CategoryDictionary cdict) {
+	public CategoryDictionaryPanel(OldCategoryDictionary cdict) {
 		super(new BorderLayout());
 				
 		model = cdict;
@@ -173,7 +173,7 @@ public class CategoryDictionaryPanel extends JPanel {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		CategoryDictionary mod = new CategoryDictionary();
+		OldCategoryDictionary mod = new OldCategoryDictionary();
 		DictionaryCategory n = mod.getCategoryRoot();
 		mod.addPatternToCategory("pattern 1", n);
 		mod.addPatternToCategory("pattern 2", n);

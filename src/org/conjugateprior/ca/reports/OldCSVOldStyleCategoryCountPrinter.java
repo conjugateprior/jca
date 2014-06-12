@@ -6,14 +6,19 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-import org.conjugateprior.ca.CategoryDictionary;
-import org.conjugateprior.ca.CategoryDictionary.DictionaryCategory;
-import org.conjugateprior.ca.CategoryDictionary.DictionaryPattern;
+import org.conjugateprior.ca.OldCategoryDictionary;
+import org.conjugateprior.ca.OldCategoryDictionary.DictionaryCategory;
+import org.conjugateprior.ca.OldCategoryDictionary.DictionaryPattern;
 import org.conjugateprior.ca.IYoshikoderDocument;
 
-public class CSVOldCategoryCountPrinter extends CSVCategoryCountPrinter {
+/**
+ * @deprecated
+ * @author will
+ *
+ */
+public class OldCSVOldStyleCategoryCountPrinter extends OldCSVCategoryCountPrinter {
 
-	public CSVOldCategoryCountPrinter(CategoryDictionary dict, File folder,
+	public OldCSVOldStyleCategoryCountPrinter(OldCategoryDictionary dict, File folder,
 			Charset c, Locale l, File[] f) {
 		super(dict, folder, c, l, f);
 	}

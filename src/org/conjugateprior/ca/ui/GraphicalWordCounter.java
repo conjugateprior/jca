@@ -50,8 +50,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-import org.conjugateprior.ca.exp.FXCatDict;
-import org.conjugateprior.ca.reports.CSVFXCatDictCategoryCountPrinter;
+import org.conjugateprior.ca.FXCategoryDictionary;
+import org.conjugateprior.ca.reports.CSVFXCategoryDictionaryCountPrinter;
 import org.conjugateprior.ca.reports.CountPrinter;
 import org.conjugateprior.ca.reports.CountPrinter.CountingTask;
 import org.conjugateprior.ca.reports.LDACWordCountPrinter;
@@ -149,7 +149,7 @@ public class GraphicalWordCounter extends Application {
 	protected CheckBox cbStop = new CheckBox();
 	protected Button stopsBtn;
 	
-	protected FXCatDict dictionary;
+	protected FXCategoryDictionary dictionary;
 	
 	// dict stuff 
 	protected FileChooser dictFileChooser = new FileChooser();
@@ -539,29 +539,29 @@ public class GraphicalWordCounter extends Application {
         return tt;
 	}
 	
-	protected FXCatDict getCategoryDictionaryFromFile(File sf) throws Exception {
+	protected FXCategoryDictionary getCategoryDictionaryFromFile(File sf) throws Exception {
 		if (!sf.exists()){
 			throw new Exception("Dictionary file cannot be found at"
 					+ sf.getAbsolutePath());
 		}
-		FXCatDict dict = null;
+		FXCategoryDictionary dict = null;
 		String fname = sf.getName();
 		if (fname.toLowerCase().endsWith(".ykd") || 
 			fname.toLowerCase().endsWith(".lcd")){
-			dict = FXCatDict.readXmlCategoryDictionaryFromFile(sf); 	
+			dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(sf); 	
 		
 		} else if (fname.toLowerCase().endsWith(".vbpro")){
-			dict = FXCatDict.importCategoryDictionaryFromFileVBPRO(sf); 
+			dict = FXCategoryDictionary.importCategoryDictionaryFromFileVBPRO(sf); 
 		
 		} else if (fname.toLowerCase().endsWith(".dic")){
-			dict = FXCatDict.importCategoryDictionaryFromFileLIWC(sf); 
+			dict = FXCategoryDictionary.importCategoryDictionaryFromFileLIWC(sf); 
 		
 		} else if (fname.toLowerCase().endsWith(".cat")){
-			dict = FXCatDict.importCategoryDictionaryFromFileWordstat(sf);
+			dict = FXCategoryDictionary.importCategoryDictionaryFromFileWordstat(sf);
 		
 		} else if (fname.toLowerCase().endsWith(".xml")) {
 			// windows or server .xml addition?
-			dict = FXCatDict.readXmlCategoryDictionaryFromFile(sf); 
+			dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(sf); 
 				
 		} else {
 			throw new Exception(
@@ -698,7 +698,7 @@ public class GraphicalWordCounter extends Application {
 			
 			Charset cs = listCharset.getSelectionModel().getSelectedItem().charset;
 			Locale ll = listLocale.getSelectionModel().getSelectedItem().locale;
-			printer = new CSVFXCatDictCategoryCountPrinter(dictionary, 
+			printer = new CSVFXCategoryDictionaryCountPrinter(dictionary, 
 				directory, "data.csv", list.getItems().toArray(new File[0]),
 				cs, ll);
 			
@@ -721,7 +721,6 @@ public class GraphicalWordCounter extends Application {
         th.setDaemon(true);
        	th.start();
 	}
-	
 	
 	protected void saveGUIStateToPreferences() throws BackingStoreException {
 		Preferences prefs = 

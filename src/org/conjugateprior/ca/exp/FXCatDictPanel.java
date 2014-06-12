@@ -31,6 +31,9 @@ import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
 import javafx.util.Callback;
 
+import org.conjugateprior.ca.DCat;
+import org.conjugateprior.ca.DPat;
+import org.conjugateprior.ca.FXCategoryDictionary;
 import org.controlsfx.control.ButtonBar;
 import org.controlsfx.control.ButtonBar.ButtonType;
 import org.controlsfx.control.action.AbstractAction;
@@ -44,7 +47,7 @@ public class FXCatDictPanel {
 
 	protected String duplicateErrorMessageTitle = "Problem";
 	
-	protected FXCatDict model;
+	protected FXCategoryDictionary model;
 	protected TreeView <DCat> tree;
 	protected ListView<DPat> list;
 	protected CheckBox box;	
@@ -154,7 +157,7 @@ public class FXCatDictPanel {
 	}
 	
 	public TreeItem<DCat> removeCategory(TreeItem<DCat> item) throws Exception {
-		if (item.equals(model.root))
+		if (item.equals(model.getCategoryRoot()))
 			throw new Exception("Can't delete the dictionary root");
 		else {
 			TreeItem<DCat> nextSelection = null;
@@ -188,7 +191,7 @@ public class FXCatDictPanel {
 		}
 	}
 	
-	public FXCatDictPanel(FXCatDict cdict) {
+	public FXCatDictPanel(FXCategoryDictionary cdict) {
 				
 		model = cdict;
 		list = new ListView<DPat>();

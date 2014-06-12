@@ -29,7 +29,13 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 // this functionality is duplicated (hopefully) by FXCatDict
-public class CategoryDictionary extends DefaultTreeModel {
+
+/**
+ * The old non TreeItem version of a yoshikoder category dictionary
+ * @author will
+ * @deprecated
+ */
+public class OldCategoryDictionary extends DefaultTreeModel {
 
 	private static final long serialVersionUID = -6071338642400002382L;
 
@@ -193,12 +199,12 @@ public class CategoryDictionary extends DefaultTreeModel {
 
 	public static class LexicoderHandler extends DefaultHandler {
 		private Stack<DictionaryCategory> stack = new Stack<DictionaryCategory>();
-		private CategoryDictionary dict;
+		private OldCategoryDictionary dict;
 
 		public void startElement(String uri, String localName, String qName,
 				Attributes attributes) throws SAXException{
 			if (qName.equals("dictionary")){ 
-				dict = new CategoryDictionary(); // substring pattern engine by default
+				dict = new OldCategoryDictionary(); // substring pattern engine by default
 				String name = attributes.getValue("name");
 				dict.getCategoryRoot().setName(name);
 				stack.push(dict.getCategoryRoot());
@@ -230,19 +236,19 @@ public class CategoryDictionary extends DefaultTreeModel {
 				stack.pop();
 		}
 		
-		public CategoryDictionary getCategoryDictionary(){
+		public OldCategoryDictionary getCategoryDictionary(){
 			return dict;
 		}
 	}	
 	
 	public static class YKDHandler050805 extends DefaultHandler {
 		private Stack<DictionaryCategory> stack = new Stack<DictionaryCategory>();
-		private CategoryDictionary dict;
+		private OldCategoryDictionary dict;
 
 		public void startElement(String uri, String localName, String qName,
 				Attributes attributes) throws SAXException{
 			if (qName.equals("dictionary")){ 
-				dict = new CategoryDictionary(); // substring pattern engine by default
+				dict = new OldCategoryDictionary(); // substring pattern engine by default
 			} else if (qName.equals("cnode")){ 
 				String name = attributes.getValue("name");             
 				DictionaryCategory newcat = null;
@@ -273,20 +279,20 @@ public class CategoryDictionary extends DefaultTreeModel {
 				stack.pop();
 		}
 		
-		public CategoryDictionary getCategoryDictionary(){
+		public OldCategoryDictionary getCategoryDictionary(){
 			return dict;
 		}
 	}
 		
-	public static CategoryDictionary importCategoryDictionaryFromFileVBPRO(File f) throws Exception {
+	public static OldCategoryDictionary importCategoryDictionaryFromFileVBPRO(File f) throws Exception {
 		
 		BufferedReader reader = null;
-		CategoryDictionary d = null;
+		OldCategoryDictionary d = null;
 		try {
 			InputStreamReader osw = new InputStreamReader(
 					new FileInputStream(f), Charset.forName("UTF8"));
 			reader = new BufferedReader(osw);
-			d = new CategoryDictionary();
+			d = new OldCategoryDictionary();
 			String line = null;
 			d.getCategoryRoot().setName("Dictionary");
 			DictionaryCategory currentCat = d.getCategoryRoot();
@@ -309,16 +315,16 @@ public class CategoryDictionary extends DefaultTreeModel {
 		return d;
 	}
 
-	public static CategoryDictionary importCategoryDictionaryFromFileWordstat(File f) throws Exception {
+	public static OldCategoryDictionary importCategoryDictionaryFromFileWordstat(File f) throws Exception {
 		
 		BufferedReader reader = null;
-		CategoryDictionary d = null;
+		OldCategoryDictionary d = null;
 		try {
 			InputStreamReader osw = new InputStreamReader(
 					new FileInputStream(f), Charset.forName("UTF8"));
 			reader = new BufferedReader(osw);
 			reader.read(); // BOM
-			d = new CategoryDictionary();
+			d = new OldCategoryDictionary();
 			String line = null;
 			d.getCategoryRoot().setName("Dictionary");
 			DictionaryCategory currentCat = d.getCategoryRoot();
@@ -367,10 +373,10 @@ public class CategoryDictionary extends DefaultTreeModel {
 	}
 	
 	// return 
-	public static CategoryDictionary readXmlCategoryDictionaryFromFile(File f) throws Exception {
+	public static OldCategoryDictionary readXmlCategoryDictionaryFromFile(File f) throws Exception {
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		InputStream stream = null;
-		CategoryDictionary d = null;
+		OldCategoryDictionary d = null;
 		try {
 			SAXParser parser = factory.newSAXParser();
 			XmlDictionaryType type = identifyDictionaryXmlFormat(f);
@@ -400,12 +406,12 @@ public class CategoryDictionary extends DefaultTreeModel {
 		return d;
 	}
 	
-	public CategoryDictionary(DictionaryCategory root) {
+	public OldCategoryDictionary(DictionaryCategory root) {
 		super(root);
 		patternEngine = new SubstringPatternEngine();
 	}
 
-	public CategoryDictionary() {
+	public OldCategoryDictionary() {
 		super(new DefaultMutableTreeNode());
 		setRoot(new DictionaryCategory("Dict"));
 		patternEngine = new SubstringPatternEngine();
@@ -545,7 +551,7 @@ public class CategoryDictionary extends DefaultTreeModel {
 		@SuppressWarnings("unchecked")
 		Enumeration<DictionaryCategory> en = node.children();
 		while (en.hasMoreElements()) {
-			CategoryDictionary.DictionaryCategory dc = en.nextElement();
+			OldCategoryDictionary.DictionaryCategory dc = en.nextElement();
 			toStringRecurse(sb, dc);
 		}
 	}
@@ -594,7 +600,7 @@ public class CategoryDictionary extends DefaultTreeModel {
 		@SuppressWarnings("unchecked")
 		Enumeration<DictionaryCategory> en = node.children();
 		while (en.hasMoreElements()) {
-			CategoryDictionary.DictionaryCategory dc = en.nextElement();
+			OldCategoryDictionary.DictionaryCategory dc = en.nextElement();
 			toXmlRecurse(sb, dc);
 		}
 		
@@ -634,7 +640,7 @@ public class CategoryDictionary extends DefaultTreeModel {
 		//System.out.println(d.toXml(true));
 
 		File f3 = new File("/Users/will/Dropbox/shared/SOP/LSD/LSD2011/LSD2011.CAT");
-		CategoryDictionary d = CategoryDictionary.importCategoryDictionaryFromFileWordstat(f3);
+		OldCategoryDictionary d = OldCategoryDictionary.importCategoryDictionaryFromFileWordstat(f3);
 		System.out.println(d.toXml(true).substring(0, 800));
 
 	}

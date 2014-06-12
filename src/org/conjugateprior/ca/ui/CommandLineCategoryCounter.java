@@ -12,9 +12,9 @@ import java.util.Locale;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-import org.conjugateprior.ca.exp.FXCatDict;
-import org.conjugateprior.ca.reports.CSVFXCatDictCategoryCountPrinter;
-import org.conjugateprior.ca.reports.CSVOldFXCatDictCategoryCountPrinter;
+import org.conjugateprior.ca.FXCategoryDictionary;
+import org.conjugateprior.ca.reports.CSVFXCategoryDictionaryCountPrinter;
+import org.conjugateprior.ca.reports.CSVOldStyleCategoryDictionaryCountPrinter;
 import org.conjugateprior.ca.reports.CountPrinter;
 
 public class CommandLineCategoryCounter extends CommandLineApplication {
@@ -25,7 +25,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 	protected boolean oldMatchStrategy = false;
 	protected File[] filesToProcess;
 	
-	protected FXCatDict dict;
+	protected FXCategoryDictionary dict;
 		
 	@Override
 	protected String getUsageString() {
@@ -100,20 +100,20 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 			
 			if (fname.toLowerCase().endsWith(".ykd") || 
 				fname.toLowerCase().endsWith(".lcd")){
-				dict = FXCatDict.readXmlCategoryDictionaryFromFile(sf); 	
+				dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(sf); 	
 			
 			} else if (fname.toLowerCase().endsWith(".vbpro")){
-				dict = FXCatDict.importCategoryDictionaryFromFileVBPRO(sf); 
+				dict = FXCategoryDictionary.importCategoryDictionaryFromFileVBPRO(sf); 
 			
 			} else if (fname.toLowerCase().endsWith(".cat")){
-				dict = FXCatDict.importCategoryDictionaryFromFileWordstat(sf);
+				dict = FXCategoryDictionary.importCategoryDictionaryFromFileWordstat(sf);
 			
 			} else if (fname.toLowerCase().endsWith(".dic")){
-				dict = FXCatDict.importCategoryDictionaryFromFileLIWC(sf);
+				dict = FXCategoryDictionary.importCategoryDictionaryFromFileLIWC(sf);
 			
 			} else if (fname.toLowerCase().endsWith(".xml")) {
 				// windows or server .xml addition?
-				dict = FXCatDict.readXmlCategoryDictionaryFromFile(sf); 
+				dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(sf); 
 					
 			} else {
 				throw new Exception(
@@ -147,10 +147,10 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 
 		CountPrinter printer = null;
 		if (oldMatchStrategy){
-			printer = new CSVOldFXCatDictCategoryCountPrinter(dict, 
+			printer = new CSVOldStyleCategoryDictionaryCountPrinter(dict, 
 				tOutputfile, "data.csv", filesToProcess, tEncoding, tLocale);
 		} else {
-			printer = new CSVFXCatDictCategoryCountPrinter(dict, 
+			printer = new CSVFXCategoryDictionaryCountPrinter(dict, 
 				tOutputfile, "data.csv", filesToProcess, tEncoding, tLocale);
 		}
 		/*

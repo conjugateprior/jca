@@ -17,9 +17,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import org.conjugateprior.ca.CategoryDictionary;
-import org.conjugateprior.ca.CategoryDictionary.DictionaryCategory;
-import org.conjugateprior.ca.CategoryDictionary.DictionaryPattern;
+import org.conjugateprior.ca.OldCategoryDictionary;
+import org.conjugateprior.ca.OldCategoryDictionary.DictionaryCategory;
+import org.conjugateprior.ca.OldCategoryDictionary.DictionaryPattern;
 import org.conjugateprior.ca.IYoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
@@ -100,7 +100,7 @@ public class CategoryReporter {
 
 	protected String wordCountHeader = "WordCount";
 	
-	protected CategoryDictionary hdict;
+	protected OldCategoryDictionary hdict;
 	protected DictionaryCategory[] categoryNodesInPrintOrder;
 	
 	protected BufferedWriter writer;
@@ -124,14 +124,14 @@ public class CategoryReporter {
 		}
 	}
 	
-	protected DictionaryCategory[] getCategoryNodesInPrintOrder(CategoryDictionary d){
+	protected DictionaryCategory[] getCategoryNodesInPrintOrder(OldCategoryDictionary d){
 		DictionaryCategory n = d.getCategoryRoot();
 		List<DictionaryCategory> list = new ArrayList<DictionaryCategory>();
 		recurseCategories(list, n);
 		return list.toArray(new DictionaryCategory[list.size()]);
 	}
 	
-	public CategoryReporter(CategoryDictionary dict) {
+	public CategoryReporter(OldCategoryDictionary dict) {
 		hdict = dict;		
 		categoryNodesInPrintOrder = getCategoryNodesInPrintOrder(dict);
 		//System.err.println("the order");
@@ -287,7 +287,7 @@ public class CategoryReporter {
 	}
 
 	public static void main(String[] args) throws Exception {
-		CategoryDictionary dd = new CategoryDictionary();
+		OldCategoryDictionary dd = new OldCategoryDictionary();
 		dd.getCategoryRoot().setName("d");
 		dd.addPatternToCategory("tomato", dd.getCategoryRoot());
 		DictionaryCategory animal = dd.addCategoryToParentCategory("cat", dd.getCategoryRoot());
