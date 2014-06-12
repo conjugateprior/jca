@@ -13,6 +13,7 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.WorkerStateEvent;
@@ -21,7 +22,6 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -31,6 +31,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Separator;
 import javafx.scene.control.SplitPane;
@@ -42,13 +43,11 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
 import org.conjugateprior.ca.FXCategoryDictionary;
 import org.conjugateprior.ca.reports.CSVFXCategoryDictionaryCountPrinter;
@@ -499,9 +498,45 @@ public class GraphicalWordCounter extends Application {
 		
 		MenuBar mbar = new MenuBar();
 		final Menu menu1 = new Menu("File");
-		final Menu menu2 = new Menu("Edit");
+		MenuItem menuAddFiles = new MenuItem("Add Files...");
+		menu1.getItems().add(menuAddFiles);
+		
+		final FileChooser fileChooser = new FileChooser();
+		menuAddFiles.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent arg0) {
+				List<File> lst = fileChooser.showOpenMultipleDialog(primaryStage);
+				if (lst != null) {
+					for (File file : lst) {
+						if (file.isDirectory()){
+							for (File subfile : file.listFiles()) {
+								if (!subfile.isDirectory()){
+									if (!list.getItems().contains(subfile))
+										list.getItems().add(subfile);
+								}
+							}
+						} else {
+							if (!list.getItems().contains(file))
+								list.getItems().add(file);
+						}
+                    }
+					list.requestFocus();
+                }
+			}
+		});
+		
+		MenuItem menuExit = new MenuItem("Exit");
+		menuExit.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent arg0) {
+				Platform.exit();
+			}
+		});
+		menu1.getItems().add(menuExit);
+		
 		final Menu menu3 = new Menu("Help");
-		mbar.getMenus().addAll(menu1, menu2, menu3);
+		mbar.getMenus().addAll(menu1, menu3);
+		
 		//mbar.setUseSystemMenuBar(true);
 		rootGroup.setTop(mbar); 
         rootGroup.setCenter(sp);
@@ -514,6 +549,7 @@ public class GraphicalWordCounter extends Application {
 		*/
         
 		primaryStage.setScene(scene);
+		/*
 		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			public void handle(WindowEvent wev) {
 				try {
@@ -524,12 +560,19 @@ public class GraphicalWordCounter extends Application {
 				}
 			};
 		});
+		*/
 		
 		//AquaFx.style();
 		
 		configureGUIFromPreferences();
 		
 		primaryStage.show();
+	}
+	
+	@Override
+	public void stop() throws Exception {
+		saveGUIStateToPreferences();
+		super.stop();
 	}
 	
 	protected Label makeLabel(String s){
