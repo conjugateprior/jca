@@ -3,11 +3,9 @@ package org.conjugateprior.ca.ui;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Locale;
+import java.util.Set;
 
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
@@ -18,13 +16,10 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import org.conjugateprior.ca.FXCategoryDictionary;
@@ -57,7 +52,7 @@ public class ProgressTest extends Application {
 			@Override
 			public void handle(ActionEvent e) {
 				try {
-					Task<Void> task = getTask();
+					Task<Set<File>> task = getTask();
 					Dialogs.create().owner(stage).style(DialogStyle.NATIVE).showWorkerProgress(task);
 					
 					//bar.progressProperty().unbind(); // last task
@@ -80,7 +75,7 @@ public class ProgressTest extends Application {
         btn.setOnAction(new EventHandler<ActionEvent>() {
 
         	final ProgressBar bar = new ProgressBar();
-            final Task<Void> task = getTask();
+            final Task<Set<File>> task = getTask();
             //Text updating = new Text("");
             
             final DefaultDialogAction actionLogin = new DefaultDialogAction("Login") {
@@ -177,7 +172,7 @@ public class ProgressTest extends Application {
         stage.show();
     }
     
-    protected Task<Void> getTask(){
+    protected Task<Set<File>> getTask(){
     	String fname = "/Users/will/Dropbox/projects/bara-et-al/"
         		+ "2007_abortion_dictionary.ykd";
         FXCategoryDictionary dict = null;

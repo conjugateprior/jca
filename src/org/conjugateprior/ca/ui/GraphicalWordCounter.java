@@ -59,6 +59,8 @@ import org.conjugateprior.ca.reports.WordCounter;
 import org.controlsfx.dialog.DialogStyle;
 import org.controlsfx.dialog.Dialogs;
 
+import com.sun.javafx.PlatformUtil;
+
 public class GraphicalWordCounter extends Application {
 
 	public static class Wrapper implements Comparable<Wrapper> {
@@ -532,14 +534,19 @@ public class GraphicalWordCounter extends Application {
 				Platform.exit();
 			}
 		});
-		menu1.getItems().add(menuExit);
+		if (!PlatformUtil.isMac())
+			menu1.getItems().add(menuExit);
 		
 		final Menu menu3 = new Menu("Help");
 		mbar.getMenus().addAll(menu1, menu3);
 		
-		//mbar.setUseSystemMenuBar(true);
+		if (PlatformUtil.isMac()){
+			mbar.setUseSystemMenuBar(true);
+			//AquaFx.style();
+		} 
 		rootGroup.setTop(mbar); 
-        rootGroup.setCenter(sp);
+		
+		rootGroup.setCenter(sp);
         Scene scene = new Scene(rootGroup, 1000, 550);
 		
 		/*
@@ -562,7 +569,7 @@ public class GraphicalWordCounter extends Application {
 		});
 		*/
 		
-		//AquaFx.style();
+		
 		
 		configureGUIFromPreferences();
 		

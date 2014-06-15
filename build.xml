@@ -3,7 +3,7 @@
 
   <!-- build.number and version -->
   <property file="./build.properties"/>
- 
+
   <property name="dir" 
             value="."/>
   <property name="source.dir" 
@@ -16,6 +16,8 @@
             value="resources"/>
   <property name="build.dir" 
             value="build"/>
+  <property name="jarname.gui" 
+            value="jfreq"/>
   <property name="jarname.cl.cats" 
             value="ykreporter"/>
   <property name="jarname.cl.words" 
@@ -24,6 +26,9 @@
             value="org.conjugateprior.ca.ui.CommandLineCategoryCounter"/>
   <property name="main.class.cl.words" 
 	            value="org.conjugateprior.ca.ui.CommandLineWordCounter"/>
+  <property name="main.class.gui" 
+	            value="org.conjugateprior.ca.ui.GraphicalWordCounter"/>
+
 
   <path id="project.class.path">
     <pathelement location="${class.root}" />
@@ -38,6 +43,42 @@
     <delete dir="${build.dir}" />
     <delete file="${jarname.cl.words}-${version}.jar" />
     <delete file="${jarname.cl.cats}-${version}.jar" />
+    <delete file="${jarname.gui}-${version}.jar" />
+  </target>
+
+  <target name="bundle-gui" depends="gui-jar">
+    <taskdef name="bundleapp"
+             classname="com.oracle.appbundler.AppBundlerTask"   
+             classpath="../../code/java/appbundler-1.0ea.jar" />
+
+    <bundleapp outputdirectory="."
+               name="JFreq"
+               displayname="JFreq"
+	       executableName="JFreq"
+	       identifier="org.conjugateprior.ca"
+	       shortversion="${version}"
+	       version="${version}"
+	       icon="resources/icons/jfreq.icns"
+	       mainclassname="org.conjugateprior.ca.ui.GraphicalWordCounter"
+	       copyright="Will Lowe, 2011-2014">
+      
+      <classpath file="${jarname.gui}-${version}.jar" />
+      
+      <!-- <runtime dir="${runtime}/Contents/Home"/>
+
+      <arch name="x86_64"/>
+      <arch name="i386"/> -->
+
+      <!-- Workaround since the icon parameter for bundleapp doesn't work -->
+      <option value="-Xdock:icon=Contents/Resources/jfreq.icns"/>
+      <option value="-Dapple.laf.useScreenMenuBar=true"/>
+      <option value="-Dcom.apple.macos.use-file-dialog-packages=true"/>
+      <option value="-Dcom.apple.macos.useScreenMenuBar=true"/>
+      <option value="-Dcom.apple.mrj.application.apple.menu.about.name=JFreq"/>
+      <option value="-Dcom.apple.smallTabs=true"/>
+      <option value="-Dfile.encoding=UTF-8"/>
+      <option value="-Xmx1024M" name="Xmx"/>
+    </bundleapp>
   </target>
 
   <target name="compile" 
@@ -55,7 +96,6 @@
     	   includeantruntime="false"/>
   </target>
  
-
   <target name="cljar-words" 
 	  description="Creates the ykwordcounter, a command line word counter"
 	  depends="compile">
@@ -84,6 +124,38 @@
       <manifest>
 	<attribute name="Main-Class" 
 		   value="${main.class.cl.words}" />
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="gui-jar" 
+	  description="Creates the JFreq, a graphical word or category counter"
+	  depends="compile">
+    
+    <!-- make and populate the build directory -->
+    <mkdir dir="${build.dir}" />
+    <unzip dest="${build.dir}">
+      <patternset>
+	<include name="**/*" />
+	<exclude name="META-INF/*" />
+      </patternset>
+      <fileset dir="${lib.dir}">
+	<include name="*.jar" />
+      </fileset>
+    </unzip>
+    
+    <!-- add classes -->
+    <copy todir="${build.dir}">
+    	<fileset dir="${class.dir}" includes="**" />
+        <fileset dir="${basedir}" includes="${resource.dir}/**" />
+    </copy>
+    
+    <!-- construct the jar -->
+    <jar destfile="${jarname.gui}-${version}.jar" 
+         basedir="${build.dir}">
+      <manifest>
+	<attribute name="Main-Class" 
+		   value="${main.class.gui}" />
       </manifest>
     </jar>
   </target>

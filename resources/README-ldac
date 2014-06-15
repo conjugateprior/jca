@@ -1,11 +1,16 @@
 ## LDA-C Format
 
-This folder contains three files:
+This folder contains three or four files:
 
 	words.csv
 	documents.csv
+	unreadable-files.txt (is there are any)
 	data.ldac
 	
+documents.csv lists the files that were successfully processed,
+unreadable-files.txt list the files that could not be read, and
+words.csv lists the word types found in the readable documents.
+
 The file data.ldac contains lines of the following form
 
 	N [A:B]+
@@ -30,7 +35,7 @@ data.ldac to the .dat file produced by that software.
 To read the word counts stored here in sparse LDA-C format into R from 
 an output folder called 'folder'
 
-	## for the lda package 
+	require(lda) 
 	documents <- read.documents("folder/data.ldac")
 	vocab <- read.vocab("folder/words.csv")
 

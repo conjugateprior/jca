@@ -1,11 +1,16 @@
 ## Matrix Market format
 
-This folder contains three files:
+This folder contains three or four files:
 
 	words.csv
 	documents.csv
+	unreadable-files.txt (if there are any)
 	data.mtx
 	
+documents.csv lists the files that were successfully processed,
+unreadable-files.txt list the files that could not be read, and
+words.csv lists the word types found in the readable documents.
+
 The file data.mtx is in Matrix Market 'coordinate' format. This consists 
 of a header and lines of the form
 

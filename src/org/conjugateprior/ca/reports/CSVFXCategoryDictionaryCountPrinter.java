@@ -107,31 +107,16 @@ public class CSVFXCategoryDictionaryCountPrinter extends CountPrinter {
 		sb.append(newline);
 		return sb.toString();
 	}
-
-	protected void writeRowsFile() throws Exception {
-		BufferedWriter docsWriter = null;
-		try {
-			OutputStreamWriter docs = new OutputStreamWriter(
-					new FileOutputStream(new File(folder, rowfilename)), outputCharset);
-			docsWriter = new BufferedWriter(docs);
-		
-			for (File file : files) {
-				docsWriter.write(file.getName() + newline);
-			}
-		} finally {
-			if (docsWriter != null)
-				docsWriter.close();
-		}
-	}
 	
 	protected void writeReadmeFile() throws Exception {
 		Date d = new Date();
 		String user = System.getProperty("user.name");
-		BufferedWriter writer = null;
-		try {
+		//BufferedWriter writer = null;
+		try (
 			OutputStreamWriter out = new OutputStreamWriter(
-					new FileOutputStream(new File(folder, readmefilename)), outputCharset);
-			writer = new BufferedWriter(out);
+				new FileOutputStream(new File(folder, readmefilename)), outputCharset);
+			BufferedWriter writer = new BufferedWriter(out);
+		){
 			writer.write("Dictionary-based content analysis");
 			writer.write(newline);
 			writer.write(newline);
@@ -143,15 +128,14 @@ public class CSVFXCategoryDictionaryCountPrinter extends CountPrinter {
 			writer.write(newline);
 			writer.write("Docs:\tdocuments.csv");
 			writer.write(newline);
-		} finally {
-			if (writer != null)
-				writer.close();
 		}
 	}
 	
 	// write out the dictionary too...
 	@Override
 	protected void postProcess() throws Exception {
+		super.postProcess();
+		
 		FXCategoryDictionary.FXCatDictXMLPrinter printer = 
 			new FXCategoryDictionary.FXCatDictXMLPrinter(hdict);
 		File loc = new File(folder, dictfilename);

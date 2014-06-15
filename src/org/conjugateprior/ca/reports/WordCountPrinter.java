@@ -24,30 +24,13 @@ public abstract class WordCountPrinter extends CountPrinter {
 		wordToId = new HashMap<String,Integer>();
 	}
 	
-	protected void writeRowsFile() throws Exception {
-		BufferedWriter docsWriter = null;
-		try {
-			OutputStreamWriter docs = new OutputStreamWriter(
-					new FileOutputStream(new File(folder, rowfilename)), outputCharset);
-			docsWriter = new BufferedWriter(docs);
-		
-			for (File file : files) {
-				docsWriter.write(file.getName() + newline);
-			}
-		} finally {
-			if (docsWriter != null)
-				docsWriter.close();
-		}
-	}
-	
 	protected void writeColumnsFile() throws Exception {
 
-		BufferedWriter wordsWriter = null;
-		try {
+		try (
 			OutputStreamWriter words = new OutputStreamWriter(
 					new FileOutputStream(new File(folder, columnfilename)), outputCharset);
-			wordsWriter = new BufferedWriter(words);
-
+			BufferedWriter wordsWriter = new BufferedWriter(words);
+		){
 			// sort
 			String[] wdsInOrder = new String[wordToId.size()];
 			for (String wd : wordToId.keySet()) {
@@ -58,10 +41,7 @@ public abstract class WordCountPrinter extends CountPrinter {
 			for (String entry : wdsInOrder)
 				wordsWriter.write(entry + newline);
 			
-		} finally {
-			if (wordsWriter != null)
-				wordsWriter.close();
-		}
+		} 
 	}
 	
 }

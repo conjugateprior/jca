@@ -10,13 +10,14 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
-import org.conjugateprior.ca.OldCategoryDictionary;
 import org.conjugateprior.ca.IYoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
@@ -44,12 +45,15 @@ public abstract class CountPrinter implements ICountPrinter {
 	protected String rowfilename = "documents.csv";
 	protected String columnfilename = "words.csv";
 	protected String readmefilename = "readme.txt";
+	protected String unreadableFilesName = "unreadable-files.txt";
+	
+	protected Set<File> unreadableFiles = new HashSet<File>();
 	
 	public CountingTask getNewCountingTask(){
 		return new CountingTask(getMaxProgress());
 	}
 	
-	public class CountingTask extends Task<Void> {
+	public class CountingTask extends Task<Set<File>> {
 
 		private double max;
 		
@@ -58,10 +62,12 @@ public abstract class CountPrinter implements ICountPrinter {
 			max = (double)totalProg;
 		}
 		
+		public Set<File> getUnreadableFiles(){
+			return unreadableFiles;
+		}
+		
 		private boolean writeDF() throws Exception {
 			boolean interrupted = false;
-			
-			//BufferedWriter writer = null;
 			try (
 					OutputStreamWriter osw = new OutputStreamWriter(
 						new FileOutputStream(new File(folder, datafilename)), outputCharset);
@@ -75,35 +81,29 @@ public abstract class CountPrinter implements ICountPrinter {
 				for (File file : files) {
 					IYoshikoderDocument doc = null;
 					try {
+						updateMessage("Processing " + file.getName());
 						doc = new SimpleYoshikoderDocument(file.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(file, charset),
-							null, tokenizer);		
-						updateMessage("Processing " + doc.getTitle());
-						
-						// subclasses override this
+							null, tokenizer);	
 						String s = makeLineFromDocument(doc);
 						writer.write(s);
-					
 					} catch (InterruptedException iex){
 						System.err.println("Interrupted - closing down");
 						if (writer != null)
 							writer.close();
 						interrupted = true;
 						break;
-					
 					} catch (Exception ex){
+						System.err.println(ex.getMessage());
 						ex.printStackTrace();
-						throw new Exception("Problem with " + doc.getTitle() +
-								" [" + ex.getMessage() + "] Skipping this document");
-					} finally {
+						unreadableFiles.add(file);
+						
+					} finally {	
 						counter++; // even if we failed, make sure progress goes up
 						updateProgress(counter, max); // preprocess + files to date
 					}
+					
 				}
-				
-			} catch (Exception ex){
-				ex.printStackTrace();
-				throw ex;
 			}
 			return interrupted;
 		}
@@ -136,7 +136,7 @@ public abstract class CountPrinter implements ICountPrinter {
         }
         
 		@Override
-		protected Void call() throws Exception {
+		protected Set<File> call() throws Exception {
 			double max = (double)getMaxProgress();
 			//preProcess();
 			overwritingPreprocess(); // bc the interface will have checked
@@ -160,7 +160,7 @@ public abstract class CountPrinter implements ICountPrinter {
 			postProcess();
 			updateProgress(files.length + 5, max);
 			
-			return null;
+			return unreadableFiles;
 		}
 	}
 	
@@ -297,10 +297,37 @@ public abstract class CountPrinter implements ICountPrinter {
 	// must be overridden in subclasses
 	abstract public String makeLineFromDocument(IYoshikoderDocument doc);
 
-	// null implementations may be overridden in subclasses
-	protected void writeRowsFile() throws Exception {}
+	// may be overridden in subclasses
+	protected void writeRowsFile() throws Exception {
+		try (
+			OutputStreamWriter docs = new OutputStreamWriter(
+				new FileOutputStream(new File(folder, rowfilename)), outputCharset);
+			BufferedWriter docsWriter = new BufferedWriter(docs);
+		){
+			for (File file : files) { // write out the ones we could process
+				if (!unreadableFiles.contains(file))
+					docsWriter.write(file.getName() + newline);
+			}
+		}
+	}
+
 	protected void writeColumnsFile() throws Exception {}
-	protected void postProcess() throws Exception {}
+	
+	protected void postProcess() throws Exception {
+		// list unreadable files
+		if (unreadableFiles.size() > 0){
+			File ff = new File(folder, unreadableFilesName);
+			try (
+				OutputStreamWriter out = new OutputStreamWriter(
+					new FileOutputStream(ff), Charset.forName("UTF-8"));
+				BufferedWriter writer = new BufferedWriter(out);
+			){
+				for (File file : unreadableFiles)
+					writer.write(file.getName() + newline);
+			}
+		}
+	}
+	
 	protected void writeReadmeFile() throws Exception {}
 	
 	protected void extractREADMEFileAndSaveToFolder(String readmeResourceName) 
@@ -319,15 +346,6 @@ public abstract class CountPrinter implements ICountPrinter {
 			if (in != null) { in.close(); }
 			if (out != null) { out.close(); }
 		}
-	}
-	
-	public static CountPrinter getCategoryCountPrinter(OldCategoryDictionary dict,
-			Format out, File folder, Charset c, Locale l, File[] fs) 
-					throws Exception {
-		if (out.equals(Format.CSV))
-			return new OldCSVCategoryCountPrinter(dict, folder, c, l, fs);
-		else
-			throw new Exception("No category counters are available for format " + out);
 	}
 	
 	public static CountPrinter getWordCountPrinter(WordCounter rep, 
