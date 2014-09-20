@@ -63,6 +63,13 @@ import com.sun.javafx.PlatformUtil;
 
 public class GraphicalWordCounter extends Application {
 
+	protected String[] stemLangs = new String[]{
+			"Danish", "Dutch", "English", "Finnish", "German", "Hungarian", "Italian",
+			"Norwegian", "Portuguese", "Romanian", "Russian", 
+			"Spanish", "Swedish", "Turkish"};
+	
+	protected String[] outputFormats = new String[]{"LDA-C", "Matrix Market"};
+	
 	public static class Wrapper implements Comparable<Wrapper> {
 		String name; // for sorting
 		public Wrapper(String n) {
@@ -131,11 +138,6 @@ public class GraphicalWordCounter extends Application {
 		}
 	}
 	
-	protected String[] stemLangs = new String[]{
-		"Danish", "Dutch", "English", "Finnish", "German", "Hungarian", "Italian",
-		"Norwegian", "Portuguese", "Romanian", "Russian", 
-		"Spanish", "Swedish", "Turkish"};
-	
 	protected CheckBox cbLowercase = new CheckBox();
 	protected CheckBox cbNoNumbers = new CheckBox();
 	protected CheckBox cbNoCurrency = new CheckBox();
@@ -180,18 +182,6 @@ public class GraphicalWordCounter extends Application {
 		grid.setHgap(10);
 		grid.setVgap(10);
 		grid.setPadding(new Insets(10));
-
-		/*
-		ColumnConstraints col1 = new ColumnConstraints();
-		//col1.setPercentWidth(25);
-		ColumnConstraints col2 = new ColumnConstraints();
-		col2.setFillWidth(true);
-		ColumnConstraints col3 = new ColumnConstraints();
-		col3.setFillWidth(true);
-		//col3.setPercentWidth(25);
-		ColumnConstraints col4 = new ColumnConstraints();
-		grid.getColumnConstraints().addAll(col1, col2, col3, col4);	
-		*/
 		
 		list = new ListView<File>();
 		list.setOnDragOver(new EventHandler <DragEvent>() {
@@ -311,8 +301,9 @@ public class GraphicalWordCounter extends Application {
 		});
 			
 		// output format
-		Text labFormat = new Text("Output format:");		
-		outputFormat.getItems().addAll("LDA-C", "Matrix Market");
+		Text labFormat = new Text("Output format:");
+		for (String outputString : outputFormats) 
+			outputFormat.getItems().add(outputString);			
 		outputFormat.getSelectionModel().select(0);
 			
 		// stopwords
@@ -493,7 +484,7 @@ public class GraphicalWordCounter extends Application {
         // add them
         sp.getItems().addAll(propertiespane, listpane);
         
-        
+       
         final BorderPane rootGroup = new BorderPane();
         //rootGroup.setPadding(new Insets(0));
 		//grid.setGridLinesVisible(true);
@@ -548,31 +539,10 @@ public class GraphicalWordCounter extends Application {
 		
 		rootGroup.setCenter(sp);
         Scene scene = new Scene(rootGroup, 1000, 550);
-		
-		/*
-		progressBar.setMaxWidth(Double.MAX_VALUE);
-		grid.add(progressBar, 0, 10, 3, 1);
-		grid.add(goButton, 3, 10);
-		*/
-        
+		     
 		primaryStage.setScene(scene);
-		/*
-		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-			public void handle(WindowEvent wev) {
-				try {
-					saveGUIStateToPreferences();
-				} catch (BackingStoreException bse){
-					System.err.println("Could not save preferences");
-					bse.printStackTrace();
-				}
-			};
-		});
-		*/
 		
-		
-		
-		configureGUIFromPreferences();
-		
+		configureGUIFromPreferences();		
 		primaryStage.show();
 	}
 	
@@ -674,13 +644,7 @@ public class GraphicalWordCounter extends Application {
 	}
 	
 	protected void processTheFiles() {
-		/*
-		if (directory.exists()){
-			Dialogs.create().style(DialogStyle.NATIVE).title("Output folder already exists")
-			.message("Please choose another output folder. This one already exists").showError();
-			return;
-		}
-		*/
+
 		if (directory == null){
 			Dialogs.create().style(DialogStyle.NATIVE).title("No output folder")
 			.message("Please choose an output folder").showError();
@@ -866,13 +830,12 @@ public class GraphicalWordCounter extends Application {
 		}
 		if (usedict)
 			cbDict.setSelected(true);
-		setWordsRatherThanCategories(!usedict);
-
-		
+		setWordsRatherThanCategories(!usedict);		
 	}
 	
 	public static void main(String[] args) {
 		launch(args);
+		
 	}
 	
 	// cached copy of this
@@ -908,43 +871,5 @@ public class GraphicalWordCounter extends Application {
 		
 		return filelist.toArray(new File[filelist.size()]);
 	}
-	
-	/*
-	final JProgressBar progressBar = new JProgressBar(0,100);
-    progressBar.setValue(0);
-    progressBar.setStringPainted(true);
-    
-    
-	printer.addPropertyChangeListener(new PropertyChangeListener() {
-		@Override
-		public void propertyChange(PropertyChangeEvent evt) {
-			if ("progress" == evt.getPropertyName()) {
-	            int progress = (Integer) evt.getNewValue();
-	            progressBar.setValue(progress);
-	        } 
-		}
-	});
-	
-	JFrame f = new JFrame();
-	f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	JPanel p = new JPanel(new BorderLayout());
-	p.add(progressBar, BorderLayout.CENTER);
-	
-	JButton cancel = new JButton("Stop!");
-	cancel.addActionListener(new ActionListener() {
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			boolean b = printer.cancel(false);
-			System.err.println("Could we cancel? " + b);
-			progressBar.setValue(0);
-		}
-	});
-	p.add(cancel, BorderLayout.EAST);
-	
-	f.getContentPane().add(p);
-	f.pack();
-	f.setLocation(200, 200);
-	f.setVisible(true);
-	*/
 	
 }
