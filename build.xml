@@ -22,13 +22,16 @@
             value="ykreporter"/>
   <property name="jarname.cl.words" 
             value="ykwordcounter"/>
+  <property name="jarname.cl.conc" 
+	        value="ykconcordancer"/>
   <property name="main.class.cl.cats" 
             value="org.conjugateprior.ca.ui.CommandLineCategoryCounter"/>
   <property name="main.class.cl.words" 
 	            value="org.conjugateprior.ca.ui.CommandLineWordCounter"/>
   <property name="main.class.gui" 
 	            value="org.conjugateprior.ca.ui.GraphicalWordCounter"/>
-
+  <property name="main.class.cl.conc" 
+	            value="org.conjugateprior.ca.ui.CommandLineConcordancer"/>
 
   <path id="project.class.path">
     <pathelement location="${class.root}" />
@@ -192,4 +195,36 @@
     </jar>
   </target>
   
+	  <target name="cljar-conc" 
+		  description="Creates the ykconcordancer, a command line concordancer"
+		  depends="compile">
+	    
+	    <!-- make and populate the build directory -->
+	    <mkdir dir="${build.dir}" />
+	    <unzip dest="${build.dir}">
+	      <patternset>
+		<include name="**/*" />
+		<exclude name="META-INF/*" />
+	      </patternset>
+	      <fileset dir="${lib.dir}">
+		<include name="*.jar" />
+	      </fileset>
+	    </unzip>
+	    
+	    <!-- add classes -->
+	    <copy todir="${build.dir}">
+	    	<fileset dir="${class.dir}" includes="**" />
+	        <fileset dir="${basedir}" includes="${resource.dir}/**" />
+	    </copy>
+	    
+	    <!-- construct the jar -->
+	    <jar destfile="${jarname.cl.conc}-${version}.jar" 
+	         basedir="${build.dir}">
+	      <manifest>
+		<attribute name="Main-Class" 
+			   value="${main.class.cl.conc}" />
+	      </manifest>
+	    </jar>
+	  </target>
+	  	
 </project>

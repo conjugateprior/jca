@@ -19,8 +19,8 @@ import org.conjugateprior.ca.reports.CountPrinter;
 
 public class CommandLineCategoryCounter extends CommandLineApplication {
 
-	protected Locale tLocale = Locale.getDefault();
-	protected Charset tEncoding = Charset.defaultCharset();
+	protected Locale tLocale;
+	protected Charset tEncoding;
 	protected File tOutputfile = null;
 	protected boolean oldMatchStrategy = false;
 	protected File[] filesToProcess;
@@ -29,28 +29,37 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		
 	@Override
 	protected String getUsageString() {
-		return "ykreporter [options] -dictionary <dictfile> -output <folder> [doc1.txt doc2.txt folder1]";
+		return "ykreporter [-encoding <encoding>] [-locale <locale>] " +
+			   "[-oldmatching] -dictionary <file> -output <folder> " +
+			   "[doc1.txt doc2.txt folder1]";
 	}
 	
 	public CommandLineCategoryCounter() {
 		super();
 
 		Option help = new Option("help", "Show this message, then exit");
-		Option encoding = new Option("encoding", true, "Encoding for input files (default: " + 
+		Option encoding = new Option("encoding", true, 
+				"Input file character encoding (default: " + 
 				Charset.defaultCharset().displayName() + ")");
-		encoding.setArgName("encoding name");
-		Option oldMatching = new Option("oldmatching", "Use old-style Yoshikoder pattern matching");
-		Option locale = new Option("locale",  true, "A locale for input files (default: " + 
+		encoding.setArgName("encoding");
+		Option oldMatching = new Option("oldmatching", 
+				"Use old-style pattern matching");
+		Option locale = new Option("locale",  true, 
+				"Locale for input files (default: " + 
 				Locale.getDefault().toString() + ")");
-		locale.setArgName("locale name");				
+		locale.setArgName("locale");				
 		// required
-		Option dictionary = new Option("dictionary", true, "Content analysis dictionary in Yoshikoder, Lexicoder, or VBPro format");
+		Option dictionary = new Option("dictionary", true, 
+				"Content analysis dictionary in Yoshikoder ('.ykd'), " +
+		        "Lexicoder ('.lcd'), Wordstat ('.CAT'), LIWC ('.dic'), or VBPro " + 
+				"('.vbpro') format");
 		dictionary.setArgName("file");
 		dictionary.setRequired(true);
 		
-		Option outputfile = new Option("output", true, "Specify a name for the output folder");
+		Option outputfile = new Option("output", true, 
+				"Name for the output folder");
 		outputfile.setRequired(true);
-		outputfile.setArgName("file");
+		outputfile.setArgName("folder");
 		
 		addCommandLineOption(help);
 		addCommandLineOption(encoding);
@@ -60,7 +69,6 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		
 		addCommandLineOption(outputfile);		
 	}
-	
 	
 	@Override
 	protected void processLine(CommandLine line) throws Exception {	
@@ -78,6 +86,8 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 						"optionally connected by an underscore to a two letter country code\n" +
 				        "from ISO 3166.  See also http://en.wikipedia.org/wiki/BCP_47");
 			}
+		} else {
+			tLocale = Locale.getDefault();
 		}
 		if (line.hasOption("encoding")){
 			try {
@@ -86,6 +96,8 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 				throw new Exception("Could not parse file encoding. Error message follows:\n" +
 						ex.getMessage());
 			}
+		} else {
+			tEncoding = Charset.defaultCharset();
 		}
 		
 		tOutputfile = new File(line.getOptionValue("output"));

@@ -13,8 +13,8 @@ import org.conjugateprior.ca.reports.WordCounter;
 
 public class CommandLineWordCounter extends CommandLineApplication {
 	
-	protected Locale tLocale = Locale.getDefault();
-	protected Charset tEncoding = Charset.defaultCharset();
+	protected Locale tLocale;
+	protected Charset tEncoding;
 	protected File tOutputfile = null;
 	
 	protected boolean removeCurrency = false;
@@ -29,33 +29,48 @@ public class CommandLineWordCounter extends CommandLineApplication {
 	protected FileOutputStream streamWords;
 	protected FileOutputStream streamDocs;
 	
+	protected String llist = "danish dutch english finnish french german hungarian " + 
+			"italian norwegian portuguese romanian russian spanish swedish turkish";
+	
 	@Override
 	protected String getUsageString(){
-		return "ykwordcounter [options] -output <folder name> [doc1.txt doc2.txt folder1]";
+		return "ykwordcounter [-encoding <encoding>] [-locale <locale>] " + 
+	           "[-no_currency] [-no_numbers] [-stopwords <file>] " +
+			   "[-stemmer <language>] [-format <format>] -output <folder> " +
+	           "[doc1.txt doc2.txt folder1]";
 	}
 	
 	public CommandLineWordCounter() {
 		super();
-		
+				
 		Option help = new Option("help", "Show this message, then exit");
-		Option encoding = new Option("encoding", true, "Character encoding for input files e.g. UTF8");
-		encoding.setArgName("encoding name");
-		Option removeStopwords = new Option("stopwords", true, "Stopwords (words not to count)");
+		Option encoding = new Option("encoding", true, 
+			"Input file character encoding (default: " + 
+		    Charset.defaultCharset().name() + ")");
+		encoding.setArgName("encoding");
+		Option removeStopwords = new Option("stopwords", true, "File of words not to be counted");
 		removeStopwords.setArgName("file");
-		Option locale = new Option("locale",  true, "Locale for input files e.g. en_US");
-		locale.setArgName("locale name");		
-		Option noCurrency = new Option("no_currency", "Remove currency amounts");
-		Option noNumbers = new Option("no_numbers", "Remove numerical quantities");
+		Option locale = new Option("locale",  true, 
+				"Locale for input files (default: " + 
+		        Locale.getDefault().toString() + ")");
+		locale.setArgName("locale");		
+		Option noCurrency = new Option("no_currency", 
+				"Remove strings beginning with currency signs");
+		Option noNumbers = new Option("no_numbers", 
+				"Remove strings beginning with digits");
 
-		Option outputfile = new Option("output", true, "Name for the output folder");
+		Option outputfile = new Option("output", true, 
+				"Name for the output folder");
 		outputfile.setRequired(true);
-		outputfile.setArgName("folder name");
+		outputfile.setArgName("folder");
 
-		Option stemmer = new Option("stemmer",  true, "Stem the input files (happens last)");
-		stemmer.setArgName("language name");	
+		Option stemmer = new Option("stemmer",  true, 
+				"Stem files before counting (happens last). One of: " + llist);
+		stemmer.setArgName("language");	
 
-		Option format = new Option("format", true, "Format for output");
-		outputfile.setArgName("matrix format");
+		Option format = new Option("format", true, 
+				"One of: ldac (the default), mtx");
+		outputfile.setArgName("format");
 		
 		addCommandLineOption(help);
 		addCommandLineOption(encoding);
@@ -85,6 +100,8 @@ public class CommandLineWordCounter extends CommandLineApplication {
 						"optionally connected by an underscore to a two letter country code\n" +
 				        "from ISO 3166.  See also http://en.wikipedia.org/wiki/BCP_47");
 			}
+		} else {
+			tLocale = Locale.getDefault();
 		}
 		if (line.hasOption("encoding")){
 			try {
@@ -93,6 +110,8 @@ public class CommandLineWordCounter extends CommandLineApplication {
 				throw new Exception("Could not parse file encoding. Error message follows:\n" +
 						ex.getMessage());
 			}
+		} else {
+			tEncoding = Charset.defaultCharset();
 		}
 		removeCurrency = line.hasOption("no_currency");
 		removeNumbers = line.hasOption("no_numbers");
@@ -109,8 +128,7 @@ public class CommandLineWordCounter extends CommandLineApplication {
 		if (line.hasOption("stemmer")){
 			stem = true;
 			String langname = line.getOptionValue("stemmer").toLowerCase();
-			String llist = "danish dutch english finnish french german hungarian " + 
-					"italian norwegian portuguese romanian russian spanish swedish turkish";
+			
 			String[] langs = llist.split(" ");
 			for (String l : langs) {
 				if (langname.equals(l)){
