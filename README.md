@@ -1,4 +1,4 @@
-## Apps for counting words and categories
+## Apps for counting words or categories, and viewing them in context
 
 This is experimental code with no guarantee of working at all.
 All subject to change.
@@ -19,3 +19,12 @@ All subject to change.
   count words and drop the results in LDAC or Matrix Market format in a folder.
 
   To compile ```ant cljar-words```
+
+* `ykconcordancer`
+  
+  A command line application to 
+  construct concordances ('keyword in context' lines) for a word or phrase 
+  across documents.
+
+  To compile ```ant cljar-conc```
+  
