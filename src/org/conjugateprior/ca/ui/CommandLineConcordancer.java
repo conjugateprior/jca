@@ -6,28 +6,37 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
+
+import javafx.scene.control.TreeItem;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
+import org.conjugateprior.ca.DCat;
+import org.conjugateprior.ca.DPat;
+import org.conjugateprior.ca.FXCategoryDictionary;
 import org.conjugateprior.ca.IPatternEngine;
 import org.conjugateprior.ca.IYoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 import org.conjugateprior.ca.SubstringPatternEngine;
 
-// TODO add formats for output
+
 public class CommandLineConcordancer extends CommandLineApplication {
 
 	protected Locale tLocale = Locale.getDefault();
 	protected Charset tEncoding = Charset.defaultCharset();
 	protected File tOutputfile = null;	
 	protected File[] filesToProcess;
-	protected Pattern[] regexp;
+	protected List<Pattern[]> regexpList;
 	protected int window = 5;
 	
 	protected enum OutputFormat {
@@ -51,7 +60,7 @@ public class CommandLineConcordancer extends CommandLineApplication {
 		
 		Option pattern = new Option("pattern", true, 
 				"Word or phrase to match (wildcards allowed)");
-		pattern.setRequired(true);
+		pattern.setRequired(false);
 		pattern.setArgName("pattern");
 		
 		Option format = new Option("format", true, 
@@ -66,6 +75,14 @@ public class CommandLineConcordancer extends CommandLineApplication {
 				"Name of output file (default: stdout)");
 		outputfile.setArgName("output");
 		
+		Option dict = new Option("dictionary", true, 
+				"Content analysis dictionary");
+		outputfile.setArgName("file");
+		
+		Option dictcat = new Option("category", true, 
+				"Category from content analysis dictionary");
+		outputfile.setArgName("category");
+				
 		addCommandLineOption(help);
 		addCommandLineOption(encoding);
 		addCommandLineOption(locale);
@@ -73,12 +90,15 @@ public class CommandLineConcordancer extends CommandLineApplication {
 		addCommandLineOption(window);
 		addCommandLineOption(format);
 		addCommandLineOption(outputfile);
+		addCommandLineOption(dict);
+		addCommandLineOption(dictcat);
 	}
 	
 	
 	@Override
 	protected String getUsageString() {
-		return "ykconcordancer -pattern <pattern> [-locale <locale>] " +
+		return "ykconcordancer -pattern <pattern> | -dictionary <file> -category <category> " + 
+	           "[-locale <locale>] " +
 	           "[-encoding <encoding>] [-window <number>] [-output <file>] " +
 			   "[-format <format>] [file1 file2 | folder1]";
 	}
@@ -91,6 +111,45 @@ public class CommandLineConcordancer extends CommandLineApplication {
 		sb.append(str);
 		return sb.toString();
 	}
+	
+	protected List<Pattern[]> getPatternListFromDictionary(FXCategoryDictionary dict, String catname)
+		throws Exception {
+		TreeItem<DCat> node = dict.getCategoryRoot();
+		Set<TreeItem<DCat>> s = new HashSet<TreeItem<DCat>>();
+		recurseCategories(node, catname, s);
+		if (s.size() == 0)
+			throw new Exception("There is no category called " + catname + " in the dictionary");
+		TreeItem<DCat> targ = s.iterator().next(); // just the first one
+		Set<DPat> patset = dict.getPatternsInSubtree(targ);
+		List<Pattern[]> pats = new ArrayList<Pattern[]>();
+		for (DPat dpat : patset) 
+			pats.add( dpat.getRegexps() );
+		return pats;
+	}
+	
+	// goodness, I totally suck at recursion
+	private void recurseCategories(TreeItem<DCat> n, String cname, Set<TreeItem<DCat>> set){
+		if (n.getValue().getName().equals(cname)){
+			set.add(n);
+			return;
+		} else {
+			for (TreeItem<DCat> child: n.getChildren())
+				recurseCategories(child, cname, set);
+		}
+	}
+
+	// compares the character indexes of the target starts
+	private Comparator<int[]> indexComparator = new Comparator<int[]>() {
+		@Override
+		public int compare(int[] o1, int[] o2) {
+			int diff = o1[2]-o2[2];
+			if (diff > 0) 
+				return 0;
+			else if (diff < 0) 
+				return -1;
+			return diff;
+		}
+	};
 	
 	protected void processLine(CommandLine line) throws Exception {
 		if (line.hasOption("help")) {
@@ -125,10 +184,55 @@ public class CommandLineConcordancer extends CommandLineApplication {
 			}
 		}
 		
-		String[] spl = line.getOptionValue("pattern").split("[ ]+");
+		if (line.hasOption("dictionary") && line.hasOption("pattern"))
+			throw new Exception("Use dictionary and category arguments or use pattern argument, but not both");
 		
-		IPatternEngine patternEngine = new SubstringPatternEngine();
-		regexp = patternEngine.makeRegexp(spl);
+		if (line.hasOption("dictionary")) {
+			String fname = line.getOptionValue("dictionary");
+			File sf = new File(fname);
+			if (!sf.exists())
+				throw new Exception("Dictionary file cannot be found at"
+						+ sf.getAbsolutePath());
+						
+			String cat = null;
+			if (line.hasOption("category"))
+				cat = line.getOptionValue("category");
+			if (cat == null) throw new Exception("No category specified for the dictionary " + 
+				sf.getAbsolutePath());			
+
+			FXCategoryDictionary dict = null;
+			if (fname.toLowerCase().endsWith(".ykd") || 
+				fname.toLowerCase().endsWith(".lcd")){
+				dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(sf); 	
+			
+			} else if (fname.toLowerCase().endsWith(".vbpro")){
+				dict = FXCategoryDictionary.importCategoryDictionaryFromFileVBPRO(sf); 
+			
+			} else if (fname.toLowerCase().endsWith(".cat")){
+				dict = FXCategoryDictionary.importCategoryDictionaryFromFileWordstat(sf);
+			
+			} else if (fname.toLowerCase().endsWith(".dic")){
+				dict = FXCategoryDictionary.importCategoryDictionaryFromFileLIWC(sf);
+			
+			} else if (fname.toLowerCase().endsWith(".xml")) {
+				// windows or server .xml addition?
+				dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(sf); 
+					
+			} else {
+				throw new Exception(
+						"Dictionary file format could not be identified.\n" +
+					    "It must be a Yoshikoder ('.ykd'), Lexicoder ('.lcd'), " +
+					    "Wordstat ('.CAT'), LIWC (.dic), or VBPro ('.vbpro') file\n");
+			}
+			// throws exception if there's no category of that name
+			regexpList = getPatternListFromDictionary(dict, cat);	
+		} else {
+			
+			String[] spl = line.getOptionValue("pattern").split("[ ]+");
+			IPatternEngine patternEngine = new SubstringPatternEngine();
+			regexpList = new ArrayList<Pattern[]>();
+			regexpList.add( patternEngine.makeRegexp(spl) );
+		}
 		
 		String[] files = line.getArgs();
 		if (files.length == 0)
@@ -195,14 +299,19 @@ public class CommandLineConcordancer extends CommandLineApplication {
 						new SimpleYoshikoderDocument(f.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(f, tEncoding),
 							null, tokenizer);
-				List<int[]> concs = 
-					idoc.getConcordanceCharacterOffsetsForPattern(regexp, window);	
+				
+				
+				List<int[]> concs = new ArrayList<int[]>();
+				for (Pattern[] pat : regexpList) 
+					concs.addAll( idoc.getConcordanceCharacterOffsetsForPattern(pat, window) );
+				concs.sort(indexComparator);
+						
 				dumpConcLinesHTML(writer, concs, idoc.getText(), idoc.getTitle());
 			}
 			writer.write("  </table>\n</body>\n</html>\n");
 		} else if (outputFormat == OutputFormat.LATEX){
 			
-			writer.write("#\\usepackage{ctable}\n");
+			writer.write("#\\usepackage{booktabs}\n");
 			writer.write("\\begin{tabular}{rr@{\\hskip 0.3em}l} \\toprule");
 			writer.newLine();
 			writer.write("Document & & Pattern \\\\ \\midrule");
@@ -212,14 +321,18 @@ public class CommandLineConcordancer extends CommandLineApplication {
 						new SimpleYoshikoderDocument(f.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(f, tEncoding),
 							null, tokenizer);
-				List<int[]> concs = 
-					idoc.getConcordanceCharacterOffsetsForPattern(regexp, window);	
+				List<int[]> concs = new ArrayList<int[]>();
+				for (Pattern[] pat : regexpList) 
+					concs.addAll( idoc.getConcordanceCharacterOffsetsForPattern(pat, window) );
+				concs.sort(indexComparator);
+
 				dumpConcLinesLATEX(writer, concs, idoc.getText(), idoc.getTitle());
 			}
 			writer.write("\\bottomrule");
 			writer.newLine();
 			writer.write("\\end{tabular}");
 			writer.newLine();
+		
 		} else {
 			// TEXT or UTF8 (encoding is set in the writer already)
 			for (File f : filesToProcess) {
@@ -227,11 +340,14 @@ public class CommandLineConcordancer extends CommandLineApplication {
 						new SimpleYoshikoderDocument(f.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(f, tEncoding),
 							null, tokenizer);
-				List<int[]> concs = 
-					idoc.getConcordanceCharacterOffsetsForPattern(regexp, window);	
+				List<int[]> concs = new ArrayList<int[]>();
+				for (Pattern[] pat : regexpList) 
+					concs.addAll( idoc.getConcordanceCharacterOffsetsForPattern(pat, window) );
+				concs.sort(indexComparator);
 				writer.write("---- " + idoc.getTitle());
 				writer.newLine();
 				dumpConcLinesTEXT(writer, concs, idoc.getText(), idoc.getTitle());
+				writer.newLine();
 			}
 		}
 		
@@ -269,7 +385,7 @@ public class CommandLineConcordancer extends CommandLineApplication {
 				.replace("%", "\\%").replace("$", "\\$")
 				.replace("&", "\\&").replace("^", "\\^{}")
 				.replace("{", "\\{").replace("}", "\\}")
-				.replace("_",  "\\_");	
+				.replace("_",  "\\_").replace("#", "\\#");	
 	}
 	
 	protected void dumpConcLinesLATEX(BufferedWriter str, 
@@ -293,22 +409,28 @@ public class CommandLineConcordancer extends CommandLineApplication {
 	// push out UTF8
 	protected void dumpConcLinesHTML(BufferedWriter str, 
 			List<int[]> indices, String txt, String fname)
-		throws IOException {
+					throws IOException {
 		boolean firstline = true;
-		for (int[] is : indices) {
-			str.write("    <tr><td>" + (firstline ? StringEscapeUtils.escapeHtml4(fname) : "") + "</td>");	
-			firstline = false;
-			String s = collapseWhitespace(txt.substring(is[0], is[1]));
-			str.write("<td class=\"rightalign\">" + 
-					StringEscapeUtils.escapeHtml4(s) + "</td>");
-			String targ = collapseWhitespace(txt.substring(is[2], is[3]));
-			int restart = (is[3]<txt.length() ? is[3] : is[4]);
-			s = collapseWhitespace(txt.substring(restart, is[5]));
-		    str.write("<td><strong>" + StringEscapeUtils.escapeHtml4(targ) + "</strong>" +
-		    		StringEscapeUtils.escapeHtml4(s) + "</td></tr>\n");
+		if (indices.size()==0){
+			str.write("    <tr><td>" +
+					StringEscapeUtils.escapeHtml4(fname) + 
+					"</td><td></td><td></td></tr>\n");
+		} else {
+			for (int[] is : indices) {
+				str.write("    <tr><td>" + (firstline ? StringEscapeUtils.escapeHtml4(fname) : "") + "</td>");	
+				firstline = false;
+				String s = collapseWhitespace(txt.substring(is[0], is[1]));
+				str.write("<td class=\"rightalign\">" + 
+						StringEscapeUtils.escapeHtml4(s) + "</td>");
+				String targ = collapseWhitespace(txt.substring(is[2], is[3]));
+				int restart = (is[3]<txt.length() ? is[3] : is[4]);
+				s = collapseWhitespace(txt.substring(restart, is[5]));
+				str.write("<td><strong>" + StringEscapeUtils.escapeHtml4(targ) + "</strong>" +
+						StringEscapeUtils.escapeHtml4(s) + "</td></tr>\n");
+			}
 		}
 	}
-	
+
 	public static void main(String[] args) {
 		CommandLineConcordancer rep = new CommandLineConcordancer();
 		try {

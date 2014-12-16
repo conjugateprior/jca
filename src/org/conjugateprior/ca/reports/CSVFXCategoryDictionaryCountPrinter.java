@@ -24,7 +24,7 @@ import org.conjugateprior.ca.IYoshikoderDocument;
 
 public class CSVFXCategoryDictionaryCountPrinter extends CountPrinter {
 
-    protected String wordCountHeader = "WordCount";
+    public static String wordCountHeader = "WordCount";
     protected String dictfilename = "dict.ykd";
 	
 	protected FXCategoryDictionary hdict; // instead of the WordCounter

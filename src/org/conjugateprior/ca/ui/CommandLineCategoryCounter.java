@@ -8,11 +8,24 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+
+import javafx.scene.control.TreeItem;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.conjugateprior.ca.AbstractYoshikoderDocument;
+import org.conjugateprior.ca.DCat;
+import org.conjugateprior.ca.DPat;
 import org.conjugateprior.ca.FXCategoryDictionary;
+import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.SimpleDocumentTokenizer;
+import org.conjugateprior.ca.SimpleYoshikoderDocument;
 import org.conjugateprior.ca.reports.CSVFXCategoryDictionaryCountPrinter;
 import org.conjugateprior.ca.reports.CSVOldStyleCategoryDictionaryCountPrinter;
 import org.conjugateprior.ca.reports.CountPrinter;
@@ -26,11 +39,12 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 	protected File[] filesToProcess;
 	
 	protected FXCategoryDictionary dict;
-		
+	protected List<TreeItem<DCat>> categoryNodesInPrintOrder;	
+	
 	@Override
 	protected String getUsageString() {
 		return "ykreporter [-encoding <encoding>] [-locale <locale>] " +
-			   "[-oldmatching] -dictionary <file> -output <folder> " +
+			   "[-oldmatching] [-output <folder>] -dictionary <file> " +
 			   "[doc1.txt doc2.txt folder1]";
 	}
 	
@@ -57,8 +71,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		dictionary.setRequired(true);
 		
 		Option outputfile = new Option("output", true, 
-				"Name for the output folder");
-		outputfile.setRequired(true);
+				"Name for an output folder");
 		outputfile.setArgName("folder");
 		
 		addCommandLineOption(help);
@@ -70,6 +83,107 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		addCommandLineOption(outputfile);		
 	}
 	
+	private void recurseCategories(List<TreeItem<DCat>> sb, TreeItem<DCat> n){
+		sb.add(n);
+		for (TreeItem<DCat> treeItem : n.getChildren()) {
+			recurseCategories(sb, treeItem);
+		}
+	}
+	
+	protected List<TreeItem<DCat>> getCategoryNodesInPrintOrder(FXCategoryDictionary d){
+		TreeItem<DCat> n = d.getCategoryRoot();
+		List<TreeItem<DCat>> list = new ArrayList<TreeItem<DCat>>();
+		recurseCategories(list, n);
+		return list;
+	}	
+
+	// this time with match counts not the indices
+	protected void fillTreeWithMatchCounts(IYoshikoderDocument doc){
+		// optimise later
+		//Set<String> vocab = doc.getWordTypes();
+		for (TreeItem<DCat> node : categoryNodesInPrintOrder){
+			Set<Integer> indexMatches = new HashSet<Integer>();
+			Set<DPat> pats = node.getValue().getPatterns();
+			int rawCount = 0; // including double counted items!
+			for (DPat pat : pats) {
+				Set<Integer> indices = 
+						doc.getAllMatchingTokenIndexesForPattern(pat.getRegexps());
+				rawCount += indices.size();
+			}
+			indexMatches.add(new Integer(rawCount)); // here one number, the total count
+			node.getValue().setMatchedIndices(indexMatches);
+		}
+		// percolate
+		for (TreeItem<DCat> node : categoryNodesInPrintOrder){
+			if (node.isLeaf()){
+				TreeItem<DCat> current = node;
+				TreeItem<DCat> parent = node.getParent();
+				while (parent != null){
+					// (mis)use the indices to hold and update single counts 
+					Set<Integer> count = current.getValue().getMatchedIndices();
+					Integer co = count.iterator().next();
+					Set<Integer> pcount = parent.getValue().getMatchedIndices();
+					Integer pco = pcount.iterator().next();
+					pcount.clear();
+					pcount.add(new Integer(pco + co));
+
+					current = parent;
+					parent = current.getParent();
+				}
+			}
+		}
+	}
+
+	// new style and old style matching
+	protected String makeLineFromDocument(FXCategoryDictionary dict, IYoshikoderDocument doc, boolean oldStyle){
+		if (!oldStyle)
+			fillTreeWithIndices(doc);
+		else
+			fillTreeWithMatchCounts(doc);
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append(StringEscapeUtils.escapeCsv(doc.getTitle()));
+		for (TreeItem<DCat> cn : categoryNodesInPrintOrder) {
+			sb.append(",");
+			sb.append(cn.getValue().getMatchedIndices().size());
+		}
+		sb.append(",");
+		sb.append(doc.getDocumentLength()); // no newline
+		return sb.toString();
+	}
+
+	// this is the new style match counting where we never double count
+	// multiple patterns that match (overlapping slices of) the same tokens
+	protected void fillTreeWithIndices(IYoshikoderDocument doc){
+		// optimise later
+		//Set<String> vocab = doc.getWordTypes();
+		for (TreeItem<DCat> node : categoryNodesInPrintOrder){
+			//System.err.println("filling " + node);
+
+			Set<Integer> indexMatches = new HashSet<Integer>();
+			Set<DPat> pats = node.getValue().getPatterns();
+			for (DPat pat : pats) {
+				Set<Integer> indices = 
+						doc.getAllMatchingTokenIndexesForPattern(pat.getRegexps());
+				//System.err.println(pat.getName() + " - indices matched: " + indices);
+				indexMatches.addAll(indices);
+			}
+			node.getValue().setMatchedIndices(indexMatches);
+		}
+		// percolate
+		for (TreeItem<DCat> node : categoryNodesInPrintOrder){
+			if (node.isLeaf()){
+				TreeItem<DCat> current = node;
+				TreeItem<DCat> parent = node.getParent();
+				while (parent != null){
+					parent.getValue().getMatchedIndices().addAll(current.getValue().getMatchedIndices());
+					current = parent;
+					parent = current.getParent();
+				}
+			}
+		}
+	}
+
 	@Override
 	protected void processLine(CommandLine line) throws Exception {	
 		if (line.hasOption("help")) {
@@ -100,7 +214,8 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 			tEncoding = Charset.defaultCharset();
 		}
 		
-		tOutputfile = new File(line.getOptionValue("output"));
+		if (line.hasOption("output"))
+			tOutputfile = new File(line.getOptionValue("output"));
 		
 		if (line.hasOption("dictionary")) {
 			String fname = line.getOptionValue("dictionary");
@@ -133,79 +248,80 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 					    "It must be a Yoshikoder ('.ykd'), Lexicoder ('.lcd'), " +
 					    "Wordstat ('.CAT'), LIWC (.dic), or VBPro ('.vbpro') file\n");
 			}
+			// for printing out
+			categoryNodesInPrintOrder = getCategoryNodesInPrintOrder(dict);
 		}
 		oldMatchStrategy = line.hasOption("oldmatching");
-		
-		tOutputfile = new File(line.getOptionValue("output"));
 	
 		String[] files = line.getArgs();
 		if (files.length == 0)
 			throw new Exception("No documents or folders of documents to process!");
 		filesToProcess = getRecursiveDepthOneFileArray(files);	
 		
-		// all little verbosity never hurts
-		System.err.println("Settings:");
-		System.err.println("  Locale of input files: " + tLocale + " ie '" + 
-				tLocale.getDisplayName() + "'");
-		System.err.println("  Encoding of input files: " + tEncoding.name() + " ie '" +
-				tEncoding.displayName() + "'");
-		System.out.println("  Dictionary file: " + 
-				line.getOptionValue("dictionary"));
-		System.err.println("  Using old pattern matching strategy? " + oldMatchStrategy);
-		//System.err.println("  Output CSV file encoding: " + 
-		//		(onWindows() ? "windows-1252 ('Latin 1')" : "UTF8"));
-		//System.err.println("  Output file line endings: " + 
-		//		(onWindows() ? "\\r\\n (Windows style)" : "\\n (Unix style)"));
-
-		CountPrinter printer = null;
-		if (oldMatchStrategy){
-			printer = new CSVOldStyleCategoryDictionaryCountPrinter(dict, 
-				tOutputfile, "data.csv", filesToProcess, tEncoding, tLocale);
-		} else {
-			printer = new CSVFXCategoryDictionaryCountPrinter(dict, 
-				tOutputfile, "data.csv", filesToProcess, tEncoding, tLocale);
-		}
-		/*
-		if (onWindows())
-			printer.setWindowsOutput(); // \r\n and Latin 1 (FFS...)
-		*/
-		final float maxProg = (float)printer.getMaxProgress();
-		final DecimalFormat df = new DecimalFormat("#.##");
-		PropertyChangeListener listener = new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				if ("progress".equals(evt.getPropertyName())){
-					int prog = (Integer)evt.getNewValue();
-					System.err.println(df.format((prog / maxProg) * 100) + "% complete");
-				}
-			}
-		};
-		printer.addPropertyChangeListener(listener);		
-		printer.processFiles(false);
-		
-		String newl = printer.getNewline();
-		File rme = new File(tOutputfile, printer.getReadmefilename());
-		try (
-				OutputStreamWriter out = new OutputStreamWriter(
-					new FileOutputStream(rme, true), /* appending */
-						printer.getOutputCharset());
-				BufferedWriter writer = new BufferedWriter(out);
-			){
-				writer.write(newl);
-			writer.write("Settings:");
-			writer.write(newl + newl);
-			writer.write("File enc:\t" + printer.getOutputCharset());
-			writer.write(newl);
-			//writer.write("Output enc:\t" + 
-			//		(onWindows() ? "windows-1252 ('Latin 1')" : "UTF-8"));
-			//writer.write(newl);
-			writer.write("Dict:\t" + line.getOptionValue("dictionary") + " (source file)");
-			writer.write(newl);
-			writer.write("Matching:\t" + (oldMatchStrategy ? "old" : "new"));
-			writer.write(newl);
-			writer.write("Line endings:\t \\n (Unix style)");
-			//writer.write(newl);
+		if (tOutputfile == null){			
+			// TODO check the dictionary does not already specify one of these
+			SimpleDocumentTokenizer tokenizer = new SimpleDocumentTokenizer(tLocale);
+			// push out in default local encoding
+			for (TreeItem<DCat> titem : categoryNodesInPrintOrder) 
+				System.out.print("," + StringEscapeUtils.escapeCsv(titem.getValue().getName()));
+			System.out.println("," + 
+				CSVFXCategoryDictionaryCountPrinter.wordCountHeader);
 			
+			for (File f : filesToProcess) {
+				IYoshikoderDocument idoc = 
+						new SimpleYoshikoderDocument(f.getName(), 
+							AbstractYoshikoderDocument.getTextFromFile(f, tEncoding),
+							null, tokenizer);
+				String docline = makeLineFromDocument(dict, idoc, oldMatchStrategy);
+				System.out.println(docline);
+			}
+		} else {
+			CountPrinter printer = null;
+			if (oldMatchStrategy){
+				printer = new CSVOldStyleCategoryDictionaryCountPrinter(dict, 
+						tOutputfile, "data.csv", filesToProcess, tEncoding, tLocale);
+			} else {
+				printer = new CSVFXCategoryDictionaryCountPrinter(dict, 
+						tOutputfile, "data.csv", filesToProcess, tEncoding, tLocale);
+			}
+			final float maxProg = (float)printer.getMaxProgress();
+			final DecimalFormat df = new DecimalFormat("#.##");
+			PropertyChangeListener listener = new PropertyChangeListener() {
+				@Override
+				public void propertyChange(PropertyChangeEvent evt) {
+					if ("progress".equals(evt.getPropertyName())){
+						int prog = (Integer)evt.getNewValue();
+						System.err.println(df.format((prog / maxProg) * 100) + "% complete");
+					}
+				}
+			};
+			printer.addPropertyChangeListener(listener);		
+			printer.processFiles(false);
+
+			String newl = printer.getNewline();
+			File rme = new File(tOutputfile, printer.getReadmefilename());
+			try (
+					OutputStreamWriter out = new OutputStreamWriter(
+							new FileOutputStream(rme, true), /* appending */
+							printer.getOutputCharset());
+					BufferedWriter writer = new BufferedWriter(out);
+					){
+				writer.write(newl);
+				writer.write("Settings:");
+				writer.write(newl + newl);
+				writer.write("File enc:\t" + printer.getOutputCharset());
+				writer.write(newl);
+				//writer.write("Output enc:\t" + 
+				//		(onWindows() ? "windows-1252 ('Latin 1')" : "UTF-8"));
+				//writer.write(newl);
+				writer.write("Dict:\t" + line.getOptionValue("dictionary") + " (source file)");
+				writer.write(newl);
+				writer.write("Matching:\t" + (oldMatchStrategy ? "old" : "new"));
+				writer.write(newl);
+				writer.write("Line endings:\t \\n (Unix style)");
+				//writer.write(newl);
+
+			}
 		}
 	}
 
