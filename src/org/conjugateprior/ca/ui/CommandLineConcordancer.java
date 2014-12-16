@@ -97,7 +97,7 @@ public class CommandLineConcordancer extends CommandLineApplication {
 	
 	@Override
 	protected String getUsageString() {
-		return "ykconcordancer -pattern <pattern> | -dictionary <file> -category <category> " + 
+		return "ykconc -pattern <pattern> | -dictionary <file> -category <category> " + 
 	           "[-locale <locale>] " +
 	           "[-encoding <encoding>] [-window <number>] [-output <file>] " +
 			   "[-format <format>] [file1 file2 | folder1]";

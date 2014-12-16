@@ -43,7 +43,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 	
 	@Override
 	protected String getUsageString() {
-		return "ykreporter [-encoding <encoding>] [-locale <locale>] " +
+		return "ykcats [-encoding <encoding>] [-locale <locale>] " +
 			   "[-oldmatching] [-output <folder>] -dictionary <file> " +
 			   "[doc1.txt doc2.txt folder1]";
 	}

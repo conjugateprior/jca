@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="ykreporter" basedir="." default="cljar-cats">
+<project name="ykreporter" basedir="." default="dist">
 
   <!-- build.number and version -->
   <property file="./build.properties"/>
@@ -44,9 +44,9 @@
           description="Removes classes, temporary directories, and targets">
     <delete dir="${class.dir}" />
     <delete dir="${build.dir}" />
-    <delete file="${jarname.cl.words}-${version}.jar" />
+    <!-- <delete file="${jarname.cl.words}-${version}.jar" />
     <delete file="${jarname.cl.cats}-${version}.jar" />
-    <delete file="${jarname.gui}-${version}.jar" />
+    <delete file="${jarname.gui}-${version}.jar" /> -->
   </target>
 
   <target name="bundle-gui" depends="gui-jar">
@@ -112,6 +112,9 @@
       </patternset>
       <fileset dir="${lib.dir}">
 	<include name="*.jar" />
+	    <exclude name="controlsfx*" />
+	    <exclude name="aquafx*" />
+
       </fileset>
     </unzip>
     
@@ -176,6 +179,9 @@
       </patternset>
       <fileset dir="${lib.dir}">
 	<include name="*.jar" />
+	    <exclude name="controlsfx*" />
+	    <exclude name="aquafx*" />
+
       </fileset>
     </unzip>
     
@@ -195,6 +201,30 @@
     </jar>
   </target>
   
+	<target name="dist" 
+		  description="Creates the ykconcordancer, a command line concordancer"
+		  depends="cljar-conc,cljar-cats,cljar-words">
+        <mkdir dir="dist" />
+		<copy todir="dist">
+			<fileset dir="." includes="*-${version}.jar" />
+		</copy>
+		<copy file="templates/bashscript" tofile="dist/ykcats"/>
+		<replace file="dist/ykcats" token="JARFILE" 
+			value="${jarname.cl.cats}-${version}.jar"/>
+		<chmod file="dist/ykcats" perm="ugo+rx"/>
+		
+		<copy file="templates/bashscript" tofile="dist/ykwords"/>
+		<replace file="dist/ykwords" token="JARFILE" 
+			value="${jarname.cl.words}-${version}.jar"/>
+		<chmod file="dist/ykwords" perm="ugo+rx"/>
+						
+		<copy file="templates/bashscript" tofile="dist/ykconc"/>
+		<replace file="dist/ykconc" token="JARFILE" 
+			value="${jarname.cl.conc}-${version}.jar"/>
+		<chmod file="dist/ykconc" perm="ugo+rx"/>
+
+	</target>
+	
 	  <target name="cljar-conc" 
 		  description="Creates the ykconcordancer, a command line concordancer"
 		  depends="compile">
@@ -205,9 +235,13 @@
 	      <patternset>
 		<include name="**/*" />
 		<exclude name="META-INF/*" />
+	
 	      </patternset>
 	      <fileset dir="${lib.dir}">
 		<include name="*.jar" />
+		    <exclude name="controlsfx*" />
+		    <exclude name="aquafx*" />
+
 	      </fileset>
 	    </unzip>
 	    
