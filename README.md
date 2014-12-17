@@ -26,11 +26,8 @@ All subject to change.
 
 To compile, type `ant`. 
 
-This will create a folder called `dist` containing bash
-scripts and the jar files that they refer to.  If you are on a Unix system, e.g.
-OSX or Linux, then `mv` all these into `~/bin/` (making sure that's on your 
-path) and use them as you would other command line tools. 
+Installation instructions are on the [project wiki](https://github.com/conjugateprior/jca/wiki)
 
-Windows executables are on the way.  Probably.  If I can find a Windows machine
-to test them on.  Or I guess Windows people could get 
-a proper command line interface from http://unxutils.sourceforge.net/
+Windows executables are on the way.  Probably.  If I can find a
+Windows machine to test them on.  Or I guess Windows people could get
+a proper command line interface from <http://unxutils.sourceforge.net/>
