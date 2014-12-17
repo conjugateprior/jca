@@ -186,6 +186,8 @@ public class CommandLineConcordancer extends CommandLineApplication {
 		
 		if (line.hasOption("dictionary") && line.hasOption("pattern"))
 			throw new Exception("Use dictionary and category arguments or use pattern argument, but not both");
+		if (!(line.hasOption("dictionary") || line.hasOption("pattern")))
+			throw new Exception("Missing either dictionary and category arguments, or pattern argument");
 		
 		if (line.hasOption("dictionary")) {
 			String fname = line.getOptionValue("dictionary");

@@ -17,3 +17,18 @@ Changes in 0.2.0:
 
   * ykreporter no longer pushes anything except errors and warnings to
     stderr
+
+Changes in 0.2.1:
+
+  Bug fixes:
+
+  * bash scripts now have the proper paths and should work according to 
+    installation instructions on the Github project wiki
+
+  * No mysterious nulls turn up when there are no input arguments to ykconc 
+
+  Developer:
+
+  * The `dist` task now makes its own zip file with bash scripts and jars
+
+ 

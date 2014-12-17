@@ -32,7 +32,9 @@
 	            value="org.conjugateprior.ca.ui.GraphicalWordCounter"/>
   <property name="main.class.cl.conc" 
 	            value="org.conjugateprior.ca.ui.CommandLineConcordancer"/>
-
+  <property name="dist.zip"
+	 value="yktools-${version}" />
+	
   <path id="project.class.path">
     <pathelement location="${class.root}" />
     <fileset dir="${lib.dir}">
@@ -204,25 +206,30 @@
 	<target name="dist" 
 		  description="Creates the ykconcordancer, a command line concordancer"
 		  depends="cljar-conc,cljar-cats,cljar-words">
-        <mkdir dir="dist" />
-		<copy todir="dist">
+        
+		<mkdir dir="${dist.zip}" />
+		<copy todir="${dist.zip}">
 			<fileset dir="." includes="*-${version}.jar" />
 		</copy>
-		<copy file="templates/bashscript" tofile="dist/ykcats"/>
-		<replace file="dist/ykcats" token="JARFILE" 
+		<copy file="templates/bashscript" tofile="${dist.zip}/ykcats"/>
+		<replace file="${dist.zip}/ykcats" token="JARFILE" 
 			value="${jarname.cl.cats}-${version}.jar"/>
-		<chmod file="dist/ykcats" perm="ugo+rx"/>
+		<chmod file="${dist.zip}/ykcats" perm="ugo+rx"/>
 		
-		<copy file="templates/bashscript" tofile="dist/ykwords"/>
-		<replace file="dist/ykwords" token="JARFILE" 
+		<copy file="templates/bashscript" tofile="${dist.zip}/ykwords"/>
+		<replace file="${dist.zip}/ykwords" token="JARFILE" 
 			value="${jarname.cl.words}-${version}.jar"/>
-		<chmod file="dist/ykwords" perm="ugo+rx"/>
+		<chmod file="${dist.zip}/ykwords" perm="ugo+rx"/>
 						
-		<copy file="templates/bashscript" tofile="dist/ykconc"/>
-		<replace file="dist/ykconc" token="JARFILE" 
+		<copy file="templates/bashscript" tofile="${dist.zip}/ykconc"/>
+		<replace file="${dist.zip}/ykconc" token="JARFILE" 
 			value="${jarname.cl.conc}-${version}.jar"/>
-		<chmod file="dist/ykconc" perm="ugo+rx"/>
-
+		<chmod file="${dist.zip}/ykconc" perm="ugo+rx"/>
+		
+		<zip destfile="${dist.zip}.zip"
+		       basedir="${dist.zip}" />
+		<delete dir="${dist.zip}"/>
+		
 	</target>
 	
 	  <target name="cljar-conc" 
