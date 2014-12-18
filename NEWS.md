@@ -31,4 +31,16 @@ Changes in 0.2.1:
 
   * The `dist` task now makes its own zip file with bash scripts and jars
 
+Changes in 0.2.2:
  
+   Bug fixes:
+   
+   * Shell scripts were losing quoted elements
+   
+   * More sensible error messages for no arguments
+   
+   * category headers in ykcats output were not showing nested structure
+   
+   * More instructions on the project wiki
+   
+   

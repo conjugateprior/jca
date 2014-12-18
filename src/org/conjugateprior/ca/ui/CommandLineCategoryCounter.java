@@ -71,8 +71,8 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		dictionary.setRequired(true);
 		
 		Option outputfile = new Option("output", true, 
-				"Name for an output folder");
-		outputfile.setArgName("folder");
+				"Name for an output file");
+		outputfile.setArgName("file");
 		
 		addCommandLineOption(help);
 		addCommandLineOption(encoding);
@@ -263,7 +263,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 			SimpleDocumentTokenizer tokenizer = new SimpleDocumentTokenizer(tLocale);
 			// push out in default local encoding
 			for (TreeItem<DCat> titem : categoryNodesInPrintOrder) 
-				System.out.print("," + StringEscapeUtils.escapeCsv(titem.getValue().getName()));
+				System.out.print("," + StringEscapeUtils.escapeCsv(DCat.getPathAsString(titem, ">")));
 			System.out.println("," + 
 				CSVFXCategoryDictionaryCountPrinter.wordCountHeader);
 			

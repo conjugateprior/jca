@@ -1,2 +1,2 @@
 #!/bin/bash
-java -Xmx512M -jar $HOME/bin/JARFILE $*
+java -Xmx512M -jar $HOME/bin/JARFILE "$@"

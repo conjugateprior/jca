@@ -70,7 +70,7 @@ public class CommandLineWordCounter extends CommandLineApplication {
 
 		Option format = new Option("format", true, 
 				"One of: ldac (the default), mtx");
-		outputfile.setArgName("format");
+		format.setArgName("format");
 		
 		addCommandLineOption(help);
 		addCommandLineOption(encoding);

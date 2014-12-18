@@ -69,7 +69,7 @@ public class CommandLineConcordancer extends CommandLineApplication {
 		
 		Option window = new Option("window", true, 
 				"Number of words either side (default: 5)");
-		window.setArgName("number of words");
+		window.setArgName("number");
 		
 		Option outputfile = new Option("output", true, 
 				"Name of output file (default: stdout)");
@@ -77,11 +77,11 @@ public class CommandLineConcordancer extends CommandLineApplication {
 		
 		Option dict = new Option("dictionary", true, 
 				"Content analysis dictionary");
-		outputfile.setArgName("file");
+		dict.setArgName("file");
 		
 		Option dictcat = new Option("category", true, 
 				"Category from content analysis dictionary");
-		outputfile.setArgName("category");
+		dictcat.setArgName("category");
 				
 		addCommandLineOption(help);
 		addCommandLineOption(encoding);
@@ -229,6 +229,7 @@ public class CommandLineConcordancer extends CommandLineApplication {
 			// throws exception if there's no category of that name
 			regexpList = getPatternListFromDictionary(dict, cat);	
 		} else {
+			//System.err.println( line.getOptionValue("pattern").split("[ ]+").length );
 			
 			String[] spl = line.getOptionValue("pattern").split("[ ]+");
 			IPatternEngine patternEngine = new SubstringPatternEngine();
