@@ -348,7 +348,7 @@ public abstract class CountPrinter implements ICountPrinter {
 		}
 	}
 	
-	public static CountPrinter getWordCountPrinter(WordCounter rep, 
+	public static CountPrinter getWordCountPrinter(VocabularyFilterer rep, 
 			Format out, File folder, Charset c, Locale l, File[] fs)
 					throws Exception {
 		

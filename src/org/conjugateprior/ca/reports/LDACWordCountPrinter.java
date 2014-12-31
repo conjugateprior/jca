@@ -11,7 +11,7 @@ import org.conjugateprior.ca.IYoshikoderDocument;
 
 public class LDACWordCountPrinter extends WordCountPrinter {
 	
-	public LDACWordCountPrinter(WordCounter reporter, 
+	public LDACWordCountPrinter(VocabularyFilterer reporter, 
 			File folder, Charset c, Locale l, File[] f) {
 		super(reporter, folder, "data.ldac", c, l, f);
 	}
@@ -42,7 +42,7 @@ public class LDACWordCountPrinter extends WordCountPrinter {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		WordCounter rep = new WordCounter();
+		VocabularyFilterer rep = new VocabularyFilterer();
 		CountPrinter wp = CountPrinter.getWordCountPrinter(rep, 
 				ICountPrinter.Format.MTX, new File("/Users/will/Desktop/fold"), 
 				Charset.forName("UTF8"), Locale.ENGLISH, 

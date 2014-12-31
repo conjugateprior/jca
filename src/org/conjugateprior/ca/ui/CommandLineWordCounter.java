@@ -9,7 +9,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.conjugateprior.ca.reports.CountPrinter;
 import org.conjugateprior.ca.reports.ICountPrinter;
-import org.conjugateprior.ca.reports.WordCounter;
+import org.conjugateprior.ca.reports.VocabularyFilterer;
 
 public class CommandLineWordCounter extends CommandLineApplication {
 	
@@ -178,7 +178,7 @@ public class CommandLineWordCounter extends CommandLineApplication {
 			throw new Exception(tOutputfile.getAbsolutePath() + " already exists. " + 
 					"Halting to prevent data loss.");
 		
-		WordCounter rep = new WordCounter();
+		VocabularyFilterer rep = new VocabularyFilterer();
 		if (removeNumbers)
 			rep.addFilter(rep.new NoNumberFilter());
 		if (removeCurrency)

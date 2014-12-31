@@ -24,7 +24,7 @@ import org.conjugateprior.ca.SubstringPatternEngine;
 public class AbstractCounter {
 
 	protected enum OutputFormat {
-		TEXT, LATEX, HTML, CSV
+		TEXT, LATEX, HTML, CSV, LDAC, MTX
 	};
 	
 	public static String WORDCOUNT = "WordCount";

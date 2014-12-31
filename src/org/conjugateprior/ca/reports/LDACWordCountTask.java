@@ -17,7 +17,7 @@ public class LDACWordCountTask extends Task<File> {
 
 	WordCountPrinter printer;
 	
-	public LDACWordCountTask(WordCounter reporter, 
+	public LDACWordCountTask(VocabularyFilterer reporter, 
 			File folder, Charset c, Locale l, File[] f) {
 		super();
 		printer = new LDACWordCountPrinter(reporter, folder, c, l, f){			

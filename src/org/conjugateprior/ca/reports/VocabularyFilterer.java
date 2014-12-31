@@ -33,7 +33,7 @@ import org.tartarus.snowball.ext.spanishStemmer;
 import org.tartarus.snowball.ext.swedishStemmer;
 import org.tartarus.snowball.ext.turkishStemmer;
 
-public class WordCounter {
+public class VocabularyFilterer {
 	
 	protected FilterPipe fp;
 	
@@ -150,7 +150,7 @@ public class WordCounter {
 		}
 	}
 	
-	public WordCounter() {
+	public VocabularyFilterer() {
 		fp = new FilterPipe();
 	}
 	
@@ -214,7 +214,7 @@ public class WordCounter {
 		IYoshikoderDocument d1 = new SimpleYoshikoderDocument("doc1", doc1, null, tok);
 		IYoshikoderDocument d2 = new SimpleYoshikoderDocument("doc2", doc2, null, tok);
 		
-		WordCounter rep = new WordCounter();
+		VocabularyFilterer rep = new VocabularyFilterer();
 		rep.addNoNumberFilter();
 		Set<String> ss = new HashSet<String>();
 		ss.add("as");

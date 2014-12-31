@@ -55,7 +55,7 @@ import org.conjugateprior.ca.reports.CountPrinter;
 import org.conjugateprior.ca.reports.CountPrinter.CountingTask;
 import org.conjugateprior.ca.reports.LDACWordCountPrinter;
 import org.conjugateprior.ca.reports.MTXWordCountPrinter;
-import org.conjugateprior.ca.reports.WordCounter;
+import org.conjugateprior.ca.reports.VocabularyFilterer;
 import org.controlsfx.dialog.DialogStyle;
 import org.controlsfx.dialog.Dialogs;
 
@@ -656,7 +656,7 @@ public class GraphicalWordCounter extends Application {
 		CountPrinter printer = null;
 		if (!cbDict.isSelected()){
 
-			WordCounter counter = new WordCounter();
+			VocabularyFilterer counter = new VocabularyFilterer();
 			if (cbNoNumbers.isSelected())
 				counter.addNoNumberFilter();
 			if (cbNoCurrency.isSelected())

@@ -17,7 +17,7 @@ public class MTXWordCountPrinter extends WordCountPrinter {
 	int mtxMaxColIndex = -1;
 	int tripleCount = 0; // how many entries in all
 
-	public MTXWordCountPrinter(WordCounter rep, File folder, Charset c, Locale l, File[] f) {
+	public MTXWordCountPrinter(VocabularyFilterer rep, File folder, Charset c, Locale l, File[] f) {
 		super(rep, folder, "data.mtx-tmp", c, l, f);
 	}
 

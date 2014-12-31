@@ -11,12 +11,12 @@ import java.util.Map;
 
 public abstract class WordCountPrinter extends CountPrinter {
 
-	protected WordCounter reporter;
+	protected VocabularyFilterer reporter;
 	
 	protected int idIndex = 0;
 	protected Map<String,Integer> wordToId;
 	
-	public WordCountPrinter(WordCounter rep, File f, String df, 
+	public WordCountPrinter(VocabularyFilterer rep, File f, String df, 
 			Charset cs, Locale loc, File[] fs) {
 		
 		super(f, df, fs, cs, loc);
@@ -43,5 +43,7 @@ public abstract class WordCountPrinter extends CountPrinter {
 			
 		} 
 	}
+	
+	
 	
 }
