@@ -25,13 +25,13 @@
   <property name="jarname.cl.conc" 
 	        value="ykconcordancer"/>
   <property name="main.class.cl.cats" 
-            value="org.conjugateprior.ca.ui.CommandLineCategoryCounter"/>
+            value="org.conjugateprior.ca.app.CLCategoryCounter"/>
   <property name="main.class.cl.words" 
 	            value="org.conjugateprior.ca.ui.CommandLineWordCounter"/>
   <property name="main.class.gui" 
 	            value="org.conjugateprior.ca.ui.GraphicalWordCounter"/>
   <property name="main.class.cl.conc" 
-	            value="org.conjugateprior.ca.ui.CommandLineConcordancer"/>
+	            value="org.conjugateprior.ca.app.CLConcordancer"/>
   <property name="dist.zip"
 	 value="yktools-${version}" />
 	

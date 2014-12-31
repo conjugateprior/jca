@@ -32,6 +32,65 @@ import org.conjugateprior.ca.reports.CountPrinter;
 
 public class CommandLineCategoryCounter extends CommandLineApplication {
 
+	// Java bean type properties
+	
+	private String localeName;
+	private String encodingName;
+	private String outputFileName;
+	private boolean useOldMatchStrategy;
+	private String[] listOfFilenames;
+	private String dictionaryFilename;
+	
+	public String getLocaleName() {
+		return localeName;
+	}
+
+	public void setLocaleName(String localeName) {
+		this.localeName = localeName;
+	}
+
+	public String getEncodingName() {
+		return encodingName;
+	}
+
+	public void setEncodingName(String encodingName) {
+		this.encodingName = encodingName;
+	}
+
+	public String getOutputFileName() {
+		return outputFileName;
+	}
+
+	public void setOutputFileName(String outputFileName) {
+		this.outputFileName = outputFileName;
+	}
+
+	public boolean isUseOldMatchStrategy() {
+		return useOldMatchStrategy;
+	}
+
+	public void setUseOldMatchStrategy(boolean useOldMatchStrategy) {
+		this.useOldMatchStrategy = useOldMatchStrategy;
+	}
+
+	public String[] getListOfFilenames() {
+		return listOfFilenames;
+	}
+
+	public void setListOfFilenames(String[] listOfFilenames) {
+		this.listOfFilenames = listOfFilenames;
+	}
+
+	public String getDictionaryFilename() {
+		return dictionaryFilename;
+	}
+
+	public void setDictionaryFilename(String dictionaryFilename) {
+		this.dictionaryFilename = dictionaryFilename;
+	}
+
+	// 
+	
 	protected Locale tLocale;
 	protected Charset tEncoding;
 	protected File tOutputfile = null;
@@ -329,6 +388,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 		CommandLineCategoryCounter rep = new CommandLineCategoryCounter();
 		try {
 			rep.process(args);
+			
 		} catch (Exception ex){
 			System.err.println(ex.getMessage());
 			rep.printUsageAndOptions();

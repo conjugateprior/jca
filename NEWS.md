@@ -43,4 +43,10 @@ Changes in 0.2.2:
    
    * More instructions on the project wiki
    
-   
+Changes in 0.2.3:
+
+   (Internal changes mostly)
+
+   Developer:
+
+   * R functions to run the jar files   

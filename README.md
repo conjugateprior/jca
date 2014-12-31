@@ -24,10 +24,26 @@ All subject to change.
 
 ### Compilation
 
-To compile, type `ant`. 
+To compile, type `ant dist`. 
 
-Installation instructions are on the [project wiki](https://github.com/conjugateprior/jca/wiki)
+The resulting file `yktools-<version>.zip` contains three jar files and
+three bash scripts to call them.  Installation details are on the 
+[project wiki](https://github.com/conjugateprior/jca/wiki).
 
-Windows executables are on the way.  Probably.  If I can find a
-Windows machine to test them on.  Or I guess Windows people could get
-a proper command line interface from <http://unxutils.sourceforge.net/>
+### Usage: command line
+
+The [project wiki](https://github.com/conjugateprior/jca/wiki)
+describes how to install and use these on a Unix system (Linux or OSX)
+
+Windows executables *might* be on the way.  If I can find a Windows
+machine to test them on.  Or I guess Windows people could get a proper
+command line interface from <http://unxutils.sourceforge.net/>.
+
+### Usage: R
+
+There's now a small pile of `source`able R functions in `rfuncs.R`,
+these work like the `ykcats` script only from within R.
+Instructions on how to use it are on the project wiki (link above).
+
+While these are not wrapped up in their own R package you'll have to
+hand in the location of the relevant jarfile.

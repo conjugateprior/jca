@@ -545,6 +545,20 @@ public class FXCategoryDictionary {
 		return sb.toString();
 	}
 	
+	private void recurseCategories(List<TreeItem<DCat>> sb, TreeItem<DCat> n){
+		sb.add(n);
+		for (TreeItem<DCat> treeItem : n.getChildren()) {
+			recurseCategories(sb, treeItem);
+		}
+	}
+	
+	public List<TreeItem<DCat>> getCategoryNodesInPrintOrder(){
+		TreeItem<DCat> n = getCategoryRoot();
+		List<TreeItem<DCat>> list = new ArrayList<TreeItem<DCat>>();
+		recurseCategories(list, n);
+		return list;
+	}	
+	
 	public static void main(String[] args) throws Exception {
 		File f = new File("/Users/will/Documents/scratch/2007_abortion_dictionary.ykd");
 		FXCategoryDictionary dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(f);

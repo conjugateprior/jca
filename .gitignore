@@ -1,2 +1,8 @@
 /classes
 /build
+/JFreq.app
+/dist
+*~
+yktools-*.zip
+yk*.jar
+.DS_Store
