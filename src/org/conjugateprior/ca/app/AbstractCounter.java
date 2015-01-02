@@ -2,7 +2,10 @@ package org.conjugateprior.ca.app;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -14,6 +17,7 @@ import java.util.regex.Pattern;
 
 import javafx.scene.control.TreeItem;
 
+import org.apache.commons.io.IOUtils;
 import org.conjugateprior.ca.DCat;
 import org.conjugateprior.ca.DPat;
 import org.conjugateprior.ca.FXCategoryDictionary;
@@ -430,6 +434,23 @@ public class AbstractCounter {
 			throw new Exception("File " + fail.getAbsolutePath() + " does not exist.");
 		
 		return filelist.toArray(new File[filelist.size()]);
+	}
+
+	// specify without resources folder
+	protected InputStream getResource(String name) throws Exception {
+		if (getClass().getResource("resources/" + name) == null)
+			return new FileInputStream(new File("resources/" + name));
+		return getClass().getResourceAsStream("resources/" + name);
+	}
+
+	protected void extractResourceFileAndSaveToFolder(String readmeResourceName, String outputName) 
+			throws Exception {
+		try (
+				InputStream is = getResource(readmeResourceName);
+				FileWriter out = new FileWriter(new File(outputFolder, outputName));
+				){
+			IOUtils.copy(is, out, outputEncoding);	
+		} 
 	}
 
 }

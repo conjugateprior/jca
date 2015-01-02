@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
 import org.conjugateprior.ca.IYoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
@@ -33,6 +34,10 @@ public class WordCounter extends AbstractCounter {
 		
 	protected VocabularyFilterer filterer = new VocabularyFilterer();
 	
+	public VocabularyFilterer getFilterer() {
+		return filterer;
+	}
+
 	public WordCounter() {
 		super();
 	}
@@ -44,7 +49,7 @@ public class WordCounter extends AbstractCounter {
 				BufferedWriter docWriter = new BufferedWriter(docs);
 				){
 			for (File doc : files) {
-				docWriter.write(doc.getName() + "\n"); // TODO platform specific?
+				docWriter.write(StringEscapeUtils.escapeCsv(doc.getName()) + "\n"); // TODO platform specific?
 			}
 		} 
 	}
@@ -61,7 +66,7 @@ public class WordCounter extends AbstractCounter {
 				wdsInOrder[ind] = wd;
 			}
 			for (String entry : wdsInOrder)
-				wordsWriter.write(entry + "\n"); // TODO platform specific?			
+				wordsWriter.write(StringEscapeUtils.escapeCsv(entry) + "\n"); // TODO platform specific?			
 		} 
 	}
 	
@@ -165,10 +170,14 @@ public class WordCounter extends AbstractCounter {
 			}
 			writer.flush(); // do we need this really?
 
-			if (format.equals(OutputFormat.MTX))
+			if (format.equals(OutputFormat.MTX)){
 				mtxClearup();
+				extractResourceFileAndSaveToFolder("README-mtx", "README.txt");
+			} else 
+				extractResourceFileAndSaveToFolder("README-ldac", "README.txt");
 			dumpVocabularyFile(new File(outputFolder, wordFilename));
-			dumpDocumentFile(new File(outputFolder, documentFilename));			
+			dumpDocumentFile(new File(outputFolder, documentFilename));	
+			
 		}		
 	}
 	

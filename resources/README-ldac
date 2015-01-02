@@ -4,7 +4,6 @@ This folder contains three or four files:
 
 	words.csv
 	documents.csv
-	unreadable-files.txt (is there are any)
 	data.ldac
 	
 documents.csv lists the files that were successfully processed,
@@ -32,12 +31,16 @@ data.ldac to the .dat file produced by that software.
 
 ## Note on topic model packages in R
 
+### lda
+
 To read the word counts stored here in sparse LDA-C format into R from 
 an output folder called 'folder'
 
 	require(lda) 
 	documents <- read.documents("folder/data.ldac")
 	vocab <- read.vocab("folder/words.csv")
+
+### topicmodels
 
 The topicmodels package has an ldaformat2dtm function to transform this into 
 TermDocumentMatrix objects, as used by the tm package.
