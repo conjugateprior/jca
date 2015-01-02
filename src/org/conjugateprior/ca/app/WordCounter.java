@@ -2,8 +2,11 @@ package org.conjugateprior.ca.app;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.channels.FileChannel;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -16,12 +19,18 @@ import org.conjugateprior.ca.reports.VocabularyFilterer;
 public class WordCounter extends AbstractCounter {
 
 	protected int idIndex = 0;
-	protected Map<String,Integer> wordToId;
+	protected Map<String,Integer> wordToId = new HashMap<String,Integer>();
 	
 	protected int mtxDocumentLineCounter = 0; // this starts at 1
 	protected int mtxMaxColIndex = -1;
 	protected int tripleCount = 0; // how many entries in all
 	
+	protected String ldacFilename = "data.ldac";
+	protected String mtxTempFilename = "data.mtx-tmp";
+	protected String mtxFilename = "data.mtx";
+	protected String documentFilename = "docs.csv";
+	protected String wordFilename = "words.csv";
+		
 	protected VocabularyFilterer filterer = new VocabularyFilterer();
 	
 	public WordCounter() {
@@ -40,7 +49,6 @@ public class WordCounter extends AbstractCounter {
 		} 
 	}
 		
-	
 	protected void dumpVocabularyFile(File f) throws Exception {
 	try (
 			OutputStreamWriter words = new OutputStreamWriter(
@@ -57,12 +65,38 @@ public class WordCounter extends AbstractCounter {
 		} 
 	}
 	
-	public void dumpMetadata() throws Exception {
-		
+	// make it *after* we've dumped the data (and computed the stats as side effects)
+	protected String makeMTXHeader(){
+		StringBuilder sb = new StringBuilder();
+		sb.append("%%MatrixMarket matrix coordinate integer general" + "\n");
+		sb.append(mtxDocumentLineCounter + " ");
+		sb.append((mtxMaxColIndex+1) + " ");
+		sb.append(tripleCount + "\n");
+		return sb.toString();
+
 	}
-	
-	public String makeMTXHeader(){
-		return null;
+
+	protected void mtxClearup() throws Exception {		
+		String header = makeMTXHeader();
+		try (
+				OutputStreamWriter real = new OutputStreamWriter(
+				new FileOutputStream(new File(outputFolder, mtxFilename)))
+			){
+			real.write(header);
+		}		
+		File tmpfile = new File(outputFolder, mtxTempFilename);
+		try (
+				FileInputStream fic = new FileInputStream(tmpfile);
+				FileChannel inputChannel = fic.getChannel();
+				FileOutputStream foc = new FileOutputStream(new File(outputFolder, mtxFilename), true);
+				FileChannel outputChannel = foc.getChannel();
+			){
+			outputChannel.transferFrom(inputChannel, header.getBytes().length, inputChannel.size());
+			boolean b = tmpfile.delete();
+			if (!b)
+				throw new Exception("Could not delete temporary file " + 
+						tmpfile.getAbsolutePath());
+		} 
 	}
 	
 	public String makeLDACLineFromDocument(IYoshikoderDocument doc){
@@ -103,24 +137,17 @@ public class WordCounter extends AbstractCounter {
 		}
 		return sb.toString();
 	}
-	
+		
 	public void processFiles() throws Exception {
 		if (outputFolder != null)
 			FileUtils.forceMkdir(outputFolder);
-
-		// now the long part
-		BufferedWriter writer = null;
-		try {
-			if (outputFolder != null){
-				if (format.equals(OutputFormat.MTX))
-					writer = getBufferedWriter(new File(outputFolder, "data.mtx"));
-				else 
-					writer = getBufferedWriter(new File(outputFolder, "data.ldac"));
-			} else {
-				writer = getBufferedWriter();
-			}
-			if (format.equals(OutputFormat.MTX))
-				writer.write(makeMTXHeader()); 			
+		
+		File ff = new File(outputFolder, ldacFilename); // default ldac
+		if (format.equals(OutputFormat.MTX))
+			ff = new File(outputFolder, mtxTempFilename);	
+		try (
+				BufferedWriter writer = getBufferedWriter(ff);
+			){
 
 			SimpleDocumentTokenizer tok = 
 					new SimpleDocumentTokenizer(locale);
@@ -133,22 +160,23 @@ public class WordCounter extends AbstractCounter {
 					writer.write(makeMTXLineFromDocument(idoc));
 				else 
 					writer.write(makeLDACLineFromDocument(idoc));
-
 				writer.newLine();
 				writer.flush(); // do we need this really?
 			}
 			writer.flush(); // do we need this really?
 
-			if (outputFolder != null){
-				dumpVocabularyFile(new File(outputFolder, "vocab.csv"));
-				dumpDocumentFile(new File(outputFolder, "docs.csv"));
-			}
-			
-		} finally {
-			if (writer != null)
-				writer.close();
-		}
-		
+			if (format.equals(OutputFormat.MTX))
+				mtxClearup();
+			dumpVocabularyFile(new File(outputFolder, wordFilename));
+			dumpDocumentFile(new File(outputFolder, documentFilename));			
+		}		
 	}
-
+	
+	public static void main(String[] args) throws Exception {
+		WordCounter counter = new WordCounter();
+		counter.setOutputFolder("/Users/will/wordout");
+		counter.setFormat(OutputFormat.MTX);
+		counter.setFiles(new String[]{"/Users/will/Dropbox/blogposts/uk-debate-by-speaker"});
+		counter.processFiles();
+	}
 }
