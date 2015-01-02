@@ -51,6 +51,12 @@ public class AbstractCounter {
 			setFormat(OutputFormat.HTML);
 		else if (s.equals("latex") || s.equals("tex"))
 			setFormat(OutputFormat.LATEX);
+		else if (s.equals("mtx"))
+			setFormat(OutputFormat.MTX);
+		else if (s.equals("ldac"))
+			setFormat(OutputFormat.LDAC);
+		else if (s.equals("csv"))
+			setFormat(OutputFormat.CSV);
 		else 
 			setFormat(OutputFormat.TEXT);
 	}
