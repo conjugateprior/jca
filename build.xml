@@ -27,7 +27,7 @@
   <property name="main.class.cl.cats" 
             value="org.conjugateprior.ca.app.CLCategoryCounter"/>
   <property name="main.class.cl.words" 
-	            value="org.conjugateprior.ca.ui.CommandLineWordCounter"/>
+	            value="org.conjugateprior.ca.app.CLWordCounter"/>
   <property name="main.class.gui" 
 	            value="org.conjugateprior.ca.ui.GraphicalWordCounter"/>
   <property name="main.class.cl.conc" 

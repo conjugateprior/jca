@@ -17,8 +17,14 @@ public class CLConcordancer {
 	protected Options options;
 	protected HelpFormatter helpFormatter;
 	
+	public static String USAGE = 
+			"ykconc -pattern <pattern> | -dictionary <file> -category <category> " + 
+					"[-locale <locale>] " +
+					"[-encoding <encoding>] [-window <number>] [-output <file>] " +
+					"[-format <format>] [file1 file2 | folder1]";
+	
 	public void printUsageAndOptions(){
-		helpFormatter.printHelp(CLCategoryCounter.USAGE, options);
+		helpFormatter.printHelp(USAGE, options);
 	}
 	
 	public CLConcordancer(Concordancer c) {

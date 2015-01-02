@@ -23,7 +23,7 @@ public class CLCategoryCounter {
 	   "[doc1.txt doc2.txt folder1]";
 	
 	public void printUsageAndOptions(){
-		helpFormatter.printHelp(CLCategoryCounter.USAGE, options);
+		helpFormatter.printHelp(USAGE, options);
 	}
 	
 	public CLCategoryCounter(CategoryCounter c) {
@@ -124,14 +124,14 @@ public class CLCategoryCounter {
 
 	public static void main(String[] args) throws Exception {
 		//ykcats -dictionary ~/Dropbox/blogposts/littledict.vbpro -output thing ~/Dropbox/blogposts/speeches
-		String[] as = new String[]{"-dictionary", "/Users/will/Dropbox/blogposts/littledict.vbpro",
-									/*"-output", "/Users/will/Dropbox/blogposts/ykcatesoutputfolder",*/ 
-									"-format", "html", "/Users/will/Dropbox/blogposts/speeches"};
+		//String[] as = new String[]{"-dictionary", "/Users/will/Dropbox/blogposts/littledict.vbpro",
+		//							/*"-output", "/Users/will/Dropbox/blogposts/ykcatesoutputfolder",*/ 
+		//							"-format", "html", "/Users/will/Dropbox/blogposts/speeches"};
 		
 		CategoryCounter cc = new CategoryCounter();
 		CLCategoryCounter c = new CLCategoryCounter(cc);
 		try {
-			c.processLine(as);
+			c.processLine(args);
 		} catch (Exception ex){
 			System.err.println(ex.getMessage());
 			c.printUsageAndOptions();

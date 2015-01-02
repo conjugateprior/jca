@@ -28,7 +28,7 @@ public class CLWordCounter {
 	           "[doc1.txt doc2.txt folder1]";
 	
 	public void printUsageAndOptions(){
-		helpFormatter.printHelp(CLCategoryCounter.USAGE, options);
+		helpFormatter.printHelp(USAGE, options);
 	}
 	
 	public CLWordCounter(WordCounter c) {
@@ -155,18 +155,19 @@ public class CLWordCounter {
 	
 	public static void main(String[] args) throws Exception {
 		//ykcats -dictionary ~/Dropbox/blogposts/littledict.vbpro -output thing ~/Dropbox/blogposts/speeches
-		String[] as = new String[]{/* "-dictionary", "/Users/will/Dropbox/blogposts/littledict.vbpro", */
+		/*
+		String[] as = new String[]{
 									"-output", "/Users/will/Dropbox/blogposts/ykwordsoutputfolder", 
 									"-format", "ldac", 
 									"-no_numbers",
 									"-no_currency",
 									"-stemmer", "english", 
 									"/Users/will/Dropbox/blogposts/speeches"};
-		
+		*/
 		WordCounter cc = new WordCounter();
 		CLWordCounter c = new CLWordCounter(cc);
 		try {
-			c.processLine(as);
+			c.processLine(args);
 		} catch (Exception ex){
 			System.err.println(ex.getMessage());
 			c.printUsageAndOptions();
