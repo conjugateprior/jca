@@ -15,6 +15,11 @@ public class Collocator extends AbstractCounter {
 		super();
 	}
 	
-	// sentence breaks first, then accurate statistics of surprise and coinc
+	// sentence breaks first, then accurate statistics 
+	// of surprise and coincidence
 	
+	
+	public static void main(String[] args) {
+		// gg
+	}
 }

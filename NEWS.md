@@ -45,8 +45,18 @@ Changes in 0.2.2:
    
 Changes in 0.2.3:
 
-   (Internal changes mostly)
+   New features:
+   
+   * New application to give simple descriptive statistics for document collections
+   
+   * New application to turn folders of documents into one document per line format 
+
+   Bug fixes:
+   
+   * miscellaneous
 
    Developer:
+
+   * Engines separated from command line apps so they can also be driven from rJava
 
    * R functions to run the jar files   

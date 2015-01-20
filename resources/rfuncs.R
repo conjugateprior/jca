@@ -1,4 +1,18 @@
 
+# rJava::.jpackage(pkgname, jars="*", lib.loc = libname)
+# .jaddClassPath("/Users/will/wip/jca/ykreporter-0.2.3.jar")
+# /Users/will/Dropbox/blogposts/speeches
+ykdesc <- function(files){
+  desc <- .jnew("org/conjugateprior/ca/app/Description")
+  ## laboriously make an array of references to files
+  flist <- rep(NULL, len(files))
+  for (i in 1:len(flist))
+    flist[i] <- .jnew("java/io/File", files[i])
+  fl <- .jarray(files, contents.class="java/io/File")
+  .jcall(desc,,method="setFiles",fl)
+  .jcall(desc,,"processFiles")
+}
+
 ykcats <- function(dictionary, args, ...){
   fs <- c(...) ## the files
   jarfile = args$jarfile

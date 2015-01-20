@@ -122,6 +122,10 @@ public class SimpleTokenization implements ITokenization {
 			return new int[]{sentenceOffsets[index][0], sentenceOffsets[index][1]};
 		return new int[]{};
 	}
+	
+	public int getSentenceCount(){
+		return sentenceOffsets.length;
+	}
 
 	// start new code
 

@@ -1,4 +1,4 @@
-## Apps for counting words or categories, and viewing them in context
+## Apps for counting words or categories, viewing them in context
 
 This is experimental code with no guarantee of working at all.
 All subject to change.
@@ -22,6 +22,11 @@ All subject to change.
   construct concordances ('keyword in context' lines) for a word, phrase, 
   or category from a content analysis dictionary, for a bunch of documents.
 
+* `ykliner`
+
+  A command line application to turn folders of documents into Mallet's 
+  prefered one per line format
+
 ### Compilation
 
 To compile, type `ant dist`. 
@@ -39,11 +44,9 @@ Windows executables *might* be on the way.  If I can find a Windows
 machine to test them on.  Or I guess Windows people could get a proper
 command line interface from <http://unxutils.sourceforge.net/>.
 
-### Usage: R
+### Usage: R (even more experimental than usual)
 
 There's now a small pile of `source`able R functions in `rfuncs.R`,
 these work like the `ykcats` script only from within R.
-Instructions on how to use it are on the project wiki (link above).
-
 While these are not wrapped up in their own R package you'll have to
 hand in the location of the relevant jarfile.

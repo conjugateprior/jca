@@ -58,6 +58,10 @@ public class SimpleYoshikoderDocument
 		return tokenization.getOffsetsForSentenceIndex(index);
 	}
 
+	public int getSentenceCount(){
+		return tokenization.getSentenceCount();
+	}
+	
 	@Override
 	public Map<String, Integer> getWordCountMap() {
 		return tokenization.getWordCountMap();

@@ -19,6 +19,7 @@ import javafx.scene.control.TreeItem;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
 import org.conjugateprior.ca.DCat;
 import org.conjugateprior.ca.DPat;
@@ -101,15 +102,6 @@ public class CommandLineConcordancer extends CommandLineApplication {
 	           "[-locale <locale>] " +
 	           "[-encoding <encoding>] [-window <number>] [-output <file>] " +
 			   "[-format <format>] [file1 file2 | folder1]";
-	}
-	
-	private String padString(String str, int len){
-		StringBuilder sb = new StringBuilder();
-		for (int toPrepend=len-str.length(); toPrepend>0; toPrepend--) {
-		    sb.append(' ');
-		}
-		sb.append(str);
-		return sb.toString();
 	}
 	
 	protected List<Pattern[]> getPatternListFromDictionary(FXCategoryDictionary dict, String catname)
@@ -366,7 +358,7 @@ public class CommandLineConcordancer extends CommandLineApplication {
 			maxlen = Math.max(maxlen, is[1]-is[0]);
 		for (int[] is : indices) {
 			String s = collapseWhitespace(txt.substring(is[0], is[1]));
-			str.write(padString(s, maxlen));
+			str.write(StringUtils.leftPad(s, maxlen));
 			s = " [" + txt.substring(is[2], is[3]) + "]";
 		    str.write(s);
 		    // catch trailing punctuation etc. by restarting straight after match

@@ -1,39 +1,34 @@
 <?xml version="1.0"?>
-<project name="ykreporter" basedir="." default="dist">
+<project name="ykreporter" 
+	     basedir="." 
+	     default="dist">
 
-  <!-- build.number and version -->
   <property file="./build.properties"/>
 
-  <property name="dir" 
-            value="."/>
-  <property name="source.dir" 
-            value="src"/>
-  <property name="class.dir" 
-            value="classes"/>
-  <property name="lib.dir" 
-            value="lib"/>
-  <property name="resource.dir" 
-            value="resources"/>
-  <property name="build.dir" 
-            value="build"/>
-  <property name="jarname.gui" 
-            value="jfreq"/>
-  <property name="jarname.cl.cats" 
-            value="ykreporter"/>
-  <property name="jarname.cl.words" 
-            value="ykwordcounter"/>
-  <property name="jarname.cl.conc" 
-	        value="ykconcordancer"/>
+  <property name="dir"             value="."/>
+  <property name="source.dir"      value="src"/>
+  <property name="class.dir"       value="classes"/>
+  <property name="lib.dir"         value="lib"/>
+  <property name="resource.dir"    value="resources"/>
+  <property name="build.dir"       value="build"/>
+  <property name="jarname.gui"     value="jfreq"/>
+  <property name="jarname"         value="jfreq"/>
+
   <property name="main.class.cl.cats" 
             value="org.conjugateprior.ca.app.CLCategoryCounter"/>
   <property name="main.class.cl.words" 
-	            value="org.conjugateprior.ca.app.CLWordCounter"/>
+	        value="org.conjugateprior.ca.app.CLWordCounter"/>
   <property name="main.class.gui" 
-	            value="org.conjugateprior.ca.ui.GraphicalWordCounter"/>
+	        value="org.conjugateprior.ca.ui.GraphicalWordCounter"/>
   <property name="main.class.cl.conc" 
-	            value="org.conjugateprior.ca.app.CLConcordancer"/>
+	        value="org.conjugateprior.ca.app.CLConcordancer"/>
+  <property name="main.class.cl.liner" 
+	        value="org.conjugateprior.ca.app.CLSingleLiner"/>
+  <property name="main.class.cl.desc" 
+		    value="org.conjugateprior.ca.app.CLDescription"/>
+
   <property name="dist.zip"
-	 value="yktools-${version}" />
+	        value="yktools-${version}" />
 	
   <path id="project.class.path">
     <pathelement location="${class.root}" />
@@ -46,44 +41,6 @@
           description="Removes classes, temporary directories, and targets">
     <delete dir="${class.dir}" />
     <delete dir="${build.dir}" />
-    <!-- <delete file="${jarname.cl.words}-${version}.jar" />
-    <delete file="${jarname.cl.cats}-${version}.jar" />
-    <delete file="${jarname.gui}-${version}.jar" /> -->
-  </target>
-
-  <target name="bundle-gui" depends="gui-jar">
-    <taskdef name="bundleapp"
-             classname="com.oracle.appbundler.AppBundlerTask"   
-             classpath="../../code/java/appbundler-1.0ea.jar" />
-
-    <bundleapp outputdirectory="."
-               name="JFreq"
-               displayname="JFreq"
-	       executableName="JFreq"
-	       identifier="org.conjugateprior.ca"
-	       shortversion="${version}"
-	       version="${version}"
-	       icon="resources/icons/jfreq.icns"
-	       mainclassname="org.conjugateprior.ca.ui.GraphicalWordCounter"
-	       copyright="Will Lowe, 2011-2014">
-      
-      <classpath file="${jarname.gui}-${version}.jar" />
-      
-      <!-- <runtime dir="${runtime}/Contents/Home"/>
-
-      <arch name="x86_64"/>
-      <arch name="i386"/> -->
-
-      <!-- Workaround since the icon parameter for bundleapp doesn't work -->
-      <option value="-Xdock:icon=Contents/Resources/jfreq.icns"/>
-      <option value="-Dapple.laf.useScreenMenuBar=true"/>
-      <option value="-Dcom.apple.macos.use-file-dialog-packages=true"/>
-      <option value="-Dcom.apple.macos.useScreenMenuBar=true"/>
-      <option value="-Dcom.apple.mrj.application.apple.menu.about.name=JFreq"/>
-      <option value="-Dcom.apple.smallTabs=true"/>
-      <option value="-Dfile.encoding=UTF-8"/>
-      <option value="-Xmx1024M" name="Xmx"/>
-    </bundleapp>
   </target>
 
   <target name="compile" 
@@ -101,171 +58,167 @@
     	   includeantruntime="false"/>
   </target>
  
-  <target name="cljar-words" 
-	  description="Creates the ykwordcounter, a command line word counter"
+  <target name="jar" 
+	  description="Creates the jar for all command line apps"
 	  depends="compile">
     
     <!-- make and populate the build directory -->
     <mkdir dir="${build.dir}" />
     <unzip dest="${build.dir}">
       <patternset>
-	<include name="**/*" />
-	<exclude name="META-INF/*" />
+	    <include name="**/*" />
+	    <exclude name="META-INF/*" />
       </patternset>
       <fileset dir="${lib.dir}">
-	<include name="*.jar" />
+	    <include name="*.jar" />
 	    <exclude name="controlsfx*" />
 	    <exclude name="aquafx*" />
-
       </fileset>
     </unzip>
     
     <!-- add classes -->
     <copy todir="${build.dir}">
-    	<fileset dir="${class.dir}" includes="**" />
-        <fileset dir="${basedir}" includes="${resource.dir}/**" />
+      <fileset dir="${class.dir}" includes="**" />
+      <fileset dir="${basedir}" includes="${resource.dir}/**" />
     </copy>
     
-    <!-- construct the jar -->
-    <jar destfile="${jarname.cl.words}-${version}.jar" 
+    <jar destfile="${jarname}-${version}.jar" 
          basedir="${build.dir}">
-      <manifest>
-	<attribute name="Main-Class" 
-		   value="${main.class.cl.words}" />
-      </manifest>
+    <!-- <manifest>
+	 <attribute name="Main-Class" 
+		   value="${main.class.cl.words}" /> 
+      </manifest> -->
     </jar>
   </target>
-
-  <target name="gui-jar" 
-	  description="Creates the JFreq, a graphical word or category counter"
-	  depends="compile">
-    
-    <!-- make and populate the build directory -->
-    <mkdir dir="${build.dir}" />
-    <unzip dest="${build.dir}">
-      <patternset>
-	<include name="**/*" />
-	<exclude name="META-INF/*" />
-      </patternset>
-      <fileset dir="${lib.dir}">
-	<include name="*.jar" />
-      </fileset>
-    </unzip>
-    
-    <!-- add classes -->
-    <copy todir="${build.dir}">
-    	<fileset dir="${class.dir}" includes="**" />
-        <fileset dir="${basedir}" includes="${resource.dir}/**" />
-    </copy>
-    
-    <!-- construct the jar -->
-    <jar destfile="${jarname.gui}-${version}.jar" 
-         basedir="${build.dir}">
-      <manifest>
-	<attribute name="Main-Class" 
-		   value="${main.class.gui}" />
-      </manifest>
-    </jar>
-  </target>
-
-  <target name="cljar-cats" 
-	  description="Creates the ykreporter, a command line category counter"
-	  depends="compile">
-    
-    <!-- make and populate the build directory -->
-    <mkdir dir="${build.dir}" />
-    <unzip dest="${build.dir}">
-      <patternset>
-	<include name="**/*" />
-	<exclude name="META-INF/*" />
-      </patternset>
-      <fileset dir="${lib.dir}">
-	<include name="*.jar" />
-	    <exclude name="controlsfx*" />
-	    <exclude name="aquafx*" />
-
-      </fileset>
-    </unzip>
-    
-    <!-- add classes -->
-    <copy todir="${build.dir}">
-    	<fileset dir="${class.dir}" includes="**" />
-        <fileset dir="${basedir}" includes="${resource.dir}/**" />
-    </copy>
-    
-    <!-- construct the jar -->
-    <jar destfile="${jarname.cl.cats}-${version}.jar" 
-         basedir="${build.dir}">
-      <manifest>
-	<attribute name="Main-Class" 
-		   value="${main.class.cl.cats}" />
-      </manifest>
-    </jar>
-  </target>
-  
-	<target name="dist" 
-		  description="Creates the ykconcordancer, a command line concordancer"
-		  depends="cljar-conc,cljar-cats,cljar-words">
-        
-		<mkdir dir="${dist.zip}" />
-		<copy todir="${dist.zip}">
-			<fileset dir="." includes="*-${version}.jar" />
-		</copy>
-		<copy file="templates/bashscript" tofile="${dist.zip}/ykcats"/>
-		<replace file="${dist.zip}/ykcats" token="JARFILE" 
-			value="${jarname.cl.cats}-${version}.jar"/>
-		<chmod file="${dist.zip}/ykcats" perm="ugo+rx"/>
-		
-		<copy file="templates/bashscript" tofile="${dist.zip}/ykwords"/>
-		<replace file="${dist.zip}/ykwords" token="JARFILE" 
-			value="${jarname.cl.words}-${version}.jar"/>
-		<chmod file="${dist.zip}/ykwords" perm="ugo+rx"/>
-						
-		<copy file="templates/bashscript" tofile="${dist.zip}/ykconc"/>
-		<replace file="${dist.zip}/ykconc" token="JARFILE" 
-			value="${jarname.cl.conc}-${version}.jar"/>
-		<chmod file="${dist.zip}/ykconc" perm="ugo+rx"/>
-		
-		<zip destfile="${dist.zip}.zip"
-		       basedir="${dist.zip}" />
-		<delete dir="${dist.zip}"/>
-		
-	</target>
+	  
+  <target name="dist" 
+          description="Creates the tools distribution"
+          depends="jar">
+	    
+	<mkdir dir="${dist.zip}" />
 	
-	  <target name="cljar-conc" 
-		  description="Creates the ykconcordancer, a command line concordancer"
+	<copy file="templates/bash" 
+		  tofile="${dist.zip}/ykcats"/>
+	<replace file="${dist.zip}/ykcats" 
+		     token="CLASSNAME" 
+		     value="${main.class.cl.cats}"/>
+
+	<copy file="templates/bash" 
+		  tofile="${dist.zip}/ykwords"/>
+	<replace file="${dist.zip}/ykwords" 
+		     token="CLASSNAME" 
+		     value="${main.class.cl.words}"/>
+	
+	<copy file="templates/bash" 
+		  tofile="${dist.zip}/ykconc"/>
+	<replace file="${dist.zip}/ykconc" 
+		     token="CLASSNAME"    
+		     value="${main.class.cl.conc}"/>
+	
+	<copy file="templates/bash" 
+		  tofile="${dist.zip}/ykliner"/>
+	<replace file="${dist.zip}/ykliner" 
+		     token="CLASSNAME" 
+		     value="${main.class.cl.liner}"/>
+
+	<copy file="templates/bash" 
+		  tofile="${dist.zip}/ykdesc"/>
+	<replace file="${dist.zip}/ykdesc" 
+		     token="CLASSNAME" 
+		     value="${main.class.cl.desc}"/>
+
+  	<!-- jar referenece -->
+  	<replace dir="${dist.zip}" 
+		     token="JARFILE" 
+		     value="${jarname}-${version}.jar">
+  	  <include name="*/**"/>
+  	</replace>
+
+  	<!-- add the jar -->
+  	<copy todir="${dist.zip}">
+	  <fileset dir="." includes="${jarname}-${version}.jar" />
+	</copy>
+ 
+  	<!-- tar, gzip, and remove the workings -->
+  	<tar destfile="${dist.zip}.tar" 
+  		 longfile='posix'>
+  	  <tarfileset dir="${dist.zip}" 
+  	  	          filemode="755">
+        <include name="**"/>
+        <exclude name="${jarname}-${version}.jar"/>
+  	  </tarfileset>
+   	  <tarfileset dir="${dist.zip}">
+  		<include name="${jarname}-${version}.jar"/>
+  	  </tarfileset>
+   	</tar>
+  	<gzip destfile="${dist.zip}.tar.gz" 
+  		  src="${dist.zip}.tar"/>
+  	<delete file="${dist.zip}.tar"/>
+  	<delete dir="${dist.zip}"/>
+  	
+  </target>
+
+	  <!-- <target name="gui-jar" 
+		  description="Creates the JFreq, a graphical word or category counter"
 		  depends="compile">
 	    
-	    <!-- make and populate the build directory -->
 	    <mkdir dir="${build.dir}" />
 	    <unzip dest="${build.dir}">
 	      <patternset>
 		<include name="**/*" />
 		<exclude name="META-INF/*" />
-	
 	      </patternset>
 	      <fileset dir="${lib.dir}">
 		<include name="*.jar" />
-		    <exclude name="controlsfx*" />
-		    <exclude name="aquafx*" />
-
 	      </fileset>
 	    </unzip>
-	    
-	    <!-- add classes -->
 	    <copy todir="${build.dir}">
 	    	<fileset dir="${class.dir}" includes="**" />
 	        <fileset dir="${basedir}" includes="${resource.dir}/**" />
 	    </copy>
-	    
-	    <!-- construct the jar -->
-	    <jar destfile="${jarname.cl.conc}-${version}.jar" 
+	    <jar destfile="${jarname.gui}-${version}.jar" 
 	         basedir="${build.dir}">
 	      <manifest>
 		<attribute name="Main-Class" 
-			   value="${main.class.cl.conc}" />
+			   value="${main.class.gui}" />
 	      </manifest>
 	    </jar>
-	  </target>
-	  	
+	  </target>  -->
+
+		  <!-- 
+		  <target name="bundle-gui" depends="gui-jar">
+		    <taskdef name="bundleapp"
+		             classname="com.oracle.appbundler.AppBundlerTask"   
+		             classpath="../../code/java/appbundler-1.0ea.jar" />
+
+		    <bundleapp outputdirectory="."
+		               name="JFreq"
+		               displayname="JFreq"
+			       executableName="JFreq"
+			       identifier="org.conjugateprior.ca"
+			       shortversion="${version}"
+			       version="${version}"
+			       icon="resources/icons/jfreq.icns"
+			       mainclassname="org.conjugateprior.ca.ui.GraphicalWordCounter"
+			       copyright="Will Lowe, 2011-2014">
+		      
+		      <classpath file="${jarname.gui}-${version}.jar" />
+		      
+		      <incomplete>
+		      <runtime dir="${runtime}/Contents/Home"/>
+		      <arch name="x86_64"/>
+		      <arch name="i386"/>
+
+		      <Workaround since the icon parameter for bundleapp doesn't work>
+		      <option value="-Xdock:icon=Contents/Resources/jfreq.icns"/>
+		      <option value="-Dapple.laf.useScreenMenuBar=true"/>
+		      <option value="-Dcom.apple.macos.use-file-dialog-packages=true"/>
+		      <option value="-Dcom.apple.macos.useScreenMenuBar=true"/>
+		      <option value="-Dcom.apple.mrj.application.apple.menu.about.name=JFreq"/>
+		      <option value="-Dcom.apple.smallTabs=true"/>
+		      <option value="-Dfile.encoding=UTF-8"/>
+		      <option value="-Xmx1024M" name="Xmx"/>
+		    </bundleapp>
+		  </target> -->
+	
 </project>

@@ -26,6 +26,8 @@ public interface ITokenization {
 
 	public abstract int[] getOffsetsForSentenceIndex(int index);
 
+	public abstract int getSentenceCount();
+	
 	// window is in words, offsets are in characters indexes as a 4-tuple
 	public abstract List<int[]> getConcordanceCharacterOffsetsForPattern(
 			Pattern[] pat, int window);
