@@ -60,10 +60,13 @@ public class CLConcordancer extends CLApplication{
 		}
 		if (line.hasOption("window")){
 			int window = Integer.parseInt(line.getOptionValue("window"));
+			System.err.println(line.getOptionValue("window"));
 			if (window < 1)
 				throw new Exception(getOptionErrorMessage("window"));
 			concordancer.setWindow(window);
-		}		
+		} else {
+			concordancer.setWindow(5);
+		}
 		if (line.hasOption("dictionary") && line.hasOption("pattern"))
 			throw new Exception("Use dictionary and category arguments or use pattern argument, but not both");
 		if (!(line.hasOption("dictionary") || line.hasOption("pattern")))
@@ -100,17 +103,11 @@ public class CLConcordancer extends CLApplication{
 		System.exit(0);
 	}
 	
-	public static void main(String[] args) {
-		//ykcats -dictionary ~/Dropbox/blogposts/littledict.vbpro -output thing ~/Dropbox/blogposts/speeches
-		String[] as = new String[]{
-				/*"-dictionary", "/Users/will/Dropbox/blogposts/littledict.vbpro",
-				"-category", "mine", */ "-pattern", "low income families", "-window", "0",
-									/*"-output", "/Users/will/Dropbox/blogposts/ykoncsoutputfolder",*/
-									"-format", "text", "/Users/will/Dropbox/blogposts/speeches"};
+	public static void main(String[] args) {	
 		Concordancer cc = new Concordancer();
 		CLConcordancer c = new CLConcordancer(cc);
 		try {
-			c.processLine(as);
+			c.processLine(args);
 		} catch (Exception ex){
 			System.err.println(ex.getMessage());
 			c.printUsageAndOptions();
@@ -118,3 +115,10 @@ public class CLConcordancer extends CLApplication{
 	}
 	
 }
+
+// //ykcats -dictionary ~/Dropbox/blogposts/littledict.vbpro -output thing ~/Dropbox/blogposts/speeches
+// String[] as = new String[]{
+//		/*"-dictionary", "/Users/will/Dropbox/blogposts/littledict.vbpro",
+//		"-category", "mine", */ "-pattern", "low income families", "-window", "0",
+//							/*"-output", "/Users/will/Dropbox/blogposts/ykoncsoutputfolder",*/
+//							"-format", "text", "/Users/will/Dropbox/blogposts/speeches"};
