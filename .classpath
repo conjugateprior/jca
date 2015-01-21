@@ -9,6 +9,11 @@
 			<attribute name="javadoc_location" value="file:/Users/will/code/java/commons-io-2.4/docs/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/commons-math3-3.4.1.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/will/code/java/commons-math3-3.4.1/commons-math3-3.4.1-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/commons-lang3-3.3.2.jar">
 		<attributes>
