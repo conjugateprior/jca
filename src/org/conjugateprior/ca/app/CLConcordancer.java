@@ -77,8 +77,12 @@ public class CLConcordancer extends CLApplication{
 			if (line.hasOption("category")){
 				cat = line.getOptionValue("category");
 				concordancer.setCategory(cat);
-			} else 
-				throw new Exception("No category specified for the dictionary ");
+				
+			} else { 
+				// TODO get every pattern?
+				concordancer.setCategory(concordancer.getDictionary().getCategoryRoot());
+				//throw new Exception("No category specified for the dictionary ");
+			}
 		} else if (line.hasOption("pattern"))
 			concordancer.addPattern(line.getOptionValue("pattern"));
 

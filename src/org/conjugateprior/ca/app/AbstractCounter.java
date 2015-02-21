@@ -25,7 +25,7 @@ import org.conjugateprior.ca.IPatternEngine;
 import org.conjugateprior.ca.IYoshikoderDocument;
 import org.conjugateprior.ca.SubstringPatternEngine;
 
-public class AbstractCounter {
+public abstract class AbstractCounter {
 
 	protected enum OutputFormat {
 		TEXT, LATEX, HTML, CSV, LDAC, MTX
@@ -452,5 +452,7 @@ public class AbstractCounter {
 			IOUtils.copy(is, out, outputEncoding);	
 		} 
 	}
+	
+	abstract public void processFiles() throws Exception;
 
 }

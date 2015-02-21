@@ -18,6 +18,11 @@ public class Collocator extends AbstractCounter {
 	// sentence breaks first, then accurate statistics 
 	// of surprise and coincidence
 	
+	@Override
+	public void processFiles() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
 	
 	public static void main(String[] args) {
 		// gg

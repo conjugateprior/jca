@@ -1,6 +1,8 @@
 package org.conjugateprior.ca;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +77,13 @@ public class SimpleYoshikoderDocument
 	@Override
 	protected String loadText() throws IOException {
 		return text;
+	}
+	
+	public static void main(String[] args) throws Exception {
+		String doc = AbstractYoshikoderDocument.getTextFromFile(
+				new File("/Users/will/Dropbox/shared/sop/European Parliament Corpus/EPcorpusEN_DE/europarl-v7.de-en.en"),
+				Charset.forName("UTF8"));
+		
 	}
 	
 }

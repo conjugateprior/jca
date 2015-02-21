@@ -122,7 +122,8 @@ abstract public class AbstractYoshikoderDocument
 	
 	public static String getTextFromFile(File f, Charset cs) 
 			throws UnsupportedEncodingException, IOException {
-		return new String(getBytes(f), cs.name());
+		byte[] bytes = getBytes(f);
+		return new String(bytes, cs.name());
 	}
 	
 	protected static byte[] getBytes(File f) throws IOException {

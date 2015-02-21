@@ -107,8 +107,6 @@ public class CorrespondenceAnalysis extends AbstractCounter {
 		SingularValueDecomposition svd = 
 				new SingularValueDecomposition(wfm);
 		
-		
-		
 		/*
 	    Dr <- drop(x %*% (rep(1/N, ncol(x))))
 	    Dc <- drop((rep(1/N, nrow(x))) %*% x)
