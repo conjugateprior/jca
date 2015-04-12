@@ -50,3 +50,9 @@ There's now a small pile of `source`able R functions in `rfuncs.R`,
 these work like the `ykcats` script only from within R.
 While these are not wrapped up in their own R package you'll have to
 hand in the location of the relevant jarfile.
+
+[![Build Status](https://travis-ci.org/conjugateprior/jca.svg?branch=master)](https://travis-ci.org/conjugateprior/jca)
+
+Will Lowe, April 2015
+
+
