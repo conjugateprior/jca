@@ -12,7 +12,7 @@ public class CLSingleLiner extends CLApplication {
 
 	@Override
 	public String getUsage() {
-		return"ykliner [-encoding <encoding>] [-locale <locale>] " +
+		return "line [-encoding <encoding>] [-locale <locale>] " +
 				"[-output <file>] [doc1.txt doc2.txt folder1]";
 	}
 	
@@ -26,6 +26,7 @@ public class CLSingleLiner extends CLApplication {
 		addOption(getOuputFileOption(false)); // not folder
 	}
 
+	@Override
 	public void processLine(String[] args) throws Exception {	
 		CommandLineParser parser = new GnuParser();
 		CommandLine line = parser.parse(options, args);
@@ -63,6 +64,7 @@ public class CLSingleLiner extends CLApplication {
 		System.exit(0);
 	}
 
+	/*
 	public static void main(String[] args) throws Exception {
 		SingleLiner cc = new SingleLiner();
 		CLSingleLiner c = new CLSingleLiner(cc);
@@ -73,4 +75,5 @@ public class CLSingleLiner extends CLApplication {
 			c.printUsageAndOptions();
 		}
 	}
+	*/
 }

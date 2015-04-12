@@ -1,2 +1,2 @@
 #!/bin/bash
-java -Xmx512M -cp $HOME/bin/JARFILE CLASSNAME "$@"
+java -Xmx512M -jar $HOME/bin/JARFILE "$@"

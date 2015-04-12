@@ -16,9 +16,18 @@ import org.conjugateprior.ca.IYoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 
+// For the Oli and Stuart project
+
 public class MatchExpander extends AbstractCounter {
 
 	// pattern[match1,match2,match3]
+	
+	public MatchExpander(FXCategoryDictionary dict, File[] docs) throws Exception {
+		super();
+		setDictionary(dict);
+		setFiles(docs);
+	}
+
 	
 	public MatchExpander(File dictFile, File[] docs) throws Exception {
 		super();
@@ -41,6 +50,7 @@ public class MatchExpander extends AbstractCounter {
 					new SimpleYoshikoderDocument(f.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(f, encoding),
 							null, tok);	
+			System.err.println("Processing " + idoc.getTitle());
 			for (DPat dPat : pats) {
 				List<int[]> lst = 
 					idoc.getCharacterOffsetsForPattern(dPat.getRegexps());
@@ -48,7 +58,7 @@ public class MatchExpander extends AbstractCounter {
 					Set<String> matches = map.get(dPat);
 					for (int[] is : lst) {
 						String str = idoc.getText().substring(is[0], is[1]);
-						matches.add(str);
+						matches.add(str.toLowerCase());
 					}
 					map.put(dPat, matches);
 				}
@@ -61,22 +71,39 @@ public class MatchExpander extends AbstractCounter {
 			for (DPat dPat : pats) {
 				writer.write(dPat.getName());
 				Set<String> st = map.get(dPat);
-				writer.write("[");
-				writer.write(StringUtils.join(st, ","));
-				writer.write("]");
+				if (st.size()>0){
+					writer.write("\t");
+					writer.write(StringUtils.join(st, "\t"));
+				}//writer.write("]");
 				writer.newLine();
-				writer.flush();
 			}
+			writer.flush();
 		}
 	}
 	
 	public static void main(String[] args) throws Exception {
-		String dir = "/Users/will/Dropbox/teaching/mainz/labs/data/abortion-debate-by-para/";
+		String dir = "/Users/will/Desktop/ep-split-up/spli/"; //"/Users/will/Dropbox/teaching/mainz/labs/data/abortion-debate-by-para/";
 		File[] fls = (new File(dir)).listFiles();
-		File d = new File("/Users/will/Dropbox/teaching/texas/dictionaries/bara-et-al.ykd");
+		//String dictfname = "/Users/will/Dropbox/teaching/mainz/labs/data/bara-et-al.ykd";
+		/*
+		FXCategoryDictionary dict = new FXCategoryDictionary("test");
+		TreeItem<DCat> cat = 
+				dict.addCategoryToParentCategory("first", dict.getCategoryRoot());
+		dict.addPatternToCategory("the*", cat);
+		dict.addPatternToCategory("honourab*", cat);
+		*/
+		String dictfname = "/Users/will/Desktop/ep-split-up/here/dpos.ykd";		
+		File d = new File(dictfname);		
 		MatchExpander ex = new MatchExpander(d, fls);
-		ex.setOutputFolder("matched_patterns.txt");
+		ex.setOutputFolder("matched_positive.txt");
+		ex.processFiles();
+		
+		dictfname = "/Users/will/Desktop/ep-split-up/here/dneg.ykd";		
+		d = new File(dictfname);		
+		ex = new MatchExpander(d, fls);
+		ex.setOutputFolder("matched_negative.txt");
 		ex.processFiles();
 	}
+	
 
 }

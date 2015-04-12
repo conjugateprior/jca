@@ -3,7 +3,6 @@ package org.conjugateprior.ca.app;
 import java.nio.charset.Charset;
 import java.util.Locale;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -12,6 +11,7 @@ public class CLApplication {
 
 	public class CLOption extends Option {
 
+		private static final long serialVersionUID = 1L;
 		String errorMessage;
 
 		public CLOption(String opt, String description) {
@@ -44,6 +44,13 @@ public class CLApplication {
 		helpFormatter = new HelpFormatter();
 	}
 
+	public void processLine(String[] line) throws Exception { 
+		System.err.println("Error. Unimplemented processLine in CLApplication");
+		System.err.println("Arguments:");
+		for (int ii = 0; ii < line.length; ii++)
+			System.err.println("\t" +line[ii]);
+	}
+	
 	public void printUsageAndOptions(){
 		helpFormatter.printHelp(getUsage(), options);
 	}
@@ -150,5 +157,70 @@ public class CLApplication {
 		return ((CLOption)options.getOption(optionName)).errorMessage;
 	}
 
+	/**
+	 * args[0] determines which CL app to run, which parses and acts on the remaining
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		String[] ar = null;
+		if (args.length < 2){
+			System.err.println("Usage: yk word|cat|conc|desc|line [options] [files]");
+			System.exit(0);
+		} else {
+			ar = new String[args.length-1];
+			for (int ii = 1; ii < args.length; ii++) 
+				ar[ii-1] = args[ii];
+		}
+		
+		if (args[0].equalsIgnoreCase("cat")){
+			CategoryCounter cc = new CategoryCounter();
+			CLCategoryCounter c = new CLCategoryCounter(cc);
+			try {
+				c.processLine(ar);
+			} catch (Exception ex){
+				System.err.println(ex.getMessage());
+				c.printUsageAndOptions();
+			}
+		} else if (args[0].equalsIgnoreCase("conc")){
+			Concordancer cc = new Concordancer();
+			CLConcordancer c = new CLConcordancer(cc);
+			try {
+				c.processLine(ar);
+			} catch (Exception ex){
+				System.err.println(ex.getMessage());
+				c.printUsageAndOptions();
+			}
+		} else if (args[0].equalsIgnoreCase("word")){
+			WordCounter cc = new WordCounter();
+			CLWordCounter c = new CLWordCounter(cc);
+			try {
+				c.processLine(ar);
+			} catch (Exception ex){
+				System.err.println(ex.getMessage());
+				c.printUsageAndOptions();
+			}
+		} else if (args[0].equalsIgnoreCase("desc")){
+			Description cc = new Description();
+			CLDescription c = new CLDescription(cc);
+			try {
+				c.processLine(ar);
+			} catch (Exception ex){
+				System.err.println(ex.getMessage());
+				c.printUsageAndOptions();
+			}
+		} else if (args[0].equalsIgnoreCase("line")){
+			SingleLiner cc = new SingleLiner();
+			CLSingleLiner c = new CLSingleLiner(cc);
+			try {
+				c.processLine(ar);
+			} catch (Exception ex){
+				System.err.println(ex.getMessage());
+				c.printUsageAndOptions();
+			}
+		} else {
+			System.err.println("Usage: jca word|cat|conc|desc|line [options] [files]");
+		}
+		System.exit(0);
+	}
 	
 }

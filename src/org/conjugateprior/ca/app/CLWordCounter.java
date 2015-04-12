@@ -17,7 +17,7 @@ public class CLWordCounter extends CLApplication {
 			"italian norwegian portuguese romanian russian spanish swedish turkish";
 	
 	public String getUsage(){
-		return "ykwords [-encoding <encoding>] [-locale <locale>] " + 
+		return "word [-encoding <encoding>] [-locale <locale>] " + 
 	           "[-no_currency] [-no_numbers] [-stopwords <file>] " +
 			   "[-stemmer <language>] [-format <format>] -output <folder> " +
 	           "[doc1.txt doc2.txt folder1]";
@@ -58,6 +58,7 @@ public class CLWordCounter extends CLApplication {
 		addOption(stemmer);
 	}
 	
+	@Override
 	public void processLine(String[] args) throws Exception {	
 		CommandLineParser parser = new GnuParser();
 		CommandLine line = parser.parse(options, args);
@@ -122,7 +123,8 @@ public class CLWordCounter extends CLApplication {
 		System.exit(0);
 	}
 	
-	public static void main(String[] args) throws Exception {
+	/*
+	public static void main(String[] args) {
 		WordCounter cc = new WordCounter();
 		CLWordCounter c = new CLWordCounter(cc);
 		try {
@@ -132,5 +134,6 @@ public class CLWordCounter extends CLApplication {
 			c.printUsageAndOptions();
 		}
 	}
+	*/
 	
 }

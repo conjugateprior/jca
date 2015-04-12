@@ -12,7 +12,7 @@ public class CLDescription extends CLApplication {
 
 	@Override
 	public String getUsage() {
-		return"ykdesc [-encoding <encoding>] [-locale <locale>] " +
+		return "desc [-encoding <encoding>] [-locale <locale>] " +
 				"[-output <file>] [doc1.txt doc2.txt folder1]";
 	}
 	
@@ -26,6 +26,7 @@ public class CLDescription extends CLApplication {
 		addOption(getOuputFileOption(false)); // not folder
 	}
 
+	@Override
 	public void processLine(String[] args) throws Exception {	
 		CommandLineParser parser = new GnuParser();
 		CommandLine line = parser.parse(options, args);
@@ -60,6 +61,7 @@ public class CLDescription extends CLApplication {
 		System.exit(0);
 	}
 
+	/*
 	public static void main(String[] args) throws Exception {
 		Description cc = new Description();
 		CLDescription c = new CLDescription(cc);
@@ -71,5 +73,6 @@ public class CLDescription extends CLApplication {
 			c.printUsageAndOptions();
 		}
 	}
+	*/
 
 }

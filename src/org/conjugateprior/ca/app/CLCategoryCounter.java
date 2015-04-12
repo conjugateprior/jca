@@ -12,7 +12,7 @@ public class CLCategoryCounter extends CLApplication {
 	protected CategoryCounter counter;
 		
 	public String getUsage() {
-		return "ykcats [-encoding <encoding>] [-locale <locale>] " +
+		return "cat [-encoding <encoding>] [-locale <locale>] " +
 				   "[-oldmatching] [-output <folder>] [-format <format>] -dictionary <file> " +
 				   "[doc1.txt doc2.txt folder1]";
 	}
@@ -39,6 +39,7 @@ public class CLCategoryCounter extends CLApplication {
 		addOption(format);
 	}
 	
+	@Override
 	public void processLine(String[] args) throws Exception {	
 		CommandLineParser parser = new GnuParser();
 		CommandLine line = parser.parse(options, args);
@@ -85,6 +86,7 @@ public class CLCategoryCounter extends CLApplication {
 		System.exit(0);
 	}
 	
+	/*
 	public static void main(String[] args) throws Exception {
 		CategoryCounter cc = new CategoryCounter();
 		CLCategoryCounter c = new CLCategoryCounter(cc);
@@ -95,4 +97,5 @@ public class CLCategoryCounter extends CLApplication {
 			c.printUsageAndOptions();
 		}
 	}
+	*/
 }

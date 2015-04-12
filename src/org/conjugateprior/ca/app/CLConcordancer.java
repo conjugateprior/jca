@@ -11,7 +11,7 @@ public class CLConcordancer extends CLApplication{
 	protected Concordancer concordancer;
 	
 	public String getUsage(){
-		return "ykconc -pattern <pattern> | -dictionary <file> -category <category> " + 
+		return "conc -pattern <pattern> | -dictionary <file> -category <category> " + 
 				"[-locale <locale>] " +
 				"[-encoding <encoding>] [-window <number>] [-output <file>] " +
 				"[-format <format>] [file1 file2 | folder1]";
@@ -38,6 +38,7 @@ public class CLConcordancer extends CLApplication{
 		addOption(format);
 	}
 	
+	@Override
 	public void processLine(String[] args) throws Exception {	
 		CommandLineParser parser = new GnuParser();
 		CommandLine line = parser.parse(options, args);
@@ -107,6 +108,7 @@ public class CLConcordancer extends CLApplication{
 		System.exit(0);
 	}
 	
+	/*
 	public static void main(String[] args) {	
 		Concordancer cc = new Concordancer();
 		CLConcordancer c = new CLConcordancer(cc);
@@ -117,6 +119,7 @@ public class CLConcordancer extends CLApplication{
 			c.printUsageAndOptions();
 		}
 	}
+	*/
 	
 }
 
