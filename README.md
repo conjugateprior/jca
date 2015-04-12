@@ -5,51 +5,59 @@ All subject to change.
 
 ### Applications
 
-* `ykcats`
+Speaking of which...
 
-  A command line application to 
-  apply a Yoshikoder dictionary to a bunch of files and
-  record the result in a CSV file.
+These tools now run off a common root, usually a shell script called `jca`
+(but equally well a `java -jar jca-<version>.jar` if you're not on a proper
+operating system).  From that root you launch the different programms:
 
-* `ykwords`
+In case you're wondering, this code deals with multi-word pattern
+matches in dictionaries and outside them.  The code just hasn't made it into
+the Yoshikoder yet.
 
-  A command line application to
-  count words and drop the results in LDAC or Matrix Market format in a folder.
+* `yk cat [options] [files]`
 
-* `ykconc`
+  Apply a Yoshikoder dictionary to a bunch of files and record the
+  result in a CSV file.  
+
+* `yk word [options] [files]`
+
+  Count words and drop the results in LDAC or Matrix Market format into
+  a folder.
+
+* `yk conc [options] [files]`
   
-  A command line application to 
-  construct concordances ('keyword in context' lines) for a word, phrase, 
-  or category from a content analysis dictionary, for a bunch of documents.
+  Construct concordances ('keyword in context' lines) for a word, a phrase, 
+  or a category from a content analysis dictionary, for a bunch of documents.
 
-* `ykliner`
+* `yk line [files]`
 
-  A command line application to turn folders of documents into Mallet's 
-  prefered one per line format
+  Turn folders of documents into Mallet's prefered one-per-line
+  format.  This has three columns.  The first two are the file's old
+  name and the final one is the text in one long line.
 
 ### Compilation
 
-To compile, type `ant dist`. 
+To compile, type `ant dist`.  You know, `ant`.  That thing your
+parents talked about.
 
-The resulting file `yktools-<version>.zip` contains three jar files and
-three bash scripts to call them.  Installation details are on the 
-[project wiki](https://github.com/conjugateprior/jca/wiki).
+The resulting file `jca-<version>.zip` contains the jar file and tiny
+bash script to drive it.
 
-### Usage: command line
-
-The [project wiki](https://github.com/conjugateprior/jca/wiki)
-describes how to install and use these on a Unix system (Linux or OSX)
-
-Windows executables *might* be on the way.  If I can find a Windows
-machine to test them on.  Or I guess Windows people could get a proper
-command line interface from <http://unxutils.sourceforge.net/>.
+Installation details are out of date on the [project
+wiki](https://github.com/conjugateprior/jca/wiki).  But I'm getting to
+it.
 
 ### Usage: R (even more experimental than usual)
 
-There's now a small pile of `source`able R functions in `rfuncs.R`,
-these work like the `ykcats` script only from within R.
-While these are not wrapped up in their own R package you'll have to
-hand in the location of the relevant jarfile.
+This thing has been refactored enough to be drivable using
+`rJava`. However, I'm holding off an intergration while rJava, Oracle,
+and Apple decide how they are going to deal with the path screwups
+they've collectively generated.
+
+There's a small pile of `source`able R functions in `rfuncs.R`, but
+they're now out of date so don't use them in versions greater than
+0.2.3
 
 [![Build Status](https://travis-ci.org/conjugateprior/jca.svg?branch=master)](https://travis-ci.org/conjugateprior/jca)
 
