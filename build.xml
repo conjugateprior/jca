@@ -116,4 +116,9 @@
   	
   </target>
 	
+	<target name="test" 
+	        description="If there were tests, they'd be here"
+		    depends="jar">
+		<!-- I'm a bad person and I feel bad -->
+	</target>
 </project>
