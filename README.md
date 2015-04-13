@@ -7,30 +7,32 @@ All subject to change.
 
 Speaking of which...
 
-These tools now run off a common root, usually a shell script called `jca`
-(but equally well a `java -jar jca-<version>.jar` if you're not on a proper
-operating system).  From that root you launch the different programms:
+These tools now run off a common root, this is either the jarfile `jca-<version>.jar`
+or a shell script called `jca` (that just wraps a `java -jar jca-<version>.jar` call).
 
 In case you're wondering, this code deals with multi-word pattern
 matches in dictionaries and outside them.  The code just hasn't made it into
 the Yoshikoder yet.
 
-* `yk cat [options] [files]`
+Here are the applications.  To get usage information type just leave out the 
+options and files arguments.
+
+* `jca cat [options] [files]`
 
   Apply a Yoshikoder dictionary to a bunch of files and record the
   result in a CSV file.  
 
-* `yk word [options] [files]`
+* `jca word [options] [files]`
 
   Count words and drop the results in LDAC or Matrix Market format into
   a folder.
 
-* `yk conc [options] [files]`
+* `jca conc [options] [files]`
   
   Construct concordances ('keyword in context' lines) for a word, a phrase, 
   or a category from a content analysis dictionary, for a bunch of documents.
 
-* `yk line [files]`
+* `jca line [files]`
 
   Turn folders of documents into Mallet's prefered one-per-line
   format.  This has three columns.  The first two are the file's old
@@ -42,7 +44,7 @@ To compile, type `ant dist`.  You know, `ant`.  That thing your
 parents talked about.
 
 The resulting file `jca-<version>.zip` contains the jar file and tiny
-bash script to drive it.
+bash script `jca` to drive it.
 
 Installation details are out of date on the [project
 wiki](https://github.com/conjugateprior/jca/wiki).  But I'm getting to
@@ -56,7 +58,7 @@ and Apple decide how they are going to deal with the path screwups
 they've collectively generated.
 
 There's a small pile of `source`able R functions in `rfuncs.R`, but
-they're now out of date so don't use them in versions greater than
+they're now *out of date* so don't use them in versions greater than
 0.2.3
 
 [![Build Status](https://travis-ci.org/conjugateprior/jca.svg?branch=master)](https://travis-ci.org/conjugateprior/jca)

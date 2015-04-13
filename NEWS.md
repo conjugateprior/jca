@@ -60,3 +60,14 @@ Changes in 0.2.3:
    * Engines separated from command line apps so they can also be driven from rJava
 
    * R functions to run the jar files   
+   
+Changes in 0.2.4:
+
+   New features:
+   
+   * Single script to rule them all
+   
+   Developer:
+   
+   * Travis CI atatched, mostly as a reminder I don't actually have any tests
+   
