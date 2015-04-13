@@ -98,7 +98,10 @@ public class CategoryCounter extends AbstractCounter {
 			}
 			if (format.equals(OutputFormat.HTML))
 				writer.write(makeHTMLHeader()); 			
-			
+			else {
+				writer.write(makeCSVHeader());
+				writer.newLine();
+			}
 			SimpleDocumentTokenizer tok = 
 					new SimpleDocumentTokenizer(locale);
 			for (File f : files) {
@@ -112,8 +115,15 @@ public class CategoryCounter extends AbstractCounter {
 					writer.write(makeCSVLineFromDocument(idoc));
 				
 				writer.newLine();
-				writer.flush(); // do we need this really?
+				
+				if (!getSilent())
+					System.err.print(".");
+				
+				//writer.flush(); // do we need this really?
 			}
+			if (!getSilent())
+				System.err.println();
+			
 			if (format.equals(OutputFormat.HTML))
 				writer.write(makeHTMLFooter());
 			writer.flush(); // do we need this really?

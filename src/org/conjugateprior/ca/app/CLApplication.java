@@ -101,6 +101,13 @@ public class CLApplication {
 		
 	}
 	
+	protected CLOption getSilentOption(){
+		CLOption clOpt = new CLOption("silent", 
+				"Switch off progress dots. Without flag, dots are shown)");
+		return clOpt;
+	}
+	
+	
 	protected CLOption getDictionaryOption(boolean required){
 		CLOption dict = new CLOption("dictionary", true, 
 				"Content analysis dictionary in Yoshikoder ('.ykd'), " +

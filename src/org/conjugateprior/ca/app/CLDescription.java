@@ -13,7 +13,7 @@ public class CLDescription extends CLApplication {
 	@Override
 	public String getUsage() {
 		return "desc [-encoding <encoding>] [-locale <locale>] " +
-				"[-output <file>] [doc1.txt doc2.txt folder1]";
+				"[-output <file>] [-silent] [doc1.txt doc2.txt folder1]";
 	}
 	
 	public CLDescription(Description c) {
@@ -24,6 +24,7 @@ public class CLDescription extends CLApplication {
 		addOption(getEncodingOption(false));
 		addOption(getLocaleOption(false));
 		addOption(getOuputFileOption(false)); // not folder
+		addOption(getSilentOption());
 	}
 
 	@Override
@@ -50,6 +51,9 @@ public class CLDescription extends CLApplication {
 		} 		
 		if (line.hasOption("output")) 
 			description.setOutputFile(new File(line.getOptionValue("output")));
+		
+		description.setSilent(line.hasOption("silent"));
+
 		
 		// and files
 		String[] files = line.getArgs();

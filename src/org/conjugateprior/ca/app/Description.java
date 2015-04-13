@@ -87,7 +87,12 @@ public class Description extends AbstractCounter {
 					hap, idoc.getSentenceCount());
 			d.sentences = idoc.getSentenceCount();
 			docToDesc.put(f.getName(), d); // in on the filename 
+			
+			if (!getSilent())
+				System.err.print(".");
 		}
+		if (!getSilent())
+			System.err.println();
 		
 		double vocabSize = vocab.size();
 		if (outputFile != null){	

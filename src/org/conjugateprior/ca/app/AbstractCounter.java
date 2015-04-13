@@ -82,6 +82,17 @@ public abstract class AbstractCounter {
 		return new BufferedWriter(out);
 	}
 	
+	protected boolean silent;
+	
+	public boolean getSilent(){
+		return silent;
+	}
+	
+	public void setSilent(boolean b){
+		silent = b;
+	}
+	
+	
 	// window
 	protected int window = 5;
 	
@@ -436,11 +447,13 @@ public abstract class AbstractCounter {
 		return filelist.toArray(new File[filelist.size()]);
 	}
 
-	// specify without resources folder
 	protected InputStream getResource(String name) throws Exception {
-		if (getClass().getResource("resources/" + name) == null)
-			return new FileInputStream(new File("resources/" + name));
-		return getClass().getResourceAsStream("resources/" + name);
+		InputStream in = getClass().getResourceAsStream("/resources/" + name);
+		if (in == null) {
+			in = new FileInputStream(new File("resources/" + name));
+			System.err.println("Now looking in file system for resource file");
+		} 
+		return in;
 	}
 
 	protected void extractResourceFileAndSaveToFolder(String readmeResourceName, String outputName) 

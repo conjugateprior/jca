@@ -13,7 +13,8 @@ public class CLCategoryCounter extends CLApplication {
 		
 	public String getUsage() {
 		return "cat [-encoding <encoding>] [-locale <locale>] " +
-				   "[-oldmatching] [-output <folder>] [-format <format>] -dictionary <file> " +
+				   "[-oldmatching] [-output <folder>] [-format <format>] [-silent] " +
+				   "-dictionary <file> " +
 				   "[doc1.txt doc2.txt folder1]";
 	}
 	
@@ -27,6 +28,7 @@ public class CLCategoryCounter extends CLApplication {
 		addOption(getLocaleOption(false));
 		addOption(getOuputFolderOption(true)); // not file
 		addOption(getDictionaryOption(true));
+		addOption(getSilentOption());
 		
 		CLOption oldmatching = new CLOption("oldmatching", 
 				"Use old-style pattern matching");
@@ -64,7 +66,8 @@ public class CLCategoryCounter extends CLApplication {
 		
 		counter.setDictionary(line.getOptionValue("dictionary"));
 		counter.setUsingOldMatchStrategy(line.hasOption("oldmatching"));
-
+		counter.setSilent(line.hasOption("silent"));
+		
 		// and files
 		String[] files = line.getArgs();
 		counter.setFiles(files);

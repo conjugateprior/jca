@@ -37,8 +37,14 @@ public class SingleLiner extends AbstractCounter {
 								null, tok);	
 				writer.write(makeTextLineFromDocument(idoc));
 				writer.newLine();
-				writer.flush(); // do we need this really?
+				
+				if (!getSilent())
+					System.err.print(".");
+				
+				//writer.flush(); // do we need this really?
 			}
+			if (!getSilent())
+				System.err.println();
 		}
 	}
 

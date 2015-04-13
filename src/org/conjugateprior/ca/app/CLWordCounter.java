@@ -19,7 +19,7 @@ public class CLWordCounter extends CLApplication {
 	public String getUsage(){
 		return "word [-encoding <encoding>] [-locale <locale>] " + 
 	           "[-no_currency] [-no_numbers] [-stopwords <file>] " +
-			   "[-stemmer <language>] [-format <format>] -output <folder> " +
+			   "[-stemmer <language>] [-format <format>]  [-silent] -output <folder> " +
 	           "[doc1.txt doc2.txt folder1]";
 	}
 	
@@ -31,9 +31,10 @@ public class CLWordCounter extends CLApplication {
 		addOption(getEncodingOption(false));
 		addOption(getLocaleOption(false));
 		addOption(getOuputFolderOption(true)); // not file
-			
+		addOption(getSilentOption());	
+		
 		Option format = OptionBuilder.withArgName("format").hasArg()
-			.withDescription("One of: liwc, mtx (default: liwc)")
+			.withDescription("One of: ldac, mtx (default: ldac)")
 			.create("format");
 		addOption(format);
 		
@@ -107,7 +108,10 @@ public class CLWordCounter extends CLApplication {
 				throw new Exception("Unrecognized language for stemmer. Must be one of: " 
 							+ llist);
 			filterer.addStemmingFilter(stemmerLanguage);
-		}				
+		}
+
+		counter.setSilent(line.hasOption("silent"));
+
 		// and files
 		String[] files = line.getArgs();
 		counter.setFiles(files);
