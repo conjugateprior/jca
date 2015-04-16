@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.Date;
 
 import javafx.scene.control.TreeItem;
@@ -15,6 +16,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
 import org.conjugateprior.ca.DCat;
 import org.conjugateprior.ca.FXCategoryDictionary;
+import org.conjugateprior.ca.FileBasedYoshikoderDocument;
 import org.conjugateprior.ca.IYoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
@@ -104,11 +106,12 @@ public class CategoryCounter extends AbstractCounter {
 			}
 			SimpleDocumentTokenizer tok = 
 					new SimpleDocumentTokenizer(locale);
+			Charset cs = getEncoding();
 			for (File f : files) {
 				IYoshikoderDocument idoc = 
-						new SimpleYoshikoderDocument(f.getName(), 
+						new FileBasedYoshikoderDocument(f.getName(), 
 								AbstractYoshikoderDocument.getTextFromFile(f, encoding),
-								null, tok);	
+								null, tok, f, cs);	
 				if (format.equals(OutputFormat.HTML))	
 					writer.write(makeHTMLLineFromDocument(idoc));
 				else 
@@ -117,9 +120,7 @@ public class CategoryCounter extends AbstractCounter {
 				writer.newLine();
 				
 				if (!getSilent())
-					System.err.print(".");
-				
-				
+					System.err.print(".");	
 			}
 			if (!getSilent())
 				System.err.println();
