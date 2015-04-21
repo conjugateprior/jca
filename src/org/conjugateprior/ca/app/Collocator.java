@@ -52,7 +52,7 @@ public class Collocator extends AbstractCounter {
 							AbstractYoshikoderDocument.getTextFromFile(f, encoding),
 							null, tok);
 			for (int ii = 0; ii < idoc.getSentenceCount(); ii++) {
-				int[] offs = idoc.getOffsetsForSentenceIndex(index);
+				int[] offs = idoc.getCharacterOffsetsForSentenceIndex(index);
 				String offsent = idoc.getText().substring(offs[0], offs[1]).trim();
 				if (offsent.length() < 3)
 					continue; // heuristic

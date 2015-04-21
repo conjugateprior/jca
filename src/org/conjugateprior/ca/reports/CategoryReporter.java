@@ -190,7 +190,7 @@ public class CategoryReporter {
 			counts[counter] = cn.getMatchedIndices().iterator().next();
 			counter++;
 		}
-		line = new ReportLine(counts, doc.getDocumentLength());
+		line = new ReportLine(counts, doc.getWordCount());
 		return line;
 	}
 	
@@ -205,7 +205,7 @@ public class CategoryReporter {
 			counts[counter] = cn.getMatchedIndices().size();
 			counter++;
 		}
-		line = new ReportLine(counts, doc.getDocumentLength());
+		line = new ReportLine(counts, doc.getWordCount());
 		return line;
 	}
 
@@ -227,7 +227,7 @@ public class CategoryReporter {
 			int rawCount = 0; // including double counted items!
 			for (DictionaryPattern pat : pats) {
 				Set<Integer> indices = 
-						doc.getAllMatchingTokenIndexesForPattern(pat.getRegexps());
+						doc.getWordIndexesForPattern(pat.getRegexps());
 				rawCount += indices.size();
 			}
 			indexMatches.add(new Integer(rawCount)); // here one number, the total count
@@ -266,7 +266,7 @@ public class CategoryReporter {
 			Set<DictionaryPattern> pats = node.getPatterns();
 			for (DictionaryPattern pat : pats) {
 				Set<Integer> indices = 
-						doc.getAllMatchingTokenIndexesForPattern(pat.getRegexps());
+						doc.getWordIndexesForPattern(pat.getRegexps());
 				//System.err.println("Indices matched: " + indices.size());
 				indexMatches.addAll(indices);
 			}

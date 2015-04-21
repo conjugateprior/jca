@@ -21,6 +21,7 @@ public class SimpleTokenization implements ITokenization {
 	
 	protected int[][]             wordOffsets;     // each row = [start-offset, end-offset+1]
 	protected int[][]             sentenceOffsets; // each row = [start-offset, end-offset+1]
+	protected int[][]             sentenceOffsetsInWordOffsets; // computed as necessary
 	protected Map<String,List<Integer>> wordTypeToTokenNumber; // vocab words to token indexes
 	protected Map<Integer,String>       tokenNumberToWordType;
 	
@@ -55,12 +56,12 @@ public class SimpleTokenization implements ITokenization {
 	}
 	
 	@Override
-	public int getDocumentLength(){
+	public int getWordCount(){
 		return wordOffsets.length;
 	}
 	
 	@Override
-	public String getTokenAtIndex(int index){
+	public String getWordAtIndex(int index){
 		if (index >= 0 && index < wordOffsets.length)
 			return tokenNumberToWordType.get(index);
 		return null;
@@ -68,7 +69,7 @@ public class SimpleTokenization implements ITokenization {
 	
 	// unordered, for reporting purposes
 	@Override
-	public Set<Integer> getAllMatchingTokenIndexesForWordType(String word){
+	public Set<Integer> getWordIndexesForWordType(String word){
 		List<Integer> lst = wordTypeToTokenNumber.get(word);
 		return new HashSet<Integer>(lst);
 	}
@@ -84,9 +85,27 @@ public class SimpleTokenization implements ITokenization {
 		return newlist;
 	}
 	
+	public List<int[]> getConcordanceWordIndexOffsetsForWordType(String wd, int window){
+		int N = getWordCount() - 1; // index of last token
+		
+		List<Integer> lst = wordTypeToTokenNumber.get(wd);
+		List<int[]> charoffs = new ArrayList<int[]>(lst.size());
+		for (Integer startIndex : lst) {
+			int endIndex = startIndex;
+			int endRhs = Math.min(N, endIndex + window);
+			int startRhs = Math.min(N, endIndex + 1);
+			int startLhs = Math.max(0, startIndex - window);
+			int endLhs = Math.max(0, startIndex - 1);
+			
+			charoffs.add(new int[]{startLhs, endLhs, startIndex,
+						           endIndex, startRhs, endRhs});
+		}
+		return charoffs;
+	}
+	
 	@Override
 	public List<int[]> getConcordanceCharacterOffsetsForWordType(String wd, int window){
-		int N = getDocumentLength() - 1; // index of last token
+		int N = getWordCount() - 1; // index of last token
 		
 		List<Integer> lst = wordTypeToTokenNumber.get(wd);
 		List<int[]> charoffs = new ArrayList<int[]>(lst.size());
@@ -110,14 +129,14 @@ public class SimpleTokenization implements ITokenization {
 	}	
 	
 	@Override
-	public int[] getOffsetsForTokenIndex(int index){
+	public int[] getCharacterOffsetsForWordIndex(int index){
 		if (index > 0 && index < wordOffsets.length-1)
 			return new int[]{wordOffsets[index][0], wordOffsets[index][1]};
 		return new int[]{};
 	}
 	
 	@Override
-	public int[] getOffsetsForSentenceIndex(int index){
+	public int[] getCharacterOffsetsForSentenceIndex(int index){
 		if (index > 0 && index < sentenceOffsets.length-1)
 			return new int[]{sentenceOffsets[index][0], sentenceOffsets[index][1]};
 		return new int[]{};
@@ -127,14 +146,37 @@ public class SimpleTokenization implements ITokenization {
 		return sentenceOffsets.length;
 	}
 
+	public int[] getWordIndexOffsetsForSentenceIndex(int snum){
+		if (sentenceOffsetsInWordOffsets == null){
+			// walk it
+			int tokenOffset = 0;
+			// TODO make sure assuming there is one sentence there does not break anything
+			
+			sentenceOffsetsInWordOffsets = new int[sentenceOffsets.length][sentenceOffsets[0].length];
+			sentenceOffsetsInWordOffsets[0][0] = 0;
+			for (int ii = 0; ii < sentenceOffsets.length-1; ii++) {
+				while (wordOffsets[tokenOffset][1] <= sentenceOffsets[ii][1]){
+					if (tokenOffset <= wordOffsets.length) 
+						tokenOffset++;
+					else 
+						break;
+				}
+				sentenceOffsetsInWordOffsets[ii][1] = tokenOffset;
+				sentenceOffsetsInWordOffsets[ii+1][0] = tokenOffset;
+			}
+			sentenceOffsetsInWordOffsets[sentenceOffsets.length-1][1] = wordOffsets.length-1;
+		}
+		return sentenceOffsetsInWordOffsets[snum];
+	}
+	
 	// start new code
 
 	// window is in words, offsets are in characters indexes as a 4-tuple
 	@Override
 	public List<int[]> getConcordanceCharacterOffsetsForPattern(Pattern[] pat, int window){
-		int N = getDocumentLength() - 1; // index of last token
+		int N = getWordCount() - 1; // index of last token
 		
-		List<Integer> lst = getStartingTokenIndexesForPattern(pat);
+		List<Integer> lst = getStartWordIndexesForPattern(pat);
 		List<int[]> charoffs = new ArrayList<int[]>(lst.size());
 		for (Integer startIndex : lst) {
 			int endIndex = startIndex + pat.length - 1;
@@ -156,8 +198,28 @@ public class SimpleTokenization implements ITokenization {
 	}	
 	
 	@Override
+	public List<int[]> getConcordanceWordIndexOffsetsForPattern(Pattern[] pat,
+			int window) {
+		int N = getWordCount() - 1; // index of last token
+		
+		List<Integer> lst = getStartWordIndexesForPattern(pat);
+		List<int[]> charoffs = new ArrayList<int[]>(lst.size());
+		for (Integer startIndex : lst) {
+			int endIndex = startIndex + pat.length - 1;
+			int endRhs = Math.min(N, endIndex + window);
+			int startRhs = Math.min(N, endIndex + 1);
+			int startLhs = Math.max(0, startIndex - window);
+			int endLhs = Math.max(0, startIndex - 1);
+			
+			charoffs.add(new int[]{startLhs, endLhs, startIndex,
+					               endIndex, startRhs, endRhs});
+		}
+		return charoffs;
+	}
+	
+	@Override
 	public List<int[]> getCharacterOffsetsForPattern(Pattern[] pat){
-		List<Integer> lst = getStartingTokenIndexesForPattern(pat);
+		List<Integer> lst = getStartWordIndexesForPattern(pat);
 		List<int[]> offs = new ArrayList<int[]>();
 		for (Integer tokIndex : lst) {
 			int[] off = new int[]{wordOffsets[tokIndex][0], 
@@ -169,8 +231,8 @@ public class SimpleTokenization implements ITokenization {
 
 	// unordered, for reporting purposes
 	@Override
-	public Set<Integer> getAllMatchingTokenIndexesForPattern(Pattern[] pat){
-		List<Integer> lst = getStartingTokenIndexesForPattern(pat);
+	public Set<Integer> getWordIndexesForPattern(Pattern[] pat){
+		List<Integer> lst = getStartWordIndexesForPattern(pat);
 		if (pat.length > 1){
 			List<Integer> extras = new ArrayList<Integer>();
 			for (Integer integer : lst) {	
@@ -185,7 +247,7 @@ public class SimpleTokenization implements ITokenization {
 	}
 
 	// just the index of the matching first tokens
-	protected List<Integer> getStartingTokenIndexesForPattern(Pattern[] pat){
+	protected List<Integer> getStartWordIndexesForPattern(Pattern[] pat){
 		// maybe we should hand in matchers in the first place?
 		Matcher[] matcher = new Matcher[pat.length];
 		for (int ii = 0; ii < matcher.length; ii++)
@@ -199,7 +261,7 @@ public class SimpleTokenization implements ITokenization {
 					boolean fits = true;
 					// check subsequent patterns, if any
 					for (int ii = 1; ii < pat.length; ii++){
-						if (tokNumber + ii < getDocumentLength()){
+						if (tokNumber + ii < getWordCount()){
 							String nextwd = tokenNumberToWordType.get(tokNumber + ii);
 							if (!matcher[ii].reset(nextwd).matches()){
 								fits = false;
@@ -247,7 +309,7 @@ public class SimpleTokenization implements ITokenization {
 		System.out.println(offs);
 		
 		System.out.println( doc.getWordCounts() );
-		System.out.println(Arrays.toString(doc.getOffsetsForTokenIndex(2)));
+		System.out.println(Arrays.toString(doc.getCharacterOffsetsForWordIndex(2)));
 		List<int[]> lst = doc.getCharacterOffsetsForPattern(new Pattern[]{Pattern.compile("had")});
 		System.out.println(lst.size());
 		for (int[] is : lst) 
@@ -276,6 +338,23 @@ public class SimpleTokenization implements ITokenization {
 				new Pattern[]{Pattern.compile("kll")}, 2);
 		for (int[] is : lst) 
 			System.out.println( Arrays.toString(is) );
+		
+		txt =  "a! Mary had a little lamb.  It's fleece was white as snow. Totally";
+		//Tokenization tn = new SimpleTokenization(txt, tok);
+		doc = new SimpleYoshikoderDocument(title, txt, new Date(20000000), tok);
+		
+		
+		int sentN = doc.getSentenceCount();
+		for (int ii = 0; ii < sentN; ii++) {
+			int[] pair = ((SimpleTokenization)doc.tokenization)
+					.getWordIndexOffsetsForSentenceIndex(ii);
+			System.out.println(pair[0] + " " + pair[1]);
+		}
+		Map<String,Integer> m = doc.getWordCountMap();
+		for (String s : m.keySet()) {
+			//doc.get
+		}
+		
 		/*
 		System.out.println("word 11");
 		lst = tn.getConcordanceOffsetsFor(Pattern.compile("snow"), 1);
@@ -294,6 +373,8 @@ public class SimpleTokenization implements ITokenization {
 		System.out.println( Arrays.toString(ofs) );
 		*/
 	}
+
+
 
 
 }

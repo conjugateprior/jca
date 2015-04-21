@@ -109,7 +109,7 @@ public class OldCSVCategoryCountPrinter extends CountPrinter {
 			sb.append(cn.getMatchedIndices().size());
 		}
 		sb.append(fieldSeparator);
-		sb.append(doc.getDocumentLength());
+		sb.append(doc.getWordCount());
 		sb.append(newline);
 		return sb.toString();
 	}
@@ -197,7 +197,7 @@ public class OldCSVCategoryCountPrinter extends CountPrinter {
 			Set<DictionaryPattern> pats = node.getPatterns();
 			for (DictionaryPattern pat : pats) {
 				Set<Integer> indices = 
-						doc.getAllMatchingTokenIndexesForPattern(pat.getRegexps());
+						doc.getWordIndexesForPattern(pat.getRegexps());
 				//System.err.println(pat.getName() + " - indices matched: " + indices);
 				indexMatches.addAll(indices);
 			}

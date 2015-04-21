@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class SimpleYoshikoderDocument 
 	extends AbstractYoshikoderDocument {
@@ -25,18 +26,18 @@ public class SimpleYoshikoderDocument
 	}
 
 	@Override
-	public int getDocumentLength() {
-		return tokenization.getDocumentLength();
+	public int getWordCount() {
+		return tokenization.getWordCount();
 	}
 
 	@Override
-	public String getTokenAtIndex(int index) {
-		return tokenization.getTokenAtIndex(index);
+	public String getWordAtIndex(int index) {
+		return tokenization.getWordAtIndex(index);
 	}
 
 	@Override
-	public Set<Integer> getAllMatchingTokenIndexesForWordType(String word) {
-		return tokenization.getAllMatchingTokenIndexesForWordType(word);
+	public Set<Integer> getWordIndexesForWordType(String word) {
+		return tokenization.getWordIndexesForWordType(word);
 	}
 
 	@Override
@@ -49,15 +50,28 @@ public class SimpleYoshikoderDocument
 			int window) {
 		return tokenization.getConcordanceCharacterOffsetsForWordType(wd, window);
 	}
-
+	
 	@Override
-	public int[] getOffsetsForTokenIndex(int index) {
-		return tokenization.getOffsetsForTokenIndex(index);
+	public List<int[]> getConcordanceWordIndexOffsetsForWordType(String wd,
+			int window) {
+		return tokenization.getConcordanceWordIndexOffsetsForWordType(wd, window);
+	}
+	
+	@Override
+	public List<int[]> getConcordanceWordIndexOffsetsForPattern(Pattern[] pat,
+			int window) {
+		
+		return tokenization.getConcordanceWordIndexOffsetsForPattern(pat, window);
 	}
 
 	@Override
-	public int[] getOffsetsForSentenceIndex(int index) {
-		return tokenization.getOffsetsForSentenceIndex(index);
+	public int[] getCharacterOffsetsForWordIndex(int index) {
+		return tokenization.getCharacterOffsetsForWordIndex(index);
+	}
+
+	@Override
+	public int[] getCharacterOffsetsForSentenceIndex(int index) {
+		return tokenization.getCharacterOffsetsForSentenceIndex(index);
 	}
 
 	public int getSentenceCount(){
@@ -85,5 +99,7 @@ public class SimpleYoshikoderDocument
 				Charset.forName("UTF8"));
 		
 	}
+
+
 	
 }

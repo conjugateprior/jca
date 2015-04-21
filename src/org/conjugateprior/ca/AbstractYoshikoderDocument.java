@@ -32,7 +32,7 @@ abstract public class AbstractYoshikoderDocument
 		tokenization = new SimpleTokenization(txt, tok);
 		locale = tok.getLocale();
 		date = d;
-		wordCount = tokenization.getDocumentLength();
+		wordCount = tokenization.getWordCount();
 	}
 
 	// triggers a retokenization
@@ -42,7 +42,7 @@ abstract public class AbstractYoshikoderDocument
 		
 		tokenization = new SimpleTokenization(getText(), tokenizerForLoc);
 		locale = loc;
-		wordCount = tokenization.getDocumentLength();
+		wordCount = tokenization.getWordCount();
 	}
 	
 	public int getWordCount(){
@@ -104,12 +104,12 @@ abstract public class AbstractYoshikoderDocument
 	}
 	
 	public String getWordAt(int N){
-		return tokenization.getTokenAtIndex(N);
+		return tokenization.getWordAtIndex(N);
 	}
 	
 	// new code 
-	public Set<Integer> getAllMatchingTokenIndexesForPattern(Pattern[] pat){
-		return tokenization.getAllMatchingTokenIndexesForPattern(pat);
+	public Set<Integer> getWordIndexesForPattern(Pattern[] pat){
+		return tokenization.getWordIndexesForPattern(pat);
 	}
 	
 	public List<int[]> getCharacterOffsetsForPattern(Pattern[] pat) {
@@ -163,7 +163,7 @@ abstract public class AbstractYoshikoderDocument
 			sb.append(df.format(date));
 		} 
 		sb.append(" (");
-		sb.append(tokenization.getDocumentLength());
+		sb.append(tokenization.getWordCount());
 		sb.append(" tokens, ");
 		sb.append(tokenization.getWordTypes().size());
 		sb.append(" types)");

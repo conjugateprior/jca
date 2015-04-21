@@ -83,7 +83,7 @@ public class Description extends AbstractCounter {
 				if (entry.getValue() == 1) hap += 1;
 			vocab.addAll(map.keySet());
 			
-			Desc d = new Desc(idoc.getDocumentLength(), map.size(), 
+			Desc d = new Desc(idoc.getWordCount(), map.size(), 
 					hap, idoc.getSentenceCount());
 			d.sentences = idoc.getSentenceCount();
 			docToDesc.put(f.getName(), d); // in on the filename 

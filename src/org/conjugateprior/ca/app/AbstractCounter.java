@@ -293,7 +293,7 @@ public abstract class AbstractCounter {
 			Set<DPat> pats = node.getValue().getPatterns();
 			for (DPat pat : pats) {
 				Set<Integer> indices = 
-						doc.getAllMatchingTokenIndexesForPattern(pat.getRegexps());
+						doc.getWordIndexesForPattern(pat.getRegexps());
 				//System.err.println(pat.getName() + " - indices matched: " + indices);
 				indexMatches.addAll(indices);
 			}
@@ -324,7 +324,7 @@ public abstract class AbstractCounter {
 			int rawCount = 0; // including double counted items!
 			for (DPat pat : pats) {
 				Set<Integer> indices = 
-						doc.getAllMatchingTokenIndexesForPattern(pat.getRegexps());
+						doc.getWordIndexesForPattern(pat.getRegexps());
 				rawCount += indices.size();
 			}
 			indexMatches.add(new Integer(rawCount)); // here one number, the total count

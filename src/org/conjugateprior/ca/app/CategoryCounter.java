@@ -175,7 +175,7 @@ public class CategoryCounter extends AbstractCounter {
 			sb.append("</td>");
 		}
 		sb.append("<td>");
-		sb.append(doc.getDocumentLength()); 
+		sb.append(doc.getWordCount()); 
 		sb.append("</td></tr>");
 		
 		return sb.toString();
@@ -206,7 +206,7 @@ public class CategoryCounter extends AbstractCounter {
 			sb.append(cn.getValue().getMatchedIndices().size());
 		}
 		sb.append(",");
-		sb.append(doc.getDocumentLength()); // no newline
+		sb.append(doc.getWordCount()); // no newline
 		return sb.toString();
 	}
 

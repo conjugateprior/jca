@@ -103,7 +103,7 @@ public class CSVFXCategoryDictionaryCountPrinter extends CountPrinter {
 			sb.append(cn.getValue().getMatchedIndices().size());
 		}
 		sb.append(fieldSeparator);
-		sb.append(doc.getDocumentLength());
+		sb.append(doc.getWordCount());
 		sb.append(newline);
 		return sb.toString();
 	}
@@ -167,7 +167,7 @@ public class CSVFXCategoryDictionaryCountPrinter extends CountPrinter {
 			Set<DPat> pats = node.getValue().getPatterns();
 			for (DPat pat : pats) {
 				Set<Integer> indices = 
-						doc.getAllMatchingTokenIndexesForPattern(pat.getRegexps());
+						doc.getWordIndexesForPattern(pat.getRegexps());
 				//System.err.println(pat.getName() + " - indices matched: " + indices);
 				indexMatches.addAll(indices);
 			}

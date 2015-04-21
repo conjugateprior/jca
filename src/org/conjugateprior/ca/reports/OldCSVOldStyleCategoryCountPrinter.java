@@ -33,7 +33,7 @@ public class OldCSVOldStyleCategoryCountPrinter extends OldCSVCategoryCountPrint
 			int rawCount = 0; // including double counted items!
 			for (DictionaryPattern pat : pats) {
 				Set<Integer> indices = 
-						doc.getAllMatchingTokenIndexesForPattern(pat.getRegexps());
+						doc.getWordIndexesForPattern(pat.getRegexps());
 				rawCount += indices.size();
 			}
 			indexMatches.add(new Integer(rawCount)); // here one number, the total count
@@ -72,7 +72,7 @@ public class OldCSVOldStyleCategoryCountPrinter extends OldCSVCategoryCountPrint
 			sb.append(num);
 		}
 		sb.append(fieldSeparator);
-		sb.append(doc.getDocumentLength());
+		sb.append(doc.getWordCount());
 		sb.append(newline);
 		return sb.toString();
 	}

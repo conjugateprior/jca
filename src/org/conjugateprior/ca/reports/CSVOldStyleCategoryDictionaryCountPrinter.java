@@ -31,7 +31,7 @@ public class CSVOldStyleCategoryDictionaryCountPrinter extends
 			int rawCount = 0; // including double counted items!
 			for (DPat pat : pats) {
 				Set<Integer> indices = 
-						doc.getAllMatchingTokenIndexesForPattern(pat.getRegexps());
+						doc.getWordIndexesForPattern(pat.getRegexps());
 				rawCount += indices.size();
 			}
 			indexMatches.add(new Integer(rawCount)); // here one number, the total count
@@ -70,7 +70,7 @@ public class CSVOldStyleCategoryDictionaryCountPrinter extends
 			sb.append(num);
 		}
 		sb.append(fieldSeparator);
-		sb.append(doc.getDocumentLength());
+		sb.append(doc.getWordCount());
 		sb.append(newline);
 		return sb.toString();
 	}
