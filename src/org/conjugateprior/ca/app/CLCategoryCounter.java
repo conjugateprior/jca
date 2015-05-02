@@ -26,7 +26,7 @@ public class CLCategoryCounter extends CLApplication {
 		addOption(getHelpOption(false));
 		addOption(getEncodingOption(false));
 		addOption(getLocaleOption(false));
-		addOption(getOuputFolderOption(true)); // not file
+		addOption(getOuputFolderOption(false)); // not file
 		addOption(getDictionaryOption(true));
 		addOption(getSilentOption());
 		
