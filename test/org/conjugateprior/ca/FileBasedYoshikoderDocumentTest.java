@@ -1,10 +1,14 @@
 package org.conjugateprior.ca;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
+import java.util.Set;
 
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.junit.After;
@@ -50,38 +54,37 @@ public class FileBasedYoshikoderDocumentTest {
 	}
 
 	@Test
-	public void testFileBasedYoshikoderDocument() {
-		//("Not yet implemented");
-	}
-
-	@Test
 	public void testGetWordCount() {
-		//("Not yet implemented");
-	}
-
-	@Test
-	public void testSimpleYoshikoderDocument() {
-		//("Not yet implemented");
+		assertEquals(fbyd1.getWordCount(), 12);
+		assertEquals(fbyd2.getWordCount(), 48);
 	}
 
 	@Test
 	public void testGetWordTypes() {
-		//("Not yet implemented");
+		Set<String> wds = fbyd1.getWordTypes();
+		assertTrue(wds.contains("he's"));
+		assertTrue(!wds.contains("mousers"));
+		assertEquals(wds.size(), 12);
 	}
 
 	@Test
 	public void testGetWordAtIndex() {
-		//("Not yet implemented");
+		assertTrue(fbyd1.getWordAt(0).equals("bustopher")); // lowercase
+		assertTrue(fbyd1.getWordAt(11).equals("fat"));
+		assertTrue(fbyd1.getWordAt(12)==null);
 	}
 
 	@Test
 	public void testGetWordIndexesForWordType() {
-		//("Not yet implemented");
+		assertTrue(fbyd2.getWordIndexesForWordType("cat").contains(19));
+		assertTrue(fbyd2.getWordIndexesForWordType("cat").contains(16));
+		assertTrue(!fbyd2.getWordIndexesForWordType("cat").contains(20));
+		assertEquals(fbyd2.getWordIndexesForWordType("cat").size(), 2);
 	}
 
 	@Test
 	public void testGetCharacterOffsetsForWordType() {
-		//("Not yet implemented");
+		
 	}
 
 	@Test

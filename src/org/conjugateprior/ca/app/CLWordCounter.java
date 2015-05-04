@@ -30,7 +30,7 @@ public class CLWordCounter extends CLApplication {
 		addOption(getHelpOption(false));
 		addOption(getEncodingOption(false));
 		addOption(getLocaleOption(false));
-		addOption(getOuputFolderOption(true)); // not file
+		addOption(getOutputFolderOption(true)); // not file
 		addOption(getSilentOption());	
 		
 		Option format = OptionBuilder.withArgName("format").hasArg()

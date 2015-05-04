@@ -1,0 +1,9 @@
+.chart-symbol { /* formerly solid circle */
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 5px;
+    -fx-padding: 5px;
+}
+.default-color1.chart-symbol { /* formerly solid square */
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 5px;
+}

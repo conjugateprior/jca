@@ -143,7 +143,7 @@ public class CLApplication {
 		return outputfile;
 	}
 	
-	protected CLOption getOuputFolderOption(boolean required){
+	protected CLOption getOutputFolderOption(boolean required){
 		CLOption outputfile = new CLOption("output", true, 
 				"Name of output file (default: stdout)");
 		outputfile.setArgName("foldername");

@@ -11,6 +11,7 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.OpenMapRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealMatrixPreservingVisitor;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
 public class CorrespondenceAnalysis extends AbstractCounter {
@@ -134,7 +135,29 @@ public class CorrespondenceAnalysis extends AbstractCounter {
 	public static void main(String[] args) {
 		Array2DRowRealMatrix wfm = 
 				new Array2DRowRealMatrix(3, 2);
+		wfm.setEntry(1, 1, 10);
+		wfm.setEntry(0, 1, 3);
+		
 		System.err.println(wfm);
+		double d = wfm.walkInOptimizedOrder(new RealMatrixPreservingVisitor() {
+			int tot = 0;
+    		@Override
+    		public void start(int rows, int columns, int startRow, int endRow,
+    				int startColumn, int endColumn) { /* */ }
+			@Override
+			public void visit(int row, int column, double value) {
+				tot += value;
+			}
+    		@Override
+    		public double end() {
+    			return tot;
+    		}
+		});
+		System.err.println(d);
+		
+		SingularValueDecomposition svd = new SingularValueDecomposition(wfm);
+		System.err.println(svd.getU());
+		System.err.println(svd.getV());
 	}
 	
 }
