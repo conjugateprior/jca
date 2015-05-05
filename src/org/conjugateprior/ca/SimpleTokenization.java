@@ -85,6 +85,11 @@ public class SimpleTokenization implements ITokenization {
 		return newlist;
 	}
 	
+	/**
+	 * Gets a 6-tuple of word indexes or -1.  If the target word starts the doc 
+	 * the first two are -1.  If the target word ends the doc, the last two
+	 * are -1.  That is: at least one side of the concordance is empty. 
+	 */
 	public List<int[]> getConcordanceWordIndexOffsetsForWordType(String wd, int window){
 		int N = getWordCount() - 1; // index of last token
 		
@@ -92,10 +97,11 @@ public class SimpleTokenization implements ITokenization {
 		List<int[]> charoffs = new ArrayList<int[]>(lst.size());
 		for (Integer startIndex : lst) {
 			int endIndex = startIndex;
-			int endRhs = Math.min(N, endIndex + window);
-			int startRhs = Math.min(N, endIndex + 1);
-			int startLhs = Math.max(0, startIndex - window);
-			int endLhs = Math.max(0, startIndex - 1);
+
+			int endRhs = startIndex.equals(N) ? -1 : Math.min(N, endIndex + window);
+			int startRhs = startIndex.equals(N) ? -1 : Math.min(N, endIndex + 1);
+			int startLhs = startIndex.equals(0) ? -1 : Math.max(0, startIndex - window);
+			int endLhs = startIndex.equals(0) ? -1 : Math.max(0, startIndex - 1);
 			
 			charoffs.add(new int[]{startLhs, endLhs, startIndex,
 						           endIndex, startRhs, endRhs});
@@ -116,14 +122,24 @@ public class SimpleTokenization implements ITokenization {
 			int startLhs = Math.max(0, startIndex - window);
 			int endLhs = Math.max(0, startIndex - 1);
 			
-			charoffs.add(new int[]{
-					wordOffsets[startLhs][0],
-					wordOffsets[endLhs][1],
-					wordOffsets[startIndex][0],
-					wordOffsets[endIndex][1],
-					wordOffsets[startRhs][0],
-					wordOffsets[endRhs][1]}
-			);
+			int[] vv = new int[6];
+			vv[2] = wordOffsets[startIndex][0];
+			vv[3] = wordOffsets[endIndex][1];
+			if (startIndex.equals(0)){
+				vv[0] = -1;
+				vv[1] = -1;
+			} else {
+				vv[0] = wordOffsets[startLhs][0];
+				vv[1] = wordOffsets[endLhs][1];
+			}
+			if (endIndex == N){
+				vv[4] = -1;
+				vv[5] = -1;
+			} else {
+				vv[4] = wordOffsets[startRhs][0];
+				vv[5] = wordOffsets[endRhs][1];
+			}
+			charoffs.add(vv);
 		}
 		return charoffs;
 	}	
@@ -180,19 +196,30 @@ public class SimpleTokenization implements ITokenization {
 		List<int[]> charoffs = new ArrayList<int[]>(lst.size());
 		for (Integer startIndex : lst) {
 			int endIndex = startIndex + pat.length - 1;
+			
 			int endRhs = Math.min(N, endIndex + window);
 			int startRhs = Math.min(N, endIndex + 1);
 			int startLhs = Math.max(0, startIndex - window);
 			int endLhs = Math.max(0, startIndex - 1);
 			
-			charoffs.add(new int[]{
-					wordOffsets[startLhs][0],
-					wordOffsets[endLhs][1],
-					wordOffsets[startIndex][0],
-					wordOffsets[endIndex][1],
-					wordOffsets[startRhs][0],
-					wordOffsets[endRhs][1]}
-			);
+			int[] vv = new int[6];
+			vv[2] = wordOffsets[startIndex][0];
+			vv[3] = wordOffsets[endIndex][1];
+			if (startIndex.equals(0)){
+				vv[0] = -1;
+				vv[1] = -1;
+			} else {
+				vv[0] = wordOffsets[startLhs][0];
+				vv[1] = wordOffsets[endLhs][1];
+			}
+			if (endIndex == N){
+				vv[4] = -1;
+				vv[5] = -1;
+			} else {
+				vv[4] = wordOffsets[startRhs][0];
+				vv[5] = wordOffsets[endRhs][1];
+			}
+			charoffs.add(vv);
 		}
 		return charoffs;
 	}	
@@ -206,10 +233,11 @@ public class SimpleTokenization implements ITokenization {
 		List<int[]> charoffs = new ArrayList<int[]>(lst.size());
 		for (Integer startIndex : lst) {
 			int endIndex = startIndex + pat.length - 1;
-			int endRhs = Math.min(N, endIndex + window);
-			int startRhs = Math.min(N, endIndex + 1);
-			int startLhs = Math.max(0, startIndex - window);
-			int endLhs = Math.max(0, startIndex - 1);
+			
+			int endRhs = (endIndex == N) ? -1 : Math.min(N, endIndex + window);
+			int startRhs = (endIndex == N) ? -1 : Math.min(N, endIndex + 1);
+			int startLhs = startIndex.equals(0) ? -1 : Math.max(0, startIndex - window);
+			int endLhs = startIndex.equals(0) ? -1 : Math.max(0, startIndex - 1);
 			
 			charoffs.add(new int[]{startLhs, endLhs, startIndex,
 					               endIndex, startRhs, endRhs});

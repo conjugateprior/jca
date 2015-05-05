@@ -73,7 +73,7 @@ public class CLConcordancer extends CLApplication{
 		if (!(line.hasOption("dictionary") || line.hasOption("pattern")))
 			throw new Exception("Missing either dictionary and category arguments, or pattern argument");
 		if (line.hasOption("dictionary")) {	
-			concordancer.setDictionary("dictionary");				
+			concordancer.setDictionary(line.getOptionValue("dictionary"));				
 			String cat = null;
 			if (line.hasOption("category")){
 				cat = line.getOptionValue("category");
@@ -108,18 +108,16 @@ public class CLConcordancer extends CLApplication{
 		System.exit(0);
 	}
 	
-	/*
 	public static void main(String[] args) {	
 		Concordancer cc = new Concordancer();
 		CLConcordancer c = new CLConcordancer(cc);
-		try {
+		try { 
 			c.processLine(args);
 		} catch (Exception ex){
-			System.err.println(ex.getMessage());
+			ex.printStackTrace();
 			c.printUsageAndOptions();
 		}
 	}
-	*/
 	
 }
 

@@ -63,12 +63,19 @@ public class Concordancer extends AbstractCounter {
 			for (int[] is : concs) {
 				str.append("    <tr><td>" + (firstline ? StringEscapeUtils.escapeHtml4(doc.getTitle()) : "") + "</td>");	
 				firstline = false;
-				String s = collapseWhitespace(txt.substring(is[0], is[1]));
+				String s;
+				if (is[0] != -1)
+					s = collapseWhitespace(txt.substring(is[0], is[1]));
+				else 
+					s = "";
 				str.append("<td class=\"rightalign\">" + 
 						StringEscapeUtils.escapeHtml4(s) + "</td>");
 				String targ = collapseWhitespace(txt.substring(is[2], is[3]));
 				int restart = (is[3]<txt.length() ? is[3] : is[4]);
-				s = collapseWhitespace(txt.substring(restart, is[5]));
+				if (is[5] != -1)
+					s = collapseWhitespace(txt.substring(restart, is[5]));
+				else 
+					s = "";
 				str.append("<td><strong>" + StringEscapeUtils.escapeHtml4(targ) + "</strong>" +
 						StringEscapeUtils.escapeHtml4(s) + "</td></tr>");
 				str.append(SystemUtils.LINE_SEPARATOR); // oohh
@@ -89,14 +96,24 @@ public class Concordancer extends AbstractCounter {
 		for (int[] is : concs)
 			maxlen = Math.max(maxlen, is[1]-is[0]);
 		for (int[] is : concs) {
-			String s = collapseWhitespace(txt.substring(is[0], is[1]));
+			String s;
+			if (is[0] != -1)
+				s = collapseWhitespace(txt.substring(is[0], is[1]));
+			else 
+				s = "";
 			str.append(StringUtils.leftPad(s, maxlen));
+			
 			s = " [" + txt.substring(is[2], is[3]) + "]";
 		    str.append(s);
+		    
 		    // catch trailing punctuation etc. by restarting straight after match
 		    int restart = (is[3]<txt.length() ? is[3] : is[4]);
-			s = collapseWhitespace(txt.substring(restart, is[5]));
-			str.append(s);
+			
+		    if (is[5] != -1)
+		    	s = collapseWhitespace(txt.substring(restart, is[5]));
+		    else
+		    	s = "";
+	    	str.append(s);
 			str.append(SystemUtils.LINE_SEPARATOR); // oohh
 		}
 		return str.toString();
