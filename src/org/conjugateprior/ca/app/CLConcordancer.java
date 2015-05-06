@@ -43,8 +43,10 @@ public class CLConcordancer extends CLApplication{
 		CommandLineParser parser = new GnuParser();
 		CommandLine line = parser.parse(options, args);
 		
-		if (line.hasOption("help"))
-			printUsageAndOptions();		
+		if (line.hasOption("help")){	
+			printUsageAndOptions();	
+			System.exit(0);
+		}
 		if (line.hasOption("locale")){
 			try {
 				concordancer.setLocale(line.getOptionValue("locale"));

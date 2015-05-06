@@ -187,7 +187,7 @@ public class SimpleTokenization implements ITokenization {
 	
 	// start new code
 
-	// window is in words, offsets are in characters indexes as a 4-tuple
+	// window is in words, offsets are in characters indexes as a 6-tuple
 	@Override
 	public List<int[]> getConcordanceCharacterOffsetsForPattern(Pattern[] pat, int window){
 		int N = getWordCount() - 1; // index of last token

@@ -33,29 +33,27 @@ public class CLWordCounter extends CLApplication {
 		addOption(getOutputFolderOption(true)); // not file
 		addOption(getSilentOption());	
 		
-		Option format = OptionBuilder.withArgName("format").hasArg()
-			.withDescription("One of: ldac, mtx (default: ldac)")
-			.create("format");
-		addOption(format);
+		Option form = new Option("format", true, 
+				"One of: ldac, mtx (default: ldac)");
+		form.setArgName("format");
+		addOption(form);
 		
-		Option stopwords = OptionBuilder.withArgName("file").hasArg()
-				.withDescription("File of words not to be counted")
-				.create("stopwords");
+		Option stopwords = new Option("file", true,
+				"File of words not to be counted");
+		stopwords.setArgName("stopwords");
 		addOption(stopwords);
 		
-		Option currency = OptionBuilder
-				.withDescription("Remove strings beginning with currency signs")
-				.create("currency");
+		Option currency = new Option("no_currency", false,
+				"Remove strings beginning with currency signs");
 		addOption(currency);
 		
-		Option numbers = OptionBuilder
-				.withDescription("Remove strings beginning with digits")
-				.create("no_numbers");
+		Option numbers = new Option("no_numbers", false,
+				"Remove strings beginning with digits");
 		addOption(numbers);
 
-		Option stemmer = OptionBuilder.hasArg().withArgName("language")
-				.withDescription("Stem files before counting. (This happens last). One of: " + llist)
-			   .create("stemmer");
+		Option stemmer = new Option("stemmer", true,
+		"Stem files before counting. (This happens last). One of: " + llist);
+		stemmer.setArgName("language");
 		addOption(stemmer);
 	}
 	
@@ -66,6 +64,7 @@ public class CLWordCounter extends CLApplication {
 		
 		if (line.hasOption("help")) {
 			printUsageAndOptions();
+			System.exit(0);
 		}
 		if (line.hasOption("locale")){
 			try {

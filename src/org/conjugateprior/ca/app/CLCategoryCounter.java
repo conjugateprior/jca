@@ -48,6 +48,7 @@ public class CLCategoryCounter extends CLApplication {
 		
 		if (line.hasOption("help")) {
 			printUsageAndOptions();
+			System.exit(0);
 		}
 		if (line.hasOption("locale")){
 			try {
