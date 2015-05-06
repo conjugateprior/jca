@@ -9,9 +9,10 @@ You'll need an up to date Java install for all these things.
 Specifically, the JDK.  You can get the currently latest one
 [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) after accepting the terms and conditions radio button.  
 
-Mac (and probably Linux) users will want to choose the link marked
-'jdk-8u45-macosx-x64.dmg' and put the following lines in the `.bash_profile`
-file in their home directories
+Mac users will want to choose the link marked
+'jdk-8u45-macosx-x64.dmg'.  Mac (and probably Linux) users will also
+probably want to put the following lines in the `.bash_profile` file
+in their home directories
 
     export JAVA_HOME="`/usr/libexec/java_home -v 1.8`"
     export PATH=$JAVA_HOME/bin:$PATH
