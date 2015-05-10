@@ -110,6 +110,7 @@ public class CLConcordancer extends CLApplication{
 		System.exit(0);
 	}
 	
+	/*
 	public static void main(String[] args) {	
 		Concordancer cc = new Concordancer();
 		CLConcordancer c = new CLConcordancer(cc);
@@ -120,6 +121,7 @@ public class CLConcordancer extends CLApplication{
 			c.printUsageAndOptions();
 		}
 	}
+	*/
 	
 }
 

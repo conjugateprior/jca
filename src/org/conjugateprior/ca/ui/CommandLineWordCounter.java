@@ -11,6 +11,11 @@ import org.conjugateprior.ca.reports.CountPrinter;
 import org.conjugateprior.ca.reports.ICountPrinter;
 import org.conjugateprior.ca.reports.VocabularyFilterer;
 
+/**
+ * @deprecated
+ * @author will
+ *
+ */
 public class CommandLineWordCounter extends CommandLineApplication {
 	
 	protected Locale tLocale;

@@ -4,7 +4,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-public class SubstringPatternEngine implements IPatternEngine {
+public class SubstringPatternEngine implements PatternEngine {
 
     protected int reFlags = Pattern.CASE_INSENSITIVE;
           

@@ -10,7 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class SimpleDocumentTokenizer implements IDocumentTokenizer {
+public class SimpleDocumentTokenizer implements DocumentTokenizer {
     
     private static Logger log = Logger.getLogger(SimpleDocumentTokenizer.class.getName());
     

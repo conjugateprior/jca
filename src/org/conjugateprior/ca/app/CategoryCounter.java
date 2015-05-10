@@ -17,7 +17,7 @@ import org.conjugateprior.ca.AbstractYoshikoderDocument;
 import org.conjugateprior.ca.DCat;
 import org.conjugateprior.ca.FXCategoryDictionary;
 import org.conjugateprior.ca.FileBasedYoshikoderDocument;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 
@@ -108,7 +108,7 @@ public class CategoryCounter extends AbstractCounter {
 					new SimpleDocumentTokenizer(locale);
 			Charset cs = getEncoding();
 			for (File f : files) {
-				IYoshikoderDocument idoc = 
+				YoshikoderDocument idoc = 
 						new FileBasedYoshikoderDocument(f.getName(), 
 								AbstractYoshikoderDocument.getTextFromFile(f, encoding),
 								null, tok, f, cs);	
@@ -159,7 +159,7 @@ public class CategoryCounter extends AbstractCounter {
 	}
 	
 	// new style and old style matching
-	public String makeHTMLLineFromDocument(IYoshikoderDocument doc){
+	public String makeHTMLLineFromDocument(YoshikoderDocument doc){
 		if (!usingOldMatchStrategy)
 			fillTreeWithIndices(doc);
 		else
@@ -193,7 +193,7 @@ public class CategoryCounter extends AbstractCounter {
 		return sb.toString();
 	}
 	
-	public String makeCSVLineFromDocument(IYoshikoderDocument doc){
+	public String makeCSVLineFromDocument(YoshikoderDocument doc){
 		if (!usingOldMatchStrategy)
 			fillTreeWithIndices(doc);
 		else

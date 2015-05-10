@@ -7,7 +7,7 @@ import java.nio.charset.Charset;
 import java.util.Locale;
 import java.util.Map;
 
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 
 public class LDACWordCountPrinter extends WordCountPrinter {
 	
@@ -17,7 +17,7 @@ public class LDACWordCountPrinter extends WordCountPrinter {
 	}
 			
 	@Override
-	public String makeLineFromDocument(IYoshikoderDocument doc){
+	public String makeLineFromDocument(YoshikoderDocument doc){
 
 		Map<String,Integer> map = reporter.getWordCountMapFromDocument(doc);
 		

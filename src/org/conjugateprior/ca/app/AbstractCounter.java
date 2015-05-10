@@ -21,8 +21,8 @@ import org.apache.commons.io.IOUtils;
 import org.conjugateprior.ca.DCat;
 import org.conjugateprior.ca.DPat;
 import org.conjugateprior.ca.FXCategoryDictionary;
-import org.conjugateprior.ca.IPatternEngine;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.PatternEngine;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SubstringPatternEngine;
 
 public abstract class AbstractCounter {
@@ -241,7 +241,7 @@ public abstract class AbstractCounter {
 	}
 	
 	// default substring
-	protected IPatternEngine patternEngine = new SubstringPatternEngine();
+	protected PatternEngine patternEngine = new SubstringPatternEngine();
 	
 	// default empty not null
 	protected List<Pattern[]> patterns = new ArrayList<Pattern[]>();
@@ -281,7 +281,7 @@ public abstract class AbstractCounter {
 		this.usingOldMatchStrategy = useOldMatchStrategy;
 	}
 
-	protected void fillTreeWithIndices(IYoshikoderDocument doc){
+	protected void fillTreeWithIndices(YoshikoderDocument doc){
 		// optimise later
 		//Set<String> vocab = doc.getWordTypes();
 		List<TreeItem<DCat>> categoryNodesInPrintOrder = dictionary.getCategoryNodesInPrintOrder();
@@ -314,7 +314,7 @@ public abstract class AbstractCounter {
 	}
 
 	// this time with match counts not the indices
-	protected void fillTreeWithMatchCounts(IYoshikoderDocument doc){
+	protected void fillTreeWithMatchCounts(YoshikoderDocument doc){
 		// optimise later
 		List<TreeItem<DCat>> categoryNodesInPrintOrder = dictionary.getCategoryNodesInPrintOrder();
 		

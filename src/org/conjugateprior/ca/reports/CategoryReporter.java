@@ -20,7 +20,7 @@ import java.util.Set;
 import org.conjugateprior.ca.OldCategoryDictionary;
 import org.conjugateprior.ca.OldCategoryDictionary.DictionaryCategory;
 import org.conjugateprior.ca.OldCategoryDictionary.DictionaryPattern;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 /**
@@ -179,7 +179,7 @@ public class CategoryReporter {
 			writer.close();
 	}
 
-	public ReportLine reportOnDocumentOldStyle(IYoshikoderDocument doc){
+	public ReportLine reportOnDocumentOldStyle(YoshikoderDocument doc){
 		fillTreeWithMatchCounts(doc);
 
 		ReportLine line = null;
@@ -194,7 +194,7 @@ public class CategoryReporter {
 		return line;
 	}
 	
-	public ReportLine reportOnDocument(IYoshikoderDocument doc){
+	public ReportLine reportOnDocument(YoshikoderDocument doc){
 		fillTreeWithIndices(doc);
 
 		ReportLine line = null;
@@ -218,7 +218,7 @@ public class CategoryReporter {
 	}
 	
 	// this is the old style match counting
-	protected void fillTreeWithMatchCounts(IYoshikoderDocument doc){
+	protected void fillTreeWithMatchCounts(YoshikoderDocument doc){
 		// optimise later
 		//Set<String> vocab = doc.getWordTypes();
 		for (DictionaryCategory node : categoryNodesInPrintOrder){
@@ -256,7 +256,7 @@ public class CategoryReporter {
 	
 	// this is the new style match counting where we never double count
 	// multiple patterns that match (overlapping slices of) the same tokens
-	protected void fillTreeWithIndices(IYoshikoderDocument doc){
+	protected void fillTreeWithIndices(YoshikoderDocument doc){
 		// optimise later
 		//Set<String> vocab = doc.getWordTypes();
 		for (DictionaryCategory node : categoryNodesInPrintOrder){
@@ -319,11 +319,11 @@ public class CategoryReporter {
 			buf.append(" ");
 		}
 		System.out.println(buf.toString());
-		IYoshikoderDocument ykdoc = new SimpleYoshikoderDocument("T\"as if\"", 
+		YoshikoderDocument ykdoc = new SimpleYoshikoderDocument("T\"as if\"", 
 				buf.toString(), new Date(2000000), 
 				new SimpleDocumentTokenizer(Locale.ENGLISH));
 	
-		IYoshikoderDocument yk2 = ykdoc;
+		YoshikoderDocument yk2 = ykdoc;
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		rep.openStreamingReport(out);

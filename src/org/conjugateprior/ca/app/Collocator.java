@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.apache.commons.math3.linear.OpenMapRealMatrix;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 
@@ -28,7 +28,7 @@ public class Collocator extends AbstractCounter {
 		SimpleDocumentTokenizer tok = 
 				new SimpleDocumentTokenizer(locale);
 		for (File f : files) {
-			IYoshikoderDocument idoc = 
+			YoshikoderDocument idoc = 
 					new SimpleYoshikoderDocument(f.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(f, encoding),
 							null, tok);	
@@ -47,7 +47,7 @@ public class Collocator extends AbstractCounter {
 		OpenMapRealMatrix mat = new OpenMapRealMatrix(V, V);
 		
 		for (File f : files) {
-			IYoshikoderDocument idoc = 
+			YoshikoderDocument idoc = 
 					new SimpleYoshikoderDocument(f.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(f, encoding),
 							null, tok);

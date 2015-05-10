@@ -20,7 +20,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.conjugateprior.ca.DCat;
 import org.conjugateprior.ca.DPat;
 import org.conjugateprior.ca.FXCategoryDictionary;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 
 public class CSVFXCategoryDictionaryCountPrinter extends CountPrinter {
 
@@ -93,7 +93,7 @@ public class CSVFXCategoryDictionaryCountPrinter extends CountPrinter {
 		categorySeparator = cSep;
 	}
 
-	public String makeLineFromDocument(IYoshikoderDocument doc){
+	public String makeLineFromDocument(YoshikoderDocument doc){
 		fillTreeWithIndices(doc);
 
 		StringBuilder sb = new StringBuilder();
@@ -157,7 +157,7 @@ public class CSVFXCategoryDictionaryCountPrinter extends CountPrinter {
 
 	// this is the new style match counting where we never double count
 	// multiple patterns that match (overlapping slices of) the same tokens
-	protected void fillTreeWithIndices(IYoshikoderDocument doc){
+	protected void fillTreeWithIndices(YoshikoderDocument doc){
 		// optimise later
 		//Set<String> vocab = doc.getWordTypes();
 		for (TreeItem<DCat> node : categoryNodesInPrintOrder){

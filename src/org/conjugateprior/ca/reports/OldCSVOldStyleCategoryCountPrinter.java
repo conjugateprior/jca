@@ -9,7 +9,7 @@ import java.util.Set;
 import org.conjugateprior.ca.OldCategoryDictionary;
 import org.conjugateprior.ca.OldCategoryDictionary.DictionaryCategory;
 import org.conjugateprior.ca.OldCategoryDictionary.DictionaryPattern;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 
 /**
  * @deprecated
@@ -24,7 +24,7 @@ public class OldCSVOldStyleCategoryCountPrinter extends OldCSVCategoryCountPrint
 	}
 
 	// this time with match counts not the indices
-	protected void fillTreeWithMatchCounts(IYoshikoderDocument doc){
+	protected void fillTreeWithMatchCounts(YoshikoderDocument doc){
 		// optimise later
 		//Set<String> vocab = doc.getWordTypes();
 		for (DictionaryCategory node : categoryNodesInPrintOrder){
@@ -60,7 +60,7 @@ public class OldCSVOldStyleCategoryCountPrinter extends OldCSVCategoryCountPrint
 		}
 	}
 	
-	public String makeLineFromDocument(IYoshikoderDocument doc){
+	public String makeLineFromDocument(YoshikoderDocument doc){
 		fillTreeWithMatchCounts(doc);
 
 		StringBuilder sb = new StringBuilder();

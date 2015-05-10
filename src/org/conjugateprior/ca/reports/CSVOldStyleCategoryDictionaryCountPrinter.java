@@ -11,7 +11,7 @@ import javafx.scene.control.TreeItem;
 import org.conjugateprior.ca.DCat;
 import org.conjugateprior.ca.DPat;
 import org.conjugateprior.ca.FXCategoryDictionary;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 
 public class CSVOldStyleCategoryDictionaryCountPrinter extends
 		CSVFXCategoryDictionaryCountPrinter {
@@ -22,7 +22,7 @@ public class CSVOldStyleCategoryDictionaryCountPrinter extends
 	}
 
 	// this time with match counts not the indices
-	protected void fillTreeWithMatchCounts(IYoshikoderDocument doc){
+	protected void fillTreeWithMatchCounts(YoshikoderDocument doc){
 		// optimise later
 		//Set<String> vocab = doc.getWordTypes();
 		for (TreeItem<DCat> node : categoryNodesInPrintOrder){
@@ -58,7 +58,7 @@ public class CSVOldStyleCategoryDictionaryCountPrinter extends
 		}
 	}
 	
-	public String makeLineFromDocument(IYoshikoderDocument doc){
+	public String makeLineFromDocument(YoshikoderDocument doc){
 		fillTreeWithMatchCounts(doc);
 
 		StringBuilder sb = new StringBuilder();

@@ -18,7 +18,7 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 
@@ -79,7 +79,7 @@ public abstract class CountPrinter implements ICountPrinter {
 				
 				int counter = 0;
 				for (File file : files) {
-					IYoshikoderDocument doc = null;
+					YoshikoderDocument doc = null;
 					try {
 						updateMessage("Processing " + file.getName());
 						doc = new SimpleYoshikoderDocument(file.getName(), 
@@ -264,7 +264,7 @@ public abstract class CountPrinter implements ICountPrinter {
 			
 			int counter = 0;
 			for (File file : files) {
-				IYoshikoderDocument doc = null;
+				YoshikoderDocument doc = null;
 				try {
 					doc = new SimpleYoshikoderDocument(file.getName(), 
 						AbstractYoshikoderDocument.getTextFromFile(file, charset),
@@ -295,7 +295,7 @@ public abstract class CountPrinter implements ICountPrinter {
 	}
 
 	// must be overridden in subclasses
-	abstract public String makeLineFromDocument(IYoshikoderDocument doc);
+	abstract public String makeLineFromDocument(YoshikoderDocument doc);
 
 	// may be overridden in subclasses
 	protected void writeRowsFile() throws Exception {

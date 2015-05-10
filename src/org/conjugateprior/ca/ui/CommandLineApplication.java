@@ -12,6 +12,11 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
+/**
+ * @deprecated
+ * @author will
+ *
+ */
 abstract public class CommandLineApplication {
 
 	protected Options options;

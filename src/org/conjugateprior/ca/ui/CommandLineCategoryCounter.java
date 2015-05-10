@@ -23,13 +23,18 @@ import org.conjugateprior.ca.AbstractYoshikoderDocument;
 import org.conjugateprior.ca.DCat;
 import org.conjugateprior.ca.DPat;
 import org.conjugateprior.ca.FXCategoryDictionary;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 import org.conjugateprior.ca.reports.CSVFXCategoryDictionaryCountPrinter;
 import org.conjugateprior.ca.reports.CSVOldStyleCategoryDictionaryCountPrinter;
 import org.conjugateprior.ca.reports.CountPrinter;
 
+/**
+ * @deprecated
+ * @author will
+ *
+ */
 public class CommandLineCategoryCounter extends CommandLineApplication {
 
 	// Java bean type properties
@@ -157,7 +162,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 	}	
 
 	// this time with match counts not the indices
-	protected void fillTreeWithMatchCounts(IYoshikoderDocument doc){
+	protected void fillTreeWithMatchCounts(YoshikoderDocument doc){
 		// optimise later
 		//Set<String> vocab = doc.getWordTypes();
 		for (TreeItem<DCat> node : categoryNodesInPrintOrder){
@@ -194,7 +199,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 	}
 
 	// new style and old style matching
-	protected String makeLineFromDocument(FXCategoryDictionary dict, IYoshikoderDocument doc, boolean oldStyle){
+	protected String makeLineFromDocument(FXCategoryDictionary dict, YoshikoderDocument doc, boolean oldStyle){
 		if (!oldStyle)
 			fillTreeWithIndices(doc);
 		else
@@ -213,7 +218,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 
 	// this is the new style match counting where we never double count
 	// multiple patterns that match (overlapping slices of) the same tokens
-	protected void fillTreeWithIndices(IYoshikoderDocument doc){
+	protected void fillTreeWithIndices(YoshikoderDocument doc){
 		// optimise later
 		//Set<String> vocab = doc.getWordTypes();
 		for (TreeItem<DCat> node : categoryNodesInPrintOrder){
@@ -327,7 +332,7 @@ public class CommandLineCategoryCounter extends CommandLineApplication {
 				CSVFXCategoryDictionaryCountPrinter.wordCountHeader);
 			
 			for (File f : filesToProcess) {
-				IYoshikoderDocument idoc = 
+				YoshikoderDocument idoc = 
 						new SimpleYoshikoderDocument(f.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(f, tEncoding),
 							null, tokenizer);

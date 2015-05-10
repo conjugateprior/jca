@@ -1,6 +1,5 @@
 package org.conjugateprior.ca;
 
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -10,6 +9,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.paint.Color;
 
 public class DCat implements Comparable<DCat> {
+	
 	private String name;
 	private Set<DPat> patterns = new HashSet<DPat>();
 	private Color color = null;

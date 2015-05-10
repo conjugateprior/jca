@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
 import org.conjugateprior.ca.DPat;
 import org.conjugateprior.ca.FXCategoryDictionary;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 
@@ -46,7 +46,7 @@ public class MatchExpander extends AbstractCounter {
 		
 		SimpleDocumentTokenizer tok = new SimpleDocumentTokenizer(locale);
 		for (File f : files) {
-			IYoshikoderDocument idoc = 
+			YoshikoderDocument idoc = 
 					new SimpleYoshikoderDocument(f.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(f, encoding),
 							null, tok);	

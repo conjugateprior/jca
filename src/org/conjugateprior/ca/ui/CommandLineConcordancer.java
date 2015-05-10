@@ -24,13 +24,18 @@ import org.conjugateprior.ca.AbstractYoshikoderDocument;
 import org.conjugateprior.ca.DCat;
 import org.conjugateprior.ca.DPat;
 import org.conjugateprior.ca.FXCategoryDictionary;
-import org.conjugateprior.ca.IPatternEngine;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.PatternEngine;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 import org.conjugateprior.ca.SubstringPatternEngine;
 
 
+/**
+ * @deprecated
+ * @author will
+ *
+ */
 public class CommandLineConcordancer extends CommandLineApplication {
 
 	protected Locale tLocale = Locale.getDefault();
@@ -224,7 +229,7 @@ public class CommandLineConcordancer extends CommandLineApplication {
 			//System.err.println( line.getOptionValue("pattern").split("[ ]+").length );
 			
 			String[] spl = line.getOptionValue("pattern").split("[ ]+");
-			IPatternEngine patternEngine = new SubstringPatternEngine();
+			PatternEngine patternEngine = new SubstringPatternEngine();
 			regexpList = new ArrayList<Pattern[]>();
 			regexpList.add( patternEngine.makeRegexp(spl) );
 		}
@@ -290,7 +295,7 @@ public class CommandLineConcordancer extends CommandLineApplication {
 			writer.write("  <table id=\"conctable\">\n");
 			writer.write("    <tr><th>Document</th><th></th><th class=\"leftalign\">Pattern</th></tr>\n");
 			for (File f : filesToProcess) {
-				IYoshikoderDocument idoc = 
+				YoshikoderDocument idoc = 
 						new SimpleYoshikoderDocument(f.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(f, tEncoding),
 							null, tokenizer);
@@ -312,7 +317,7 @@ public class CommandLineConcordancer extends CommandLineApplication {
 			writer.write("Document & & Pattern \\\\ \\midrule");
 			writer.newLine();
 			for (File f : filesToProcess) {
-				IYoshikoderDocument idoc = 
+				YoshikoderDocument idoc = 
 						new SimpleYoshikoderDocument(f.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(f, tEncoding),
 							null, tokenizer);
@@ -331,7 +336,7 @@ public class CommandLineConcordancer extends CommandLineApplication {
 		} else {
 			// TEXT or UTF8 (encoding is set in the writer already)
 			for (File f : filesToProcess) {
-				IYoshikoderDocument idoc = 
+				YoshikoderDocument idoc = 
 						new SimpleYoshikoderDocument(f.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(f, tEncoding),
 							null, tokenizer);

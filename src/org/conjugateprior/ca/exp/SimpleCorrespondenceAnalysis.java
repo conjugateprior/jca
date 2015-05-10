@@ -1,8 +1,22 @@
 package org.conjugateprior.ca.exp;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Formatter;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.DefaultRealMatrixChangingVisitor;
 import org.apache.commons.math3.linear.DefaultRealMatrixPreservingVisitor;
@@ -60,11 +74,120 @@ class SimpleCorrespondenceAnalysis {
 	
 	String[] columnNames;
 	String[] rowNames;
+	RealMatrix wfm;
 	
-	public SimpleCorrespondenceAnalysis(RealMatrix wfm, int dim, String[] rNames, String[] cNames) {
+	public SimpleCorrespondenceAnalysis(File fold, int dimension) throws Exception {
+		dim = dimension;
+		if ((new File(fold, "data.ldac")).exists())
+			getLDAC(fold);
+		else if ((new File(fold, "data.csv")).exists())
+			getCSV(fold);
+		else if ((new File(fold, "data.mtx")).exists())
+			getMTX(fold);
+		else
+			throw new Exception("Could not find data.ldac (or .mtx or .csv) in " + fold.getAbsolutePath());
+		
+		computeSimpleCorrespondenceAnalysis();
+	}
+
+	protected void getCSV(File fold) throws Exception {
+		File csvData = new File(fold, "data.csv");
+		InputStreamReader reader = new InputStreamReader(
+				new FileInputStream(csvData), Charset.forName("UTF-8"));
+		
+		List<CSVRecord> list = null;
+		try (CSVParser parser = new CSVParser(reader, CSVFormat.EXCEL)){
+			list = parser.getRecords();
+		}
+		
+		CSVRecord lineOne = list.get(0);
+		columnNames = new String[lineOne.size()-1];
+		rowNames = new String[list.size()-1];
+		wfm = new Array2DRowRealMatrix(rowNames.length, columnNames.length);
+		
+		Iterator<CSVRecord> iterator = list.iterator(); 
+		CSVRecord header = iterator.next();
+		for (int ii = 1; ii < header.size(); ii++)
+			columnNames[ii-1] = header.get(ii);
+		int row = 0;
+		while (iterator.hasNext()) {
+			CSVRecord csvRecord = iterator.next();
+			rowNames[row] = csvRecord.get(0);
+			for (int ii = 1; ii < csvRecord.size(); ii++)
+				wfm.setEntry(row, ii-1, Integer.parseInt( csvRecord.get(ii) ));
+			row++;
+		}
+	}
+
+	protected void getMTX(File fold) throws Exception {
+		throw new Exception("Not implemented!");
+	}
+	
+	protected void getLDAC(File fold) throws Exception {
+		File ldacData = new File(fold, "data.ldac");
+		File documents = new File(fold, "documents.csv");
+		File words = new File(fold, "words.csv");
+		
+		List<String> documentNames = new ArrayList<String>();
+		LineIterator it = FileUtils.lineIterator(documents, "UTF-8");
+		try {
+			while (it.hasNext()){
+				String line = it.nextLine();
+				if (line.trim().length() > 0)
+					documentNames.add(line.trim());
+			}
+		} finally {
+			it.close();
+		}
+		List<String> wordNames = new ArrayList<String>();
+		it = FileUtils.lineIterator(words, "UTF-8");
+		try {
+			while (it.hasNext()){
+				String line = it.nextLine();
+				if (line.trim().length() > 0)
+					wordNames.add(line.trim());
+			}
+		} finally {
+			it.close();
+		}
+		columnNames = wordNames.toArray(new String[wordNames.size()]);
+		rowNames = documentNames.toArray(new String[documentNames.size()]);
+		wfm = new Array2DRowRealMatrix(documentNames.size(), wordNames.size());
+
+		Matcher m = Pattern.compile("(\\d+):(\\d+)").matcher("");
+
+		it = FileUtils.lineIterator(ldacData, null);
+		try {
+			int lineNumber = 0;
+			while (it.hasNext()) {
+				String line = it.nextLine();
+				String[] spl = line.split(" ");
+				for (int i = 1; i < spl.length; i++) {
+					if (!m.reset(spl[i]).find())
+						throw new Exception("Failed to parse LDAC element " + spl[i]);
+					int wd = Integer.parseInt( m.group(1) );	
+					int count = Integer.parseInt( m.group(2) );
+
+					wfm.setEntry(lineNumber, wd, count);		
+				}
+				lineNumber++;
+			}
+
+		} finally {
+			LineIterator.closeQuietly(it);
+		}
+	}
+		
+	public SimpleCorrespondenceAnalysis(RealMatrix wfmatrix, int dimension, String[] rNames, String[] cNames) {
 		rowNames = rNames;
 		columnNames = cNames;
+		wfm = wfmatrix;
+		dim = dimension; 	
 		
+		computeSimpleCorrespondenceAnalysis();
+	}
+	    	
+	protected void computeSimpleCorrespondenceAnalysis(){
 		MarginMaker mm = new MarginMaker();
     	total = wfm.walkInOptimizedOrder(mm);
     	r = mm.rowMargin;
@@ -94,9 +217,9 @@ class SimpleCorrespondenceAnalysis {
     			Lambda[ii][jj] /= Math.sqrt(c[ii]/total);
     			G[ii][jj] = Lambda[ii][jj] * Da[jj];
     		}
-    	}        	
+    	}       
 	}
-	    	
+	
 	public String[] getColumnNames() {
 		return columnNames;
 	}

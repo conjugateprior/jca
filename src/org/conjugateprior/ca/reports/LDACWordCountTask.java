@@ -10,7 +10,7 @@ import java.util.Locale;
 import javafx.concurrent.Task;
 
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 
 public class LDACWordCountTask extends Task<File> {
@@ -22,7 +22,7 @@ public class LDACWordCountTask extends Task<File> {
 		super();
 		printer = new LDACWordCountPrinter(reporter, folder, c, l, f){			
 			@Override
-			public String makeLineFromDocument(IYoshikoderDocument doc) {
+			public String makeLineFromDocument(YoshikoderDocument doc) {
 				
 				
 				if (LDACWordCountTask.this.isCancelled()) { 
@@ -60,7 +60,7 @@ public class LDACWordCountTask extends Task<File> {
 						updateMessage("Processed " + getProgress() + " of " + getMaxProgress() + " documents");
 						updateProgress(getProgress(), getMaxProgress());
 						
-						IYoshikoderDocument doc = null;
+						YoshikoderDocument doc = null;
 						try {
 							doc = new SimpleYoshikoderDocument(file.getName(), 
 								AbstractYoshikoderDocument.getTextFromFile(file, charset),

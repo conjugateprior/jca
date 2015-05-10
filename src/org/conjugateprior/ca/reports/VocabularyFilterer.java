@@ -12,8 +12,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.conjugateprior.ca.IDocumentTokenizer;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.DocumentTokenizer;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 import org.tartarus.snowball.SnowballStemmer;
@@ -158,7 +158,7 @@ public class VocabularyFilterer {
 		fp.addFilter(filt);
 	}
 	
-	public Map<String,Integer> getWordCountMapFromDocument(IYoshikoderDocument doc){
+	public Map<String,Integer> getWordCountMapFromDocument(YoshikoderDocument doc){
 		Map<String,Integer> map = applyFilters(doc.getWordCountMap(), fp);
 		return map;
 	}
@@ -210,9 +210,9 @@ public class VocabularyFilterer {
 	public static void main(String[] args) throws Exception {
 		String doc1 = "Mary had a  lttle Lamb. Mary had 1 little lamb, her fleece was white as snow";
 		String doc2 = "And everywhere that Mary went, the lamb was sure to go";
-		IDocumentTokenizer tok = new SimpleDocumentTokenizer(Locale.ENGLISH);
-		IYoshikoderDocument d1 = new SimpleYoshikoderDocument("doc1", doc1, null, tok);
-		IYoshikoderDocument d2 = new SimpleYoshikoderDocument("doc2", doc2, null, tok);
+		DocumentTokenizer tok = new SimpleDocumentTokenizer(Locale.ENGLISH);
+		YoshikoderDocument d1 = new SimpleYoshikoderDocument("doc1", doc1, null, tok);
+		YoshikoderDocument d2 = new SimpleYoshikoderDocument("doc2", doc2, null, tok);
 		
 		VocabularyFilterer rep = new VocabularyFilterer();
 		rep.addNoNumberFilter();

@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 // rewrite xml out code
 // reconstruct the GUI
 
-public class SimpleTokenization implements ITokenization {
+public class SimpleTokenization implements Tokenization {
 	
 	protected int[][]             wordOffsets;     // each row = [start-offset, end-offset+1]
 	protected int[][]             sentenceOffsets; // each row = [start-offset, end-offset+1]
@@ -25,7 +25,7 @@ public class SimpleTokenization implements ITokenization {
 	protected Map<String,List<Integer>> wordTypeToTokenNumber; // vocab words to token indexes
 	protected Map<Integer,String>       tokenNumberToWordType;
 	
-	public SimpleTokenization(String txt, IDocumentTokenizer tok) throws Exception {
+	public SimpleTokenization(String txt, DocumentTokenizer tok) throws Exception {
 		
 		wordOffsets = tok.getWordOffsets(txt);
 		if (wordOffsets.length == 0)
@@ -327,7 +327,7 @@ public class SimpleTokenization implements ITokenization {
 		String offs = "01234567890123456789012345678901234567890123456789012345";
 		String upp =  "00000000001111111111222222222233333333334444444444555555";
 		String title = "Mary";
-		IDocumentTokenizer tok = new SimpleDocumentTokenizer(Locale.ENGLISH);
+		DocumentTokenizer tok = new SimpleDocumentTokenizer(Locale.ENGLISH);
 		//Tokenization tn = new SimpleTokenization(txt, tok);
 		SimpleYoshikoderDocument doc = new SimpleYoshikoderDocument(title,
 				txt, new Date(20000000), tok);

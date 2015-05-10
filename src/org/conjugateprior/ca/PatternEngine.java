@@ -7,7 +7,7 @@ import java.util.regex.PatternSyntaxException;
 /**
  * @author will
  */
-public interface IPatternEngine extends Serializable{
+public interface PatternEngine extends Serializable{
 	
     /**
      * Compile an appropriate regular expression from a string.

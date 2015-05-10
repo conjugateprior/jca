@@ -11,7 +11,7 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 import org.conjugateprior.ca.app.AbstractCounter.OutputFormat;
@@ -73,7 +73,7 @@ public class Description extends AbstractCounter {
 		SimpleDocumentTokenizer tok = 
 				new SimpleDocumentTokenizer(locale);
 		for (File f : files) {
-			IYoshikoderDocument idoc = 
+			YoshikoderDocument idoc = 
 					new SimpleYoshikoderDocument(f.getName(), 
 							AbstractYoshikoderDocument.getTextFromFile(f, encoding),
 							null, tok);	

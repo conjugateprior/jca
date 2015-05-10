@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Locale;
 
-public interface IYoshikoderDocument extends ITokenization, Comparable<IYoshikoderDocument> {
+public interface YoshikoderDocument extends Tokenization, Comparable<YoshikoderDocument> {
 	
 	public String getTitle();
 
@@ -18,6 +18,6 @@ public interface IYoshikoderDocument extends ITokenization, Comparable<IYoshikod
 	
 	public Locale getLocale();
 	
-	public void setLocale(Locale locale, IDocumentTokenizer tokenizerForLocale) throws Exception;
+	public void setLocale(Locale locale, DocumentTokenizer tokenizerForLocale) throws Exception;
 	
 }

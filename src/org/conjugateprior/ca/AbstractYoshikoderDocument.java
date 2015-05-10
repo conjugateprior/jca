@@ -16,16 +16,16 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 abstract public class AbstractYoshikoderDocument 
-	implements IYoshikoderDocument {
+	implements YoshikoderDocument {
 
 	protected String title;
 	protected Locale locale;
-	protected ITokenization tokenization;
+	protected Tokenization tokenization;
 	protected Date date;
 	protected int wordCount;
 	// subclasses get to keep the text
 	
-	public AbstractYoshikoderDocument(String docTitle, String txt, Date d, IDocumentTokenizer tok)
+	public AbstractYoshikoderDocument(String docTitle, String txt, Date d, DocumentTokenizer tok)
 		throws Exception {
 		
 		title = docTitle;
@@ -36,7 +36,7 @@ abstract public class AbstractYoshikoderDocument
 	}
 
 	// triggers a retokenization
-	public void setLocale(Locale loc, IDocumentTokenizer tokenizerForLoc) throws Exception {
+	public void setLocale(Locale loc, DocumentTokenizer tokenizerForLoc) throws Exception {
 		if (loc.equals(locale))
 			return;
 		
@@ -49,7 +49,7 @@ abstract public class AbstractYoshikoderDocument
 		return wordCount;
 	}
 	
-	public int compareTo(IYoshikoderDocument o) {
+	public int compareTo(YoshikoderDocument o) {
 		return getTitle().compareTo(o.getTitle());
 	}
 
@@ -76,7 +76,7 @@ abstract public class AbstractYoshikoderDocument
 	 */
 	public boolean equals(Object o){
 		try {
-			IYoshikoderDocument doc = (IYoshikoderDocument)o;
+			YoshikoderDocument doc = (YoshikoderDocument)o;
 			return title.equals(doc.getTitle());
 		} catch (ClassCastException e){
 			// falls through and returns false

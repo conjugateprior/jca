@@ -2,7 +2,7 @@ package org.conjugateprior.ca;
 
 import java.util.Locale;
 
-public interface IDocumentTokenizer {
+public interface DocumentTokenizer {
 
 	int[][] getWordOffsets(String txt) throws Exception;
 	

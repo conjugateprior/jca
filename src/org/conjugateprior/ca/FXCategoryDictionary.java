@@ -36,7 +36,7 @@ public class FXCategoryDictionary {
 	protected static String duplicateMessage = 
 		"There is already a category with that name under this parent category";
 	
-	public static IPatternEngine patternEngine;
+	public static PatternEngine patternEngine;
 	
 	public enum XmlDictionaryType {
 	    LEXICODER, YOSHIKODER_050805 
@@ -418,10 +418,11 @@ public class FXCategoryDictionary {
 	}
 	
 	// string will be split on [ ]+ and a patternengine applied to the elements
+	// patterns already present are implicitly dropped
 	public DPat addPatternToCategory(String el, TreeItem<DCat> cat)
 			throws Exception {
 		DPat pat = new DPat(el);
-		cat.getValue().getPatterns().add(pat);
+		cat.getValue().getPatterns().add(pat); 
 		return pat;
 	}
 
@@ -534,7 +535,7 @@ public class FXCategoryDictionary {
 			toStringRecurse(sb, titem, sep);			
 	}
 	
-	public IPatternEngine getPatternEngine() {
+	public PatternEngine getPatternEngine() {
 		return patternEngine;
 	}
 	

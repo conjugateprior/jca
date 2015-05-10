@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 
@@ -47,7 +47,7 @@ public class Concordancer extends AbstractCounter {
 		return s.replace("\n", " ").replace("\r",  " ");
 	}
 	
-	protected String makeHTMLLinesFromDocument(IYoshikoderDocument doc) throws Exception {
+	protected String makeHTMLLinesFromDocument(YoshikoderDocument doc) throws Exception {
 		List<int[]> concs = new ArrayList<int[]>();
 		for (Pattern[] pat : patterns) 
 			concs.addAll( doc.getConcordanceCharacterOffsetsForPattern(pat, window) );
@@ -84,7 +84,7 @@ public class Concordancer extends AbstractCounter {
 		return str.toString();
 	}
 	
-	protected String makeTextLinesFromDocument(IYoshikoderDocument doc) throws Exception {
+	protected String makeTextLinesFromDocument(YoshikoderDocument doc) throws Exception {
 		List<int[]> concs = new ArrayList<int[]>();
 		for (Pattern[] pat : patterns) 
 			concs.addAll( doc.getConcordanceCharacterOffsetsForPattern(pat, window) );
@@ -145,7 +145,7 @@ public class Concordancer extends AbstractCounter {
 			SimpleDocumentTokenizer tok = 
 					new SimpleDocumentTokenizer(locale);
 			for (File f : files) {
-				IYoshikoderDocument idoc = 
+				YoshikoderDocument idoc = 
 						new SimpleYoshikoderDocument(f.getName(), 
 								AbstractYoshikoderDocument.getTextFromFile(f, encoding),
 								null, tok);	

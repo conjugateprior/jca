@@ -13,7 +13,7 @@ public class FileBasedYoshikoderDocument extends SimpleYoshikoderDocument {
 	SoftReference<String> textReference;
 	
 	public FileBasedYoshikoderDocument(String docTitle, String txt, Date d,
-			IDocumentTokenizer tok, File f, Charset cs) throws Exception {
+			DocumentTokenizer tok, File f, Charset cs) throws Exception {
 		super(docTitle, txt, d, tok);
 		file = f;
 		charset = cs;

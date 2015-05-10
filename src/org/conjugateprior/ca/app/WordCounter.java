@@ -12,7 +12,7 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 import org.conjugateprior.ca.reports.VocabularyFilterer;
@@ -104,7 +104,7 @@ public class WordCounter extends AbstractCounter {
 		} 
 	}
 	
-	public String makeLDACLineFromDocument(IYoshikoderDocument doc){
+	public String makeLDACLineFromDocument(YoshikoderDocument doc){
 		Map<String,Integer> map = filterer.getWordCountMapFromDocument(doc);
 		
 		StringBuffer sb = new StringBuffer();
@@ -121,7 +121,7 @@ public class WordCounter extends AbstractCounter {
 		return sb.toString();
 	}
 	
-	public String makeMTXLineFromDocument(IYoshikoderDocument doc){
+	public String makeMTXLineFromDocument(YoshikoderDocument doc){
 		Map<String,Integer> map = filterer.getWordCountMapFromDocument(doc);
 		mtxDocumentLineCounter++;
 		tripleCount += map.keySet().size();
@@ -157,7 +157,7 @@ public class WordCounter extends AbstractCounter {
 			SimpleDocumentTokenizer tok = 
 					new SimpleDocumentTokenizer(locale);
 			for (File f : files) {
-				IYoshikoderDocument idoc = 
+				YoshikoderDocument idoc = 
 						new SimpleYoshikoderDocument(f.getName(), 
 								AbstractYoshikoderDocument.getTextFromFile(f, encoding),
 								null, tok);	

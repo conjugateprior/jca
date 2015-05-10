@@ -41,7 +41,7 @@ public class OldCategoryDictionary extends DefaultTreeModel {
 
 	protected String duplicateMessage = 
 			"There is already a category with that name under this parent category";
-	protected IPatternEngine patternEngine;
+	protected PatternEngine patternEngine;
 	
 	// this is not any kind of tree node
 	public class DictionaryPattern implements Comparable<DictionaryPattern>{
@@ -607,7 +607,7 @@ public class OldCategoryDictionary extends DefaultTreeModel {
 		sb.append(toXml(node, true));
 	}
 	
-	public IPatternEngine getPatternEngine() {
+	public PatternEngine getPatternEngine() {
 		return patternEngine;
 	}
 	

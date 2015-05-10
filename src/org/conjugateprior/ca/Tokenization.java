@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-public interface ITokenization {
+public interface Tokenization {
 
 	public abstract Set<String> getWordTypes();
 

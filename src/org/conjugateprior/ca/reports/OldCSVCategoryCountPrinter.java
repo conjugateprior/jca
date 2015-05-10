@@ -19,7 +19,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.conjugateprior.ca.OldCategoryDictionary;
 import org.conjugateprior.ca.OldCategoryDictionary.DictionaryCategory;
 import org.conjugateprior.ca.OldCategoryDictionary.DictionaryPattern;
-import org.conjugateprior.ca.IYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 
 
 /**
@@ -99,7 +99,7 @@ public class OldCSVCategoryCountPrinter extends CountPrinter {
 		categorySeparator = cSep;
 	}
 
-	public String makeLineFromDocument(IYoshikoderDocument doc){
+	public String makeLineFromDocument(YoshikoderDocument doc){
 		fillTreeWithIndices(doc);
 
 		StringBuilder sb = new StringBuilder();
@@ -187,7 +187,7 @@ public class OldCSVCategoryCountPrinter extends CountPrinter {
 
 	// this is the new style match counting where we never double count
 	// multiple patterns that match (overlapping slices of) the same tokens
-	protected void fillTreeWithIndices(IYoshikoderDocument doc){
+	protected void fillTreeWithIndices(YoshikoderDocument doc){
 		// optimise later
 		//Set<String> vocab = doc.getWordTypes();
 		for (DictionaryCategory node : categoryNodesInPrintOrder){

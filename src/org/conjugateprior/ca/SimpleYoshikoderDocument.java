@@ -15,7 +15,7 @@ public class SimpleYoshikoderDocument
 	protected String text; // simple because it just keep the string in memory
 	
 	public SimpleYoshikoderDocument(String docTitle, String txt, Date d,
-			IDocumentTokenizer tok) throws Exception {
+			DocumentTokenizer tok) throws Exception {
 		super(docTitle, txt, d, tok);
 		text = txt;
 	}
