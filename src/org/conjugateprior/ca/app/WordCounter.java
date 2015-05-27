@@ -12,6 +12,8 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
+import org.conjugateprior.ca.DocumentTokenizer;
+import org.conjugateprior.ca.RegexpDocumentTokenizer;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 import org.conjugateprior.ca.YoshikoderDocument;
@@ -157,8 +159,15 @@ public class WordCounter extends AbstractCounter {
 				BufferedWriter writer = getBufferedWriter(ff);
 			){
 
-			SimpleDocumentTokenizer tok = 
-					new SimpleDocumentTokenizer(locale);
+			DocumentTokenizer tok = null;
+			if (usingRegexpTokenizer)
+				if (regexp == null)
+					throw new Exception("No regexp set");
+				else 
+					tok = new RegexpDocumentTokenizer(locale, regexp);
+			else
+				tok = new SimpleDocumentTokenizer(locale);
+			
 			for (File f : files) {
 				YoshikoderDocument idoc = 
 						new SimpleYoshikoderDocument(f.getName(), 

@@ -77,6 +77,15 @@ public class CLApplication {
 		return clOpt;
 	}
 	
+	protected CLOption getRegexpOption(boolean required){
+		CLOption encoding = new CLOption("regexp", true, 
+				"Use regexp to tokenize (default: not used)");
+		encoding.setArgName("regexp");
+		encoding.setErrorMessage("Could not work with this regexp");
+		encoding.setRequired(required);
+		return encoding;
+	}
+	
 	protected CLOption getEncodingOption(boolean required){
 		CLOption encoding = new CLOption("encoding", true, 
 				"Input file character encoding (default: " + 

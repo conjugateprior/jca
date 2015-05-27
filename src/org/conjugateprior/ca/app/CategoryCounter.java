@@ -15,11 +15,12 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
 import org.conjugateprior.ca.DCat;
+import org.conjugateprior.ca.DocumentTokenizer;
 import org.conjugateprior.ca.FXCategoryDictionary;
 import org.conjugateprior.ca.FileBasedYoshikoderDocument;
-import org.conjugateprior.ca.YoshikoderDocument;
+import org.conjugateprior.ca.RegexpDocumentTokenizer;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
-import org.conjugateprior.ca.SimpleYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 
 public class CategoryCounter extends AbstractCounter {
 	
@@ -104,8 +105,16 @@ public class CategoryCounter extends AbstractCounter {
 				writer.write(makeCSVHeader());
 				writer.newLine();
 			}
-			SimpleDocumentTokenizer tok = 
-					new SimpleDocumentTokenizer(locale);
+			
+			DocumentTokenizer tok = null;
+			if (usingRegexpTokenizer)
+				if (regexp == null)
+					throw new Exception("No regexp set");
+				else 
+					tok = new RegexpDocumentTokenizer(locale, regexp);
+			else
+				tok = new SimpleDocumentTokenizer(locale);
+
 			Charset cs = getEncoding();
 			for (File f : files) {
 				YoshikoderDocument idoc = 

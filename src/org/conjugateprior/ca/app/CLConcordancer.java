@@ -13,7 +13,8 @@ public class CLConcordancer extends CLApplication{
 	public String getUsage(){
 		return "conc -pattern <pattern> | -dictionary <file> -category <category> " + 
 				"[-locale <locale>] " +
-				"[-encoding <encoding>] [-window <number>] [-output <file>] " +
+				"[-encoding <encoding>] [-regexp <regexp>] " +
+				"[-window <number>] [-output <file>] " +
 				"[-format <format>] [file1 file2 | folder1]";
 	}
 			
@@ -25,6 +26,7 @@ public class CLConcordancer extends CLApplication{
 		addOption(getHelpOption(false));
 		addOption(getEncodingOption(false));
 		addOption(getLocaleOption(false));
+		addOption(getRegexpOption(false));
 		addOption(getPatternOption(false));
 		addOption(getWindowOption(false));
 		addOption(getOuputFileOption(false)); // not folder
@@ -61,6 +63,15 @@ public class CLConcordancer extends CLApplication{
 				throw new Exception(getOptionErrorMessage("encoding"));
 			}
 		}
+		
+		if (line.hasOption("regexp")){
+			concordancer.setUsingRegexpTokenizer(true);
+			String d = line.getOptionValue("regexp");
+			if (d == null)
+				throw new Exception("No regexp provided");
+			concordancer.setRegexp(d);
+		}
+		
 		if (line.hasOption("window")){
 			int window = Integer.parseInt(line.getOptionValue("window"));
 			System.err.println(line.getOptionValue("window"));

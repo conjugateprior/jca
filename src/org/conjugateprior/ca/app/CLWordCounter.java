@@ -6,7 +6,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.conjugateprior.ca.reports.VocabularyFilterer;
 
 public class CLWordCounter extends CLApplication {
@@ -18,6 +17,7 @@ public class CLWordCounter extends CLApplication {
 	
 	public String getUsage(){
 		return "word [-encoding <encoding>] [-locale <locale>] " + 
+				"[-regexp <regexp>]" +   
 	           "[-no_currency] [-no_numbers] [-stopwords <file>] " +
 			   "[-stemmer <language>] [-format <format>]  [-silent] -output <folder> " +
 	           "[doc1.txt doc2.txt folder1]";
@@ -30,6 +30,7 @@ public class CLWordCounter extends CLApplication {
 		addOption(getHelpOption(false));
 		addOption(getEncodingOption(false));
 		addOption(getLocaleOption(false));
+		addOption(getRegexpOption(false));
 		addOption(getOutputFolderOption(true)); // not file
 		addOption(getSilentOption());	
 		
@@ -80,6 +81,15 @@ public class CLWordCounter extends CLApplication {
 				throw new Exception(getOptionErrorMessage("encoding"));
 			}
 		}	
+		
+		if (line.hasOption("regexp")){
+			counter.setUsingRegexpTokenizer(true);
+			String d = line.getOptionValue("regexp");
+			if (d == null)
+				throw new Exception("No regexp provided");
+			counter.setRegexp(d);
+		}
+		
 		// filter business
 		VocabularyFilterer filterer = counter.getFilterer();
 		if (line.hasOption("no_numbers"))

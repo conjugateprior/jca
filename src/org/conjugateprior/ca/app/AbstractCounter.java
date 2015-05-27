@@ -20,10 +20,12 @@ import javafx.scene.control.TreeItem;
 import org.apache.commons.io.IOUtils;
 import org.conjugateprior.ca.DCat;
 import org.conjugateprior.ca.DPat;
+import org.conjugateprior.ca.DocumentTokenizer;
 import org.conjugateprior.ca.FXCategoryDictionary;
 import org.conjugateprior.ca.PatternEngine;
-import org.conjugateprior.ca.YoshikoderDocument;
+import org.conjugateprior.ca.RegexpDocumentTokenizer;
 import org.conjugateprior.ca.SubstringPatternEngine;
+import org.conjugateprior.ca.YoshikoderDocument;
 
 public abstract class AbstractCounter {
 
@@ -40,6 +42,26 @@ public abstract class AbstractCounter {
 		return format;
 	}
 
+	protected String regexp = null;
+	
+	public String getRegexp(){
+		return regexp;
+	}
+	
+	public void setRegexp(String re){
+		regexp = re;
+	}
+	
+	protected boolean usingRegexpTokenizer = false;
+	
+	public boolean isUsingRegexpTokenizer(){
+		return usingRegexpTokenizer;
+	}
+	
+	public void setUsingRegexpTokenizer(boolean b){
+		usingRegexpTokenizer = b;
+	}
+	
 	// sets format (SIDE EFFECT: if HTML 
 	// also sets the output encoding to UTF-8)
 	public void setFormat(OutputFormat format) {

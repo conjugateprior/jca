@@ -12,7 +12,7 @@ public class CLCategoryCounter extends CLApplication {
 	protected CategoryCounter counter;
 		
 	public String getUsage() {
-		return "cat [-encoding <encoding>] [-locale <locale>] " +
+		return "cat [-encoding <encoding>] [-locale <locale>] [-regexp <regexp>] " +
 				   "[-oldmatching] [-output <folder>] [-format <format>] [-silent] " +
 				   "-dictionary <file> " +
 				   "[doc1.txt doc2.txt folder1]";
@@ -26,6 +26,7 @@ public class CLCategoryCounter extends CLApplication {
 		addOption(getHelpOption(false));
 		addOption(getEncodingOption(false));
 		addOption(getLocaleOption(false));
+		addOption(getRegexpOption(false));
 		addOption(getOutputFolderOption(false)); // not file
 		addOption(getDictionaryOption(true));
 		addOption(getSilentOption());
@@ -65,6 +66,14 @@ public class CLCategoryCounter extends CLApplication {
 			}
 		}
 		
+		if (line.hasOption("regexp")){
+			counter.setUsingRegexpTokenizer(true);
+			String d = line.getOptionValue("regexp");
+			if (d == null)
+				throw new Exception("No regexp provided");
+			counter.setRegexp(d);
+		}
+			
 		counter.setDictionary(line.getOptionValue("dictionary"));
 		counter.setUsingOldMatchStrategy(line.hasOption("oldmatching"));
 		counter.setSilent(line.hasOption("silent"));

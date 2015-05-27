@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
+import org.conjugateprior.ca.DocumentTokenizer;
+import org.conjugateprior.ca.RegexpDocumentTokenizer;
 import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
@@ -81,8 +83,15 @@ public class SingleLiner extends AbstractCounter {
 	
 	public void processFiles() throws Exception {
 		try (BufferedWriter writer = getBufferedWriter(outputFile)){			
-			SimpleDocumentTokenizer tok = 
-					new SimpleDocumentTokenizer(locale);
+			DocumentTokenizer tok = null;
+			if (usingRegexpTokenizer)
+				if (regexp == null)
+					throw new Exception("No regexp set");
+				else 
+					tok = new RegexpDocumentTokenizer(locale, regexp);
+			else
+				tok = new SimpleDocumentTokenizer(locale);
+			
 			int findex = 0;
 			for (File f : files) {
 				YoshikoderDocument idoc = 

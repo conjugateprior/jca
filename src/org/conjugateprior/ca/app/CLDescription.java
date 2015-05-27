@@ -13,6 +13,7 @@ public class CLDescription extends CLApplication {
 	@Override
 	public String getUsage() {
 		return "desc [-encoding <encoding>] [-locale <locale>] " +
+				"[-regexp <regexp>] " + 
 				"[-output <file>] [-silent] [doc1.txt doc2.txt folder1]";
 	}
 	
@@ -23,6 +24,7 @@ public class CLDescription extends CLApplication {
 		addOption(getHelpOption(false));
 		addOption(getEncodingOption(false));
 		addOption(getLocaleOption(false));
+		addOption(getRegexpOption(false));
 		addOption(getOuputFileOption(false)); // not folder
 		addOption(getSilentOption());
 	}
@@ -49,7 +51,17 @@ public class CLDescription extends CLApplication {
 			} catch (Exception ex){
 				throw new Exception(getOptionErrorMessage("encoding"));
 			}
-		} 		
+		} 
+		
+		if (line.hasOption("regexp")){
+			description.setUsingRegexpTokenizer(true);
+			String d = line.getOptionValue("regexp");
+			if (d == null)
+				throw new Exception("No regexp provided");
+			description.setRegexp(d);
+		}
+		
+		
 		if (line.hasOption("output")) 
 			description.setOutputFile(new File(line.getOptionValue("output")));
 		

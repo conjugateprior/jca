@@ -16,8 +16,9 @@ import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 
-// For the Oli and Stuart project
-
+/** For the Oli and Stuart project
+ * @deprecated
+ */
 public class MatchExpander extends AbstractCounter {
 
 	// pattern[match1,match2,match3]
