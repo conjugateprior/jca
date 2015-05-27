@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.conjugateprior.ca.DocumentTokenizer;
-import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.tartarus.snowball.SnowballStemmer;
 import org.tartarus.snowball.ext.danishStemmer;
 import org.tartarus.snowball.ext.dutchStemmer;
@@ -125,10 +125,8 @@ public class VocabularyFilterer {
 			stops = sts;
 		}
 		public StopwordFilter(File rfile) throws Exception {
-			BufferedReader sb = null;
-			try {
-				sb = new BufferedReader(
-						new InputStreamReader(new FileInputStream(rfile), "UTF-8"));
+			try (BufferedReader sb = new BufferedReader(
+						new InputStreamReader(new FileInputStream(rfile), "UTF-8"))){
 				String line = null;
 				while ((line = sb.readLine()) != null){
 					String l = line.trim();
@@ -136,17 +134,30 @@ public class VocabularyFilterer {
 						stops.add(l);
 				}
 			} catch (Exception ex){
-				throw new Exception("Could not get stopwords from " + rfile.getAbsolutePath());
+				throw new Exception("Could not get words from " + rfile.getAbsolutePath());
 				
-			} finally {
-				if (sb != null)
-					sb.close();
-			}
+			} 
 		}
 		public String filter(String wd){
 			if (stops.contains(wd))
 				return null;
 			return wd;
+		}
+	}
+	
+	public class GowordFilter extends StopwordFilter {
+		public GowordFilter(Set<String> wds) {
+			super(wds);
+		}
+		
+		public GowordFilter(File f) throws Exception {
+			super(f);
+		}
+		
+		public String filter(String wd){
+			if (stops.contains(wd))
+				return wd;
+			return null;
 		}
 	}
 	
@@ -156,6 +167,11 @@ public class VocabularyFilterer {
 	
 	public void addFilter(BaseFilter filt){
 		fp.addFilter(filt);
+	}
+	
+	public Map<String,Integer> getWordCountMapFromDocument(Map<String,Integer> wordCountMap){
+		Map<String,Integer> map = applyFilters(wordCountMap, fp);
+		return map;
 	}
 	
 	public Map<String,Integer> getWordCountMapFromDocument(YoshikoderDocument doc){
@@ -196,6 +212,11 @@ public class VocabularyFilterer {
 		fp.addFilter(st);
 	}
 
+	public void addGowordFilter(File gowordFile) throws Exception {
+		GowordFilter gf = new GowordFilter(gowordFile);
+		fp.addFilter(gf);
+	}
+	
 	public void addStopwordFilter(File stopwordFile) throws Exception {
 		StopwordFilter sf = new StopwordFilter(stopwordFile);
 		fp.addFilter(sf);

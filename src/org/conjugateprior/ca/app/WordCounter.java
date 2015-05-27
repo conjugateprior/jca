@@ -12,9 +12,9 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
-import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.reports.VocabularyFilterer;
 
 public class WordCounter extends AbstractCounter {
@@ -31,7 +31,7 @@ public class WordCounter extends AbstractCounter {
 	protected String mtxFilename = "data.mtx";
 	protected String documentFilename = "docs.csv";
 	protected String wordFilename = "words.csv";
-		
+	
 	protected VocabularyFilterer filterer = new VocabularyFilterer();
 	
 	public VocabularyFilterer getFilterer() {
@@ -41,7 +41,7 @@ public class WordCounter extends AbstractCounter {
 	public WordCounter() {
 		super();
 	}
-
+	
 	protected void dumpDocumentFile(File f) throws Exception {
 		try (
 				OutputStreamWriter docs = new OutputStreamWriter(
@@ -49,7 +49,8 @@ public class WordCounter extends AbstractCounter {
 				BufferedWriter docWriter = new BufferedWriter(docs);
 				){
 			for (File doc : files) {
-				docWriter.write(StringEscapeUtils.escapeCsv(doc.getName()) + "\n"); // TODO platform specific?
+				docWriter.write(StringEscapeUtils.escapeCsv(doc.getName()) + "\n"); 
+				// TODO platform specific?
 			}
 		} 
 	}
@@ -147,6 +148,8 @@ public class WordCounter extends AbstractCounter {
 		if (outputFolder != null)
 			FileUtils.forceMkdir(outputFolder);
 		
+		//File fc = new File(outputFolder, wordcountFilename);
+		
 		File ff = new File(outputFolder, ldacFilename); // default ldac
 		if (format.equals(OutputFormat.MTX))
 			ff = new File(outputFolder, mtxTempFilename);	
@@ -169,8 +172,6 @@ public class WordCounter extends AbstractCounter {
 				
 				if (!getSilent())
 					System.err.print(".");
-				
-				//writer.flush(); // do we need this really?
 			}
 			writer.flush(); // do we need this really?
 			if (!getSilent())

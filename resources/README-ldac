@@ -1,12 +1,12 @@
 ## LDA-C Format
 
-This folder contains three or four files:
+This folder contains three files:
 
 	words.csv
-	documents.csv
+	docs.csv
 	data.ldac
 	
-documents.csv lists the files that were successfully processed,
+docs.csv lists the files that were successfully processed,
 unreadable-files.txt list the files that could not be read, and
 words.csv lists the word types found in the readable documents.
 
@@ -23,18 +23,17 @@ in the document.
 See http://www.cs.princeton.edu/~blei/lda-c/readme.txt sec.B.2
 for details.
 
-## Note on text2ldac
+## R
 
-If you have used the python script text2ldac then the documents.csv
-corresponds to the .dmap file, words.csv to the .vocab file and 
-data.ldac to the .dat file produced by that software.
+### rjca
 
-## Note on topic model packages in R
+You can drive the word counting code from the rjca package, if you'd prefer.
+See the function 'jca_word'.
 
 ### lda
 
-To read the word counts stored here in sparse LDA-C format into R from 
-an output folder called 'folder'
+To read the word counts stored here in sparse LDA-C format using the 'lda' package
+from an output folder called 'folder'
 
 	require(lda) 
 	documents <- read.documents("folder/data.ldac")
@@ -42,6 +41,13 @@ an output folder called 'folder'
 
 ### topicmodels
 
-The topicmodels package has an ldaformat2dtm function to transform this into 
-TermDocumentMatrix objects, as used by the tm package.
+The topicmodels package has an 'ldaformat2dtm' function to transform this into 
+TermDocumentMatrix objects as used by the 'tm' package.
 
+## Python
+
+### text2ldac
+
+If you have used the python script 'text2ldac' then the 'documents.csv'
+corresponds to the .dmap file, 'words.csv' to the .vocab file and 
+'data.ldac' to the .dat file produced by that software.
