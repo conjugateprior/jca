@@ -7,7 +7,7 @@ All subject to change.
 
 You'll need an up to date Java install for all these things.
 Specifically, the JDK.  You can get the currently latest one
-[here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) after accepting the terms and conditions radio button.  
+[here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) after accepting the terms and conditions radio button and running the installer. 
 
 Mac users will want to choose the link marked
 'jdk-8u45-macosx-x64.dmg'.  Mac (and probably Linux) users will also
@@ -90,19 +90,14 @@ Installation details are out of date on the [project
 wiki](https://github.com/conjugateprior/jca/wiki).  But I'm getting to
 it.
 
-### Usage: R (even more experimental than usual)
+### Usage: R 
 
-This thing has been refactored enough to be drivable using
-`rJava`. However, I'm holding off an intergration while rJava, Oracle,
-and Apple decide how they are going to deal with the path screwups
-they've collectively generated.
-
-There's a small pile of `source`able R functions in `rfuncs.R`, but
-they're now *out of date* so don't use them in versions greater than
-0.2.3
+If you don't really love the commandline, you might prefer to interact with these
+tools via an R package.  That R package is [here](https://github.com/conjugateprior/rjca).
+In particular, don't bother with the functions in `rfuncs.R`
 
 [![Build Status](https://travis-ci.org/conjugateprior/jca.svg?branch=master)](https://travis-ci.org/conjugateprior/jca)
 
-Will Lowe, April 2015
+Will Lowe, May 2015
 
 
