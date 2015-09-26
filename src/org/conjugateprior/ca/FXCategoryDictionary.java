@@ -20,6 +20,7 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 import javafx.scene.paint.Color;
 
@@ -32,9 +33,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class FXCategoryDictionary {
-
-	protected static String duplicateMessage = 
-		"There is already a category with that name under this parent category";
 	
 	public static PatternEngine patternEngine;
 	
@@ -73,7 +71,7 @@ public class FXCategoryDictionary {
 			return sb.toString();
 		}
 		
-		private String toXml(TreeItem<DCat> n, boolean close) {
+		private static String toXml(TreeItem<DCat> n, boolean close) {
 			if (close)
 				return "</cnode>\n";
 			
@@ -87,7 +85,7 @@ public class FXCategoryDictionary {
 			return str.toString();
 		}
 
-		private String patternsToXml(TreeItem<DCat> n) {
+		private static String patternsToXml(TreeItem<DCat> n) {
 			Set<DPat> pats = n.getValue().getPatterns();
 			StringBuilder str = new StringBuilder();
 			for (DPat dictionaryPattern : pats) {
@@ -174,7 +172,7 @@ public class FXCategoryDictionary {
 			} else if (qName.equals("pnode")){ 
 				String name = attributes.getValue("name");
 				try {
-					// trim because we Lexicoder seems to add a leading space
+					// trim because Lexicoder seems to add a leading space
 					dict.addPatternToCategory(name.trim(), stack.peek());
 				} catch (Exception ex){
 					throw new SAXException(ex);
@@ -197,7 +195,7 @@ public class FXCategoryDictionary {
 		private Stack<TreeItem<DCat>> stack = new Stack<TreeItem<DCat>>();
 		private FXCategoryDictionary dict;
 
-		private Color parseColor(String s) throws Exception {
+		static private Color parseColor(String s) throws Exception {
 			String[] vv = s.split(" ");
 			return new Color(Double.parseDouble(vv[0]), 
 					         Double.parseDouble(vv[1]),
@@ -219,21 +217,21 @@ public class FXCategoryDictionary {
 					} catch (Exception ex) { /* will not happen actually */ }
 					newcat = dict.getCategoryRoot();
 				} else {
-					try {
-						newcat = dict.addCategoryToParentCategory(name, stack.peek());
-						if (col != null){
+					newcat = dict.addCategoryToParentCategory(name, stack.peek());
+					if (col != null){
+						try {
 							Color c = parseColor(col);
 							newcat.getValue().setColor(c);
+						} catch (Exception ex){
+							/*  */
 						}
-					} catch (Exception ex){
-						throw new SAXException(ex);
 					}
 				}
 				stack.push(newcat);
 			} else if (qName.equals("pnode")){ 
 				String name = attributes.getValue("name");
 				try {
-					dict.addPatternToCategory(name, stack.peek());	
+					dict.addPatternToCategory(name, stack.peek());
 				} catch (Exception ex){
 					throw new SAXException(ex);
 				}
@@ -290,6 +288,27 @@ public class FXCategoryDictionary {
 				}
 			}
 		} 
+		return dict;
+	}
+	
+	// do the renaming in the load function
+	public static FXCategoryDictionary deDuplicateCategoryNames(FXCategoryDictionary dict) {
+		System.out.println( dict.getCategoryNodesInPrintOrder());
+		for (TreeItem<DCat> cat : dict.getCategoryNodesInPrintOrder()) {
+			int counter = 1;
+			Set<String> usedNames = new HashSet<String>();
+			for (TreeItem<DCat> item : cat.getChildren()) {
+				String itemName = item.getValue().getName();
+				if (usedNames.contains(itemName)){
+					String nname = itemName + "(" + counter + ")";
+					item.getValue().setName(nname);
+					counter++;
+					usedNames.add(nname);
+				} else { 
+					usedNames.add(itemName);
+				}
+			}
+		}
 		return dict;
 	}
 	
@@ -387,12 +406,37 @@ public class FXCategoryDictionary {
 		
 	/////////////////////////////////////////////////////////////////////
 	
+	class DuplicateCategoryException extends Exception {
+		private static final long serialVersionUID = 1L;
+
+		public DuplicateCategoryException() {
+			super();
+		}
+		
+		@Override
+		public String getMessage() {
+			return "There is already a category with that name under this parent category"; 
+		}
+	}
+	
 	protected TreeItem<DCat> root; // need listeners most likely
 	
 	public FXCategoryDictionary(String dictName) {
 		DCat dc = new DCat(dictName, null);
 		root = new TreeItem<DCat>(dc);
 		patternEngine = new SubstringPatternEngine();
+	}
+	
+	// 
+	boolean checkNoDuplicates(TreeItem<DCat> parent, TreeItem<DCat> cat){
+		boolean isDuplicate = true;
+		for (TreeItem<DCat> item : parent.getChildren()) {
+			if (cat.getValue().getName().equals( item.getValue().getName() )){
+				isDuplicate = false;
+				break;
+			}
+		}
+		return isDuplicate;
 	}
 	
 	public Set<DPat> getPatternsInSubtree(TreeItem<DCat> node){
@@ -422,7 +466,8 @@ public class FXCategoryDictionary {
 	public DPat addPatternToCategory(String el, TreeItem<DCat> cat)
 			throws Exception {
 		DPat pat = new DPat(el);
-		cat.getValue().getPatterns().add(pat); 
+		Set<DPat> pats = cat.getValue().getPatterns();
+		pats.add(pat);
 		return pat;
 	}
 
@@ -450,24 +495,36 @@ public class FXCategoryDictionary {
 		return findIndexFor(child, parent, half+1, i2);
 	}
 
+	protected boolean hasChildNamed(ObservableList<TreeItem<DCat>> ch, String name){
+		for (TreeItem<DCat> treeItem : ch) {
+			if (treeItem.getValue().getName().equals(name))
+				return true;
+		}
+		return false;
+	}
+	
 	protected void insertNodeAlphabeticallyInto(TreeItem<DCat> cat, 
-			TreeItem<DCat> parent) throws Exception {
-		for (TreeItem<DCat> item : parent.getChildren()) {
-			if (cat.getValue().getName().equals( item.getValue().getName() ))
-				throw new Exception(duplicateMessage);
+			TreeItem<DCat> parent) {
+		
+		String name = cat.getValue().getName();
+		if (hasChildNamed(parent.getChildren(), name)){
+			int counter = 1;
+			while (hasChildNamed(parent.getChildren(), name + "(" + counter + ")"))
+				counter++;
+			cat.getValue().setName(name + "(" + counter + ")");
 		}
 		int ind = findIndexFor(cat, parent);
 		parent.getChildren().add(ind, cat);
 	}
 	
 	public void addCategoryToParentCategory(TreeItem<DCat> cat, 
-			TreeItem<DCat> parentCat) throws Exception {
+			TreeItem<DCat> parentCat) {
 		insertNodeAlphabeticallyInto(cat, parentCat);
 	}
 
 	// use this one 
 	public TreeItem<DCat> addCategoryToParentCategory(String catname, 
-			TreeItem<DCat> parentCat) throws Exception {
+			TreeItem<DCat> parentCat) {
 		DCat dc = new DCat(catname, null);
 		TreeItem<DCat> cat = new TreeItem<DCat>(dc);
 		insertNodeAlphabeticallyInto(cat, parentCat);
@@ -475,7 +532,7 @@ public class FXCategoryDictionary {
 	}
 
 	public TreeItem<DCat> addCategoryToParentCategory(String catname, 
-			Color c, TreeItem<DCat> parentCat) throws Exception {
+			Color c, TreeItem<DCat> parentCat) {
 		DCat dc = new DCat(catname, c);
 		TreeItem<DCat> cat = new TreeItem<DCat>(dc);
 		insertNodeAlphabeticallyInto(cat, parentCat);
@@ -548,9 +605,8 @@ public class FXCategoryDictionary {
 	
 	private void recurseCategories(List<TreeItem<DCat>> sb, TreeItem<DCat> n){
 		sb.add(n);
-		for (TreeItem<DCat> treeItem : n.getChildren()) {
+		for (TreeItem<DCat> treeItem : n.getChildren()) 
 			recurseCategories(sb, treeItem);
-		}
 	}
 	
 	public List<TreeItem<DCat>> getCategoryNodesInPrintOrder(){
@@ -561,13 +617,28 @@ public class FXCategoryDictionary {
 	}	
 	
 	public static void main(String[] args) throws Exception {
-		File f = new File("/Users/will/Documents/scratch/2007_abortion_dictionary.ykd");
-		FXCategoryDictionary dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(f);
+		//File f = new File("/Users/will/Documents/scratch/2007_abortion_dictionary.ykd");
+		//FXCategoryDictionary dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(f);
         //System.out.println(dict);
         
-        f = new File("/Applications/LIWC2007/Dictionaries/LIWC2001_German.dic");
-		dict = FXCategoryDictionary.importCategoryDictionaryFromFileLIWC(f);
-        System.out.println(dict);
+		//File f = new File("/Users/will/Dropbox/shared/SOP/Paper/repl/Corrected Translations with Inflections/dict-fr-from-ra.ykd");
+		//FXCategoryDictionary dict = FXCategoryDictionary.readXmlCategoryDictionaryFromFile(f);
+        //System.out.println(dict);
+		
+        //f = new File("/Applications/LIWC2007/Dictionaries/LIWC2001_German.dic");
+		//dict = FXCategoryDictionary.importCategoryDictionaryFromFileLIWC(f);
+        //System.out.println(dict);
+        
+        FXCategoryDictionary d = new FXCategoryDictionary("fg");
+        d.addCategoryToParentCategory("thing", d.getCategoryRoot());
+        d.addCategoryToParentCategory("thingy", d.getCategoryRoot());
+        TreeItem<DCat> item = d.addCategoryToParentCategory("thing", d.getCategoryRoot());
+        d.addPatternToCategory("pattern thing", item);
+        d.addCategoryToParentCategory("thing", d.getCategoryRoot());
+        System.out.println(d);
+        
+        d = deDuplicateCategoryNames(d);
+        System.out.println(d);
         
 	}
 
