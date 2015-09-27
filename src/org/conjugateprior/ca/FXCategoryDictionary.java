@@ -21,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.TreeItem;
 import javafx.scene.paint.Color;
 
@@ -291,26 +292,6 @@ public class FXCategoryDictionary {
 		return dict;
 	}
 	
-	// do the renaming in the load function
-	public static FXCategoryDictionary deDuplicateCategoryNames(FXCategoryDictionary dict) {
-		System.out.println( dict.getCategoryNodesInPrintOrder());
-		for (TreeItem<DCat> cat : dict.getCategoryNodesInPrintOrder()) {
-			int counter = 1;
-			Set<String> usedNames = new HashSet<String>();
-			for (TreeItem<DCat> item : cat.getChildren()) {
-				String itemName = item.getValue().getName();
-				if (usedNames.contains(itemName)){
-					String nname = itemName + "(" + counter + ")";
-					item.getValue().setName(nname);
-					counter++;
-					usedNames.add(nname);
-				} else { 
-					usedNames.add(itemName);
-				}
-			}
-		}
-		return dict;
-	}
 	
 	public static FXCategoryDictionary importCategoryDictionaryFromFileVBPRO(File f) throws Exception {
 		
@@ -406,24 +387,70 @@ public class FXCategoryDictionary {
 		
 	/////////////////////////////////////////////////////////////////////
 	
-	class DuplicateCategoryException extends Exception {
-		private static final long serialVersionUID = 1L;
-
-		public DuplicateCategoryException() {
-			super();
+	public class FXCategory extends TreeItem<DCat> {
+	    public FXCategory(DCat arg) {
+	    	super(arg);
+	    }
+		public FXCategory(DCat arg, Node node){
+			super(arg, node);
 		}
 		
-		@Override
-		public String getMessage() {
-			return "There is already a category with that name under this parent category"; 
+		public String getName() {
+			return getValue().getName();
 		}
+		
+		public void setName(String name) {
+			getValue().setName(name);
+		}
+		
+		public Color getColor(){
+			return getValue().getColor();
+		}
+		
+		public void setColor(Color newcol){
+			getValue().setColor(newcol);
+		}
+		
+		public Set<DPat> getPatterns(){
+			return getValue().getPatterns();
+		}
+		
+		public Set<Integer> getMatchedIndices() {		
+			return getValue().getMatchedIndices();
+		}
+		
+		public FXCategory getParentCategory() {
+			TreeItem<DCat> ti = getParent();
+			if (ti != null)
+				return (FXCategory)ti;
+			return null;
+		}
+		
+		public void setMatchedIndices(Set<Integer> matchedInds){
+			getValue().setMatchedIndices(matchedInds);
+		}
+		
+		public String getPathAsString(String sep){
+			List<String> arr = new ArrayList<String>();
+			FXCategory me = this;
+			arr.add(me.getName());
+			while ((me = me.getParentCategory()) != null)
+				arr.add(me.getName());
+
+	        StringBuffer sb = new StringBuffer();
+	        for (int ii = arr.size()-1; ii >= 0; ii--)
+				sb.append(arr.get(ii) + sep);
+			return sb.substring(0, sb.length()-sep.length()).toString();
+	    }
+
 	}
 	
 	protected TreeItem<DCat> root; // need listeners most likely
 	
 	public FXCategoryDictionary(String dictName) {
 		DCat dc = new DCat(dictName, null);
-		root = new TreeItem<DCat>(dc);
+		//root = new TreeItem<DCat>(dc);
+		root = new FXCategory(dc);
 		patternEngine = new SubstringPatternEngine();
 	}
 	
@@ -508,6 +535,8 @@ public class FXCategoryDictionary {
 		
 		String name = cat.getValue().getName();
 		if (hasChildNamed(parent.getChildren(), name)){
+			System.err.println("Category name '" + name + "' already exists in " +
+		         "category '" + parent.getValue().getName() + "'. Renaming...");
 			int counter = 1;
 			while (hasChildNamed(parent.getChildren(), name + "(" + counter + ")"))
 				counter++;
@@ -637,7 +666,7 @@ public class FXCategoryDictionary {
         d.addCategoryToParentCategory("thing", d.getCategoryRoot());
         System.out.println(d);
         
-        d = deDuplicateCategoryNames(d);
+        //d = deDuplicateCategoryNames(d);
         System.out.println(d);
         
 	}
