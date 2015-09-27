@@ -387,6 +387,7 @@ public class FXCategoryDictionary {
 		
 	/////////////////////////////////////////////////////////////////////
 	
+	// this will never fly: think of the children
 	public class FXCategory extends TreeItem<DCat> {
 	    public FXCategory(DCat arg) {
 	    	super(arg);
@@ -419,6 +420,10 @@ public class FXCategoryDictionary {
 			return getValue().getMatchedIndices();
 		}
 		
+		//public ObservableList<FXCategoryDictionary.FXCategory> getChildCategories(){
+		//	return (ObservableList<FXCategoryDictionary.FXCategory>)getChildren()
+		//}
+		
 		public FXCategory getParentCategory() {
 			TreeItem<DCat> ti = getParent();
 			if (ti != null)
@@ -449,21 +454,8 @@ public class FXCategoryDictionary {
 	
 	public FXCategoryDictionary(String dictName) {
 		DCat dc = new DCat(dictName, null);
-		//root = new TreeItem<DCat>(dc);
-		root = new FXCategory(dc);
+		root = new TreeItem<DCat>(dc);
 		patternEngine = new SubstringPatternEngine();
-	}
-	
-	// 
-	boolean checkNoDuplicates(TreeItem<DCat> parent, TreeItem<DCat> cat){
-		boolean isDuplicate = true;
-		for (TreeItem<DCat> item : parent.getChildren()) {
-			if (cat.getValue().getName().equals( item.getValue().getName() )){
-				isDuplicate = false;
-				break;
-			}
-		}
-		return isDuplicate;
 	}
 	
 	public Set<DPat> getPatternsInSubtree(TreeItem<DCat> node){

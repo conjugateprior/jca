@@ -179,8 +179,8 @@ public class CLApplication {
 	 */
 	public static void main(String[] args) {
 		String[] ar = null;
-		if (args.length < 2){
-			System.err.println("Usage: yk word|cat|conc|desc|line [options] [files]");
+		if (args.length < 1){
+			System.err.println("Missing arguments: word|cat|conc|desc|line [options] [files]");
 			System.exit(0);
 		} else {
 			ar = new String[args.length-1];
