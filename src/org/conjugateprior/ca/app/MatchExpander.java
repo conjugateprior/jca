@@ -40,7 +40,7 @@ public class MatchExpander extends AbstractCounter {
 	public void processFiles() throws Exception {
 		FXCategoryDictionary dict = getDictionary();
 		Set<DPat> pats = dict.getPatternsInSubtree(dict.getCategoryRoot());
-		//System.err.println(pats);
+		
 		Map<DPat,Set<String>> map = new HashMap<DPat,Set<String>>(pats.size());
 		for (DPat dPat : pats)
 			map.put(dPat, new HashSet<String>());

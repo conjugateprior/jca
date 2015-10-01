@@ -5,6 +5,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
@@ -14,12 +16,12 @@ import org.apache.commons.lang3.SystemUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
 import org.conjugateprior.ca.DocumentTokenizer;
 import org.conjugateprior.ca.RegexpDocumentTokenizer;
-import org.conjugateprior.ca.YoshikoderDocument;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
+import org.conjugateprior.ca.YoshikoderDocument;
 
 public class Concordancer extends AbstractCounter {
-
+	
 	// compares the character indexes of the target starts
 	private Comparator<int[]> indexComparator = new Comparator<int[]>() {
 		@Override
@@ -88,6 +90,7 @@ public class Concordancer extends AbstractCounter {
 	
 	protected String makeTextLinesFromDocument(YoshikoderDocument doc) throws Exception {
 		List<int[]> concs = new ArrayList<int[]>();
+		
 		for (Pattern[] pat : patterns) 
 			concs.addAll( doc.getConcordanceCharacterOffsetsForPattern(pat, window) );
 		concs.sort(indexComparator);
@@ -103,10 +106,12 @@ public class Concordancer extends AbstractCounter {
 				s = collapseWhitespace(txt.substring(is[0], is[1]));
 			else 
 				s = "";
+			
 			str.append(StringUtils.leftPad(s, maxlen));
 			
 			s = " [" + txt.substring(is[2], is[3]) + "]";
-		    str.append(s);
+						
+			str.append(s);
 		    
 		    // catch trailing punctuation etc. by restarting straight after match
 		    int restart = (is[3]<txt.length() ? is[3] : is[4]);
@@ -115,7 +120,8 @@ public class Concordancer extends AbstractCounter {
 		    	s = collapseWhitespace(txt.substring(restart, is[5]));
 		    else
 		    	s = "";
-	    	str.append(s);
+		    
+			str.append(s);
 			str.append(SystemUtils.LINE_SEPARATOR); // oohh
 		}
 		return str.toString();

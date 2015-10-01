@@ -35,7 +35,7 @@ public class CLWordCounter extends CLApplication {
 		addOption(getSilentOption());	
 		
 		Option form = new Option("format", true, 
-				"One of: ldac, mtx (default: ldac)");
+				"One of: ldac (default), mtx, csv (only for small corpora...)");
 		form.setArgName("format");
 		addOption(form);
 		

@@ -5,6 +5,7 @@ import java.nio.charset.Charset;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
+import org.conjugateprior.ca.DPat;
 
 public class CLConcordancer extends CLApplication{
 
@@ -74,7 +75,7 @@ public class CLConcordancer extends CLApplication{
 		
 		if (line.hasOption("window")){
 			int window = Integer.parseInt(line.getOptionValue("window"));
-			System.err.println(line.getOptionValue("window"));
+			
 			if (window < 1)
 				throw new Exception(getOptionErrorMessage("window"));
 			concordancer.setWindow(window);
@@ -87,15 +88,14 @@ public class CLConcordancer extends CLApplication{
 			throw new Exception("Missing either dictionary and category arguments, or pattern argument");
 		if (line.hasOption("dictionary")) {	
 			concordancer.setDictionary(line.getOptionValue("dictionary"));				
+			
 			String cat = null;
 			if (line.hasOption("category")){
 				cat = line.getOptionValue("category");
 				concordancer.setCategory(cat);
 				
 			} else { 
-				// TODO get every pattern?
 				concordancer.setCategory(concordancer.getDictionary().getCategoryRoot());
-				//throw new Exception("No category specified for the dictionary ");
 			}
 		} else if (line.hasOption("pattern"))
 			concordancer.addPattern(line.getOptionValue("pattern"));
@@ -118,22 +118,18 @@ public class CLConcordancer extends CLApplication{
 			throw new Exception("No documents or folders of documents to process!");
 	
 		concordancer.processFiles();	
-		System.exit(0);
 	}
-	
-	/*
-	public static void main(String[] args) {	
+
+	public static void main(String[] args) {
 		Concordancer cc = new Concordancer();
 		CLConcordancer c = new CLConcordancer(cc);
-		try { 
+		try {
 			c.processLine(args);
 		} catch (Exception ex){
-			ex.printStackTrace();
+			System.err.println(ex.getMessage());
 			c.printUsageAndOptions();
-		}
+		} 
 	}
-	*/
-	
 }
 
 // //ykcats -dictionary ~/Dropbox/blogposts/littledict.vbpro -output thing ~/Dropbox/blogposts/speeches

@@ -6,7 +6,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -31,6 +33,7 @@ public class WordCounter extends AbstractCounter {
 	protected String ldacFilename = "data.ldac";
 	protected String mtxTempFilename = "data.mtx-tmp";
 	protected String mtxFilename = "data.mtx";
+	protected String csvFilename = "data.csv";
 	protected String documentFilename = "docs.csv";
 	protected String wordFilename = "words.csv";
 	
@@ -124,6 +127,21 @@ public class WordCounter extends AbstractCounter {
 		return sb.toString();
 	}
 	
+	public String makeCSVLineFromDocument(List<Map<Integer,Integer>> lil, int docIndex){
+		StringBuffer sb = new StringBuffer();
+		sb.append(StringEscapeUtils.escapeCsv(files[docIndex].getName()));
+		int[] counts = new int[idIndex];
+		Map<Integer,Integer> docmap = lil.get(docIndex);
+		
+		for (Map.Entry<Integer,Integer> entry : docmap.entrySet())
+			counts[entry.getKey()] = entry.getValue(); 
+		for (int c : counts) {
+			sb.append(",");
+			sb.append(c);
+		}
+		return sb.toString();
+	}
+	
 	public String makeMTXLineFromDocument(YoshikoderDocument doc){
 		Map<String,Integer> map = filterer.getWordCountMapFromDocument(doc);
 		mtxDocumentLineCounter++;
@@ -145,19 +163,20 @@ public class WordCounter extends AbstractCounter {
 		}
 		return sb.toString();
 	}
-		
+	
 	public void processFiles() throws Exception {
 		if (outputFolder != null)
 			FileUtils.forceMkdir(outputFolder);
+
+		File ff = null;
+		if (format.equals(OutputFormat.CSV))
+			ff = new File(outputFolder, csvFilename);	
+		else if (format.equals(OutputFormat.MTX))
+			ff = new File(outputFolder, mtxTempFilename);
+		else
+			ff = new File(outputFolder, ldacFilename); // default ldac
 		
-		//File fc = new File(outputFolder, wordcountFilename);
-		
-		File ff = new File(outputFolder, ldacFilename); // default ldac
-		if (format.equals(OutputFormat.MTX))
-			ff = new File(outputFolder, mtxTempFilename);	
-		try (
-				BufferedWriter writer = getBufferedWriter(ff);
-			){
+		try (BufferedWriter writer = getBufferedWriter(ff)){
 
 			DocumentTokenizer tok = null;
 			if (usingRegexpTokenizer)
@@ -165,9 +184,44 @@ public class WordCounter extends AbstractCounter {
 					throw new Exception("No regexp set");
 				else 
 					tok = new RegexpDocumentTokenizer(locale, regexp);
-			else
+			else	
 				tok = new SimpleDocumentTokenizer(locale);
+
+			List<Map<Integer,Integer>> lil = new ArrayList<>(); // only used by CSV
+			if (format.equals(OutputFormat.CSV)){
+				for (File f : files) {
+					YoshikoderDocument idoc = 
+							new SimpleYoshikoderDocument(f.getName(), 
+									AbstractYoshikoderDocument.getTextFromFile(f, encoding),
+									null, tok);	
+					Map<String,Integer> docwordtocount = filterer.getWordCountMapFromDocument(idoc);
+				
+					Map<Integer,Integer> docindextocount = new HashMap<>();
+					for (String wd : docwordtocount.keySet()) {
+						int wdCount = docwordtocount.get(wd);
+						Integer wordId = wordToId.get(wd);
+						if (wordId == null){
+							docindextocount.put(idIndex, wdCount);							
+							wordToId.put(wd, idIndex++);
+						} else {
+							docindextocount.put(wordId.intValue(), wdCount);
+						}
+					}
+					
+					lil.add(docindextocount);
+				}
+				// write top line
+				String[] toprow = new String[idIndex];
+				for (Map.Entry<String,Integer> entry : wordToId.entrySet())
+					toprow[entry.getValue()] = entry.getKey(); 
+				for (String s : toprow) {
+					writer.write(",");
+					writer.write(StringEscapeUtils.escapeCsv(s));
+				}
+				writer.newLine();
+			}
 			
+			int docIndex = 0;
 			for (File f : files) {
 				YoshikoderDocument idoc = 
 						new SimpleYoshikoderDocument(f.getName(), 
@@ -175,32 +229,48 @@ public class WordCounter extends AbstractCounter {
 								null, tok);	
 				if (format.equals(OutputFormat.MTX))	
 					writer.write(makeMTXLineFromDocument(idoc));
-				else 
+				else if (format.equals(OutputFormat.CSV))
+					writer.write(makeCSVLineFromDocument(lil, docIndex++)); // use idIndex
+				else
 					writer.write(makeLDACLineFromDocument(idoc));
 				writer.newLine();
-				
+
 				if (!getSilent())
 					System.err.print(".");
 			}
 			writer.flush(); // do we need this really?
 			if (!getSilent())
 				System.err.println();
-			
+
 			if (format.equals(OutputFormat.MTX)){
 				mtxClearup();
 				extractResourceFileAndSaveToFolder("README-mtx", "README.txt");
-			} else 
+			} else if (format.equals(OutputFormat.LDAC))
 				extractResourceFileAndSaveToFolder("README-ldac", "README.txt");
-			dumpVocabularyFile(new File(outputFolder, wordFilename));
-			dumpDocumentFile(new File(outputFolder, documentFilename));	
 			
+			if (!format.equals(OutputFormat.CSV)){
+				dumpVocabularyFile(new File(outputFolder, wordFilename));
+				dumpDocumentFile(new File(outputFolder, documentFilename));
+			}
 		}		
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		WordCounter counter = new WordCounter();
 		counter.setOutputFolder("/Users/will/wordout");
-		counter.setFormat(OutputFormat.MTX);
+		counter.setFormat(OutputFormat.CSV);
+		
+		/*
+		File a1 = File.createTempFile("aaa", "b");
+		File a2 = File.createTempFile("aaa", "b");
+		FileOutputStream fout = new FileOutputStream(a1);
+		fout.write("This is it".getBytes());
+		fout.close();
+		fout = new FileOutputStream(a2);
+		fout.write("is it always".getBytes());
+		fout.close();
+		counter.setFiles(new File[]{a1, a2});
+		*/
 		counter.setFiles(new String[]{"/Users/will/Dropbox/blogposts/uk-debate-by-speaker"});
 		counter.processFiles();
 	}

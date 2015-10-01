@@ -47,5 +47,15 @@ public class DPat implements Comparable<DPat>{
 		return this.toString().compareTo(o.toString());
 	}
 
-
+	@Override
+	public boolean equals(Object obj) {
+		DPat me = null;
+		boolean eq = false;
+		try {
+			me = (DPat)obj;
+			eq = this.toString().equals(me.toString());
+		} catch (Exception ex){ }
+		return eq;
+	}
+	
 }

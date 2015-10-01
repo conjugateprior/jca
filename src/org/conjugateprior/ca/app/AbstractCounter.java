@@ -9,26 +9,29 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javafx.scene.control.TreeItem;
 
 import org.apache.commons.io.IOUtils;
 import org.conjugateprior.ca.DCat;
 import org.conjugateprior.ca.DPat;
-import org.conjugateprior.ca.DocumentTokenizer;
 import org.conjugateprior.ca.FXCategoryDictionary;
 import org.conjugateprior.ca.PatternEngine;
-import org.conjugateprior.ca.RegexpDocumentTokenizer;
 import org.conjugateprior.ca.SubstringPatternEngine;
 import org.conjugateprior.ca.YoshikoderDocument;
 
 public abstract class AbstractCounter {
 
+	static private Logger log = Logger.getLogger(AbstractCounter.class.getName());
+	
 	protected enum OutputFormat {
 		TEXT, LATEX, HTML, CSV, LDAC, MTX
 	};
@@ -305,18 +308,15 @@ public abstract class AbstractCounter {
 
 	protected void fillTreeWithIndices(YoshikoderDocument doc){
 		// optimise later
-		//Set<String> vocab = doc.getWordTypes();
 		List<TreeItem<DCat>> categoryNodesInPrintOrder = dictionary.getCategoryNodesInPrintOrder();
 		
 		for (TreeItem<DCat> node : categoryNodesInPrintOrder){
-			//System.err.println("filling " + node);
 
 			Set<Integer> indexMatches = new HashSet<Integer>();
 			Set<DPat> pats = node.getValue().getPatterns();
 			for (DPat pat : pats) {
 				Set<Integer> indices = 
 						doc.getWordIndexesForPattern(pat.getRegexps());
-				//System.err.println(pat.getName() + " - indices matched: " + indices);
 				indexMatches.addAll(indices);
 			}
 			node.getValue().setMatchedIndices(indexMatches);
@@ -419,21 +419,10 @@ public abstract class AbstractCounter {
 		}
 		return l;
 	}
-	
-	
+
 	public File[] getRecursiveDepthOneFileArray(String[] files) throws Exception {
-		List<File> filelist = new ArrayList<File>();
-		for (int ii = 0; ii < files.length; ii++) {
-			try {
-				File g = new File(files[ii]);
-				if (!g.exists())
-					throw new Exception(g.getName() + " does not exist");
-				filelist.add(g);
-			} catch (Exception ex){
-				System.err.println(ex.getMessage());
-			}
-		}
-		return getRecursiveDepthOneFileArray(filelist.toArray(new File[filelist.size()]));
+		File[] fs = Arrays.stream(files).map(t -> new File(t)).toArray(File[]::new);
+		return getRecursiveDepthOneFileArray(fs);
 	}
 
 	/**
@@ -473,7 +462,7 @@ public abstract class AbstractCounter {
 		InputStream in = getClass().getResourceAsStream("/resources/" + name);
 		if (in == null) {
 			in = new FileInputStream(new File("resources/" + name));
-			System.err.println("Now looking in file system for resource file");
+			log.info("Now looking in file system for resource file");
 		} 
 		return in;
 	}

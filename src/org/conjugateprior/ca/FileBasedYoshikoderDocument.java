@@ -5,9 +5,12 @@ import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.nio.charset.Charset;
 import java.util.Date;
+import java.util.logging.Logger;
 
 public class FileBasedYoshikoderDocument extends SimpleYoshikoderDocument {
 
+	private static Logger log = Logger.getLogger(FileBasedYoshikoderDocument.class.getName());
+	
 	File file;
 	Charset charset;
 	SoftReference<String> textReference;
@@ -23,10 +26,10 @@ public class FileBasedYoshikoderDocument extends SimpleYoshikoderDocument {
 	protected String loadText() throws IOException {
 		String txt = textReference.get();
 		if (txt == null){
-			System.err.println("Empty soft reference, reloading from file...");
+			log.info("Empty soft reference, reloading from file...");
 			txt = AbstractYoshikoderDocument.getTextFromFile(file, charset);
 			textReference = new SoftReference<String>(txt);
-			System.err.println("and back in place");
+			log.info("and back in place");
 		}
 		return txt;
 	}

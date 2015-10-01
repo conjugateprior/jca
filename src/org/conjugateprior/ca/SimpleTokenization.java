@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +19,8 @@ import java.util.regex.Pattern;
 // reconstruct the GUI
 
 public class SimpleTokenization implements Tokenization {
+	
+	private static Logger log = Logger.getLogger(SimpleTokenization.class.getName());
 	
 	protected int[][]             wordOffsets;     // each row = [start-offset, end-offset+1]
 	protected int[][]             sentenceOffsets; // each row = [start-offset, end-offset+1]
@@ -114,6 +117,9 @@ public class SimpleTokenization implements Tokenization {
 		int N = getWordCount() - 1; // index of last token
 		
 		List<Integer> lst = wordTypeToTokenNumber.get(wd);
+		
+		log.info(lst.toString());
+		
 		List<int[]> charoffs = new ArrayList<int[]>(lst.size());
 		for (Integer startIndex : lst) {
 			int endIndex = startIndex;
@@ -193,6 +199,7 @@ public class SimpleTokenization implements Tokenization {
 		int N = getWordCount() - 1; // index of last token
 		
 		List<Integer> lst = getStartWordIndexesForPattern(pat);
+		
 		List<int[]> charoffs = new ArrayList<int[]>(lst.size());
 		for (Integer startIndex : lst) {
 			int endIndex = startIndex + pat.length - 1;

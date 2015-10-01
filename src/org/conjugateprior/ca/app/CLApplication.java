@@ -45,10 +45,7 @@ public class CLApplication {
 	}
 
 	public void processLine(String[] line) throws Exception { 
-		System.err.println("Error. Unimplemented processLine in CLApplication");
-		System.err.println("Arguments:");
-		for (int ii = 0; ii < line.length; ii++)
-			System.err.println("\t" +line[ii]);
+		throw new Exception("Unimplemented processLine in CLApplication");
 	}
 	
 	public void printUsageAndOptions(){
