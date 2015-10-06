@@ -44,9 +44,9 @@ public class CLWordCounter extends CLApplication {
 				"Drop the count starting each LDAC output line");
 		addOption(ldacPairCount);
 		
-		Option stopwords = new Option("file", true,
+		Option stopwords = new Option("stopwords", true,
 				"File of words not to be counted");
-		stopwords.setArgName("stopwords");
+		stopwords.setArgName("file");
 		addOption(stopwords);
 		
 		Option currency = new Option("no_currency", false,
