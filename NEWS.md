@@ -65,9 +65,20 @@ Changes in 0.2.4:
 
    New features:
    
-   * Single script to rule them all
+   * One script to rule them all
    
    Developer:
    
-   * Travis CI atatched, mostly as a reminder I don't actually have any tests
+   * Travis CI attached, mostly as a reminder I don't actually have any tests
    
+Changes in 0.2.5:
+
+   New features:
+   
+   * Changed dictionary import semantics. Duplicate category names are re-assigned 
+     unique names instead of triggering an error.
+   
+   * You can now drop the pair count in LDAC output lines with -no_paircount 
+   
+   * CSV format is back for word counting.  (Useful for testing but asking for trouble if 
+     used in the field.)

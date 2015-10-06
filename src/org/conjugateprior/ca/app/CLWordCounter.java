@@ -6,6 +6,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
+import org.conjugateprior.ca.app.AbstractCounter.OutputFormat;
 import org.conjugateprior.ca.reports.VocabularyFilterer;
 
 public class CLWordCounter extends CLApplication {
@@ -19,7 +20,7 @@ public class CLWordCounter extends CLApplication {
 		return "word [-encoding <encoding>] [-locale <locale>] " + 
 				"[-regexp <regexp>]" +   
 	           "[-no_currency] [-no_numbers] [-stopwords <file>] " +
-			   "[-stemmer <language>] [-format <format>]  [-silent] -output <folder> " +
+			   "[-stemmer <language>] [-format <format>] [-no_paircount] [-silent] -output <folder> " +
 	           "[doc1.txt doc2.txt folder1]";
 	}
 	
@@ -38,6 +39,10 @@ public class CLWordCounter extends CLApplication {
 				"One of: ldac (default), mtx, csv (only for small corpora...)");
 		form.setArgName("format");
 		addOption(form);
+		
+		Option ldacPairCount = new Option("no_paircount", false,
+				"Drop the count starting each LDAC output line");
+		addOption(ldacPairCount);
 		
 		Option stopwords = new Option("file", true,
 				"File of words not to be counted");
@@ -129,6 +134,9 @@ public class CLWordCounter extends CLApplication {
 		if (line.hasOption("format"))
 			counter.setFormat(line.getOptionValue("format").toLowerCase());
 		
+		if (counter.getFormat().equals(OutputFormat.LDAC))
+			counter.setLDACPairCount(!line.hasOption("no_paircount"));
+			
 		counter.setOutputFolder(line.getOptionValue("output"));
 				
 		counter.processFiles();

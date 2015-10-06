@@ -37,6 +37,8 @@ public class WordCounter extends AbstractCounter {
 	protected String documentFilename = "docs.csv";
 	protected String wordFilename = "words.csv";
 	
+	protected boolean LDACPairCount = false;
+	
 	protected VocabularyFilterer filterer = new VocabularyFilterer();
 	
 	public VocabularyFilterer getFilterer() {
@@ -45,6 +47,14 @@ public class WordCounter extends AbstractCounter {
 
 	public WordCounter() {
 		super();
+	}
+	
+	public boolean getLDACPairCount(){
+		return LDACPairCount;
+	}
+	
+	public void setLDACPairCount(boolean b){
+		LDACPairCount = b;
 	}
 	
 	protected void dumpDocumentFile(File f) throws Exception {
@@ -114,7 +124,7 @@ public class WordCounter extends AbstractCounter {
 		Map<String,Integer> map = filterer.getWordCountMapFromDocument(doc);
 		
 		StringBuffer sb = new StringBuffer();
-		sb.append(map.keySet().size()); // this many feature pairs
+		//
 		for (String wd : map.keySet()) {
 			Integer id = wordToId.get(wd);
 			if (id == null){
@@ -124,6 +134,11 @@ public class WordCounter extends AbstractCounter {
 			}
 			sb.append(" " + id + ":" + map.get(wd));
 		}
+		if (LDACPairCount)
+			sb.insert(0, map.keySet().size()); // this many feature pairs
+		else
+			sb.delete(0, 1); // remove starting space
+		
 		return sb.toString();
 	}
 	
@@ -246,7 +261,10 @@ public class WordCounter extends AbstractCounter {
 				mtxClearup();
 				extractResourceFileAndSaveToFolder("README-mtx", "README.txt");
 			} else if (format.equals(OutputFormat.LDAC))
-				extractResourceFileAndSaveToFolder("README-ldac", "README.txt");
+				if (getLDACPairCount())
+					extractResourceFileAndSaveToFolder("README-ldac", "README.txt");
+				else
+					extractResourceFileAndSaveToFolder("README-ldac-nopaircount", "README.txt");
 			
 			if (!format.equals(OutputFormat.CSV)){
 				dumpVocabularyFile(new File(outputFolder, wordFilename));
@@ -257,9 +275,9 @@ public class WordCounter extends AbstractCounter {
 
 	public static void main(String[] args) throws Exception {
 		WordCounter counter = new WordCounter();
-		counter.setOutputFolder("/Users/will/wordout");
-		counter.setFormat(OutputFormat.CSV);
-		
+		counter.setOutputFolder("/Users/wlowe/data/out");
+		counter.setFormat(OutputFormat.LDAC);
+		counter.setLDACPairCount(true);
 		/*
 		File a1 = File.createTempFile("aaa", "b");
 		File a2 = File.createTempFile("aaa", "b");
@@ -271,7 +289,7 @@ public class WordCounter extends AbstractCounter {
 		fout.close();
 		counter.setFiles(new File[]{a1, a2});
 		*/
-		counter.setFiles(new String[]{"/Users/will/Dropbox/blogposts/uk-debate-by-speaker"});
+		counter.setFiles(new String[]{"/Users/wlowe/data/uk-debate-by-speaker"});
 		counter.processFiles();
 	}
 }

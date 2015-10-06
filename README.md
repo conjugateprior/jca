@@ -40,7 +40,7 @@ Here are the tools:
   word, a phrase, or a category from a content analysis dictionary,
   for a bunch of documents.
 
-* `line`: Turn *folders* of documents into Mallet's prefered
+* `line`: Turn *folders* of documents into Mallet's preferred
   one-per-line format.  This has three columns.  The first two are the
   file's old name and the final one is the text in one long line.
 
@@ -67,7 +67,7 @@ folders full of text files.
 
 You can give any mixture of files and folder names.  If a folder
 name is provided then the documents within that folder will be
-analysed, but the tools don't look into any subfolders that might be
+analyzed, but the tools don't look into any sub-folders that might be
 down there too.
 
 Unix / Mac folk might find it more convenient to add 
