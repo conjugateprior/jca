@@ -95,8 +95,15 @@ public class Concordancer extends AbstractCounter {
 		// FIXME First cut: ignore double counting words that match multiple patterns
 		//StringBuffer sb = new StringBuffer();
 		//int n = doc.getWordCount();
+		System.err.println("words -> " + doc.getWordCount());
 		String txt = doc.getText();
+		//System.err.println(txt);
+		
 		StringBuffer str = new StringBuffer();
+		for (Pattern[] patterns : pats) {
+			System.err.println(patterns[0].pattern());
+		}
+		
 		
 		for (Pattern[] pat : pats) {
 			List<int[]> concs = doc.getConcordanceCharacterOffsetsForPattern(pat, window);

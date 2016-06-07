@@ -49,7 +49,7 @@ public class CLCategoryCounter extends CLApplication {
 		format.setArgName("format");
 		addOption(format);
 		
-		Option target = new Option("target", false, 
+		Option target = new Option("target", true, 
 				"dictionary category to whose matches the "
 				+ "dictionary is applied within 'window' words");
 		
@@ -59,7 +59,8 @@ public class CLCategoryCounter extends CLApplication {
 		Option op = getWindowOption(false);
 		op.setDescription("window of words around 'target'"
 				+ " to apply dictionary to (default 15)");
-
+		addOption(op);
+		
 	}
 	
 	@Override

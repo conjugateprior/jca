@@ -20,9 +20,9 @@ import org.conjugateprior.ca.DCat;
 import org.conjugateprior.ca.DPat;
 import org.conjugateprior.ca.DocumentTokenizer;
 import org.conjugateprior.ca.FXCategoryDictionary;
-import org.conjugateprior.ca.FileBasedYoshikoderDocument;
 import org.conjugateprior.ca.RegexpDocumentTokenizer;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
+import org.conjugateprior.ca.SimpleYoshikoderDocument;
 import org.conjugateprior.ca.YoshikoderDocument;
 
 import javafx.scene.control.TreeItem;
@@ -120,12 +120,26 @@ public class CategoryCounter extends AbstractCounter {
 			FileUtils.forceMkdir(outputFolder);
 			dumpMetadata();
 		}
-		
-		Set<DPat> tPats = dictionary.getPatternsInSubtree(new TreeItem<DCat>(targetDCat));
-		List<Pattern[]> targetPatterns = new ArrayList<>(tPats.size());
-		for (DPat dpat : tPats) 
-			targetPatterns.add(dpat.getRegexps());
 
+		List<Pattern[]> targetPatterns = new ArrayList<>();
+		if (isPreConcordanced()){
+			List<TreeItem<DCat>> list = dictionary.getCategoryNodesInPrintOrder();
+			TreeItem<DCat> tid = null;
+			for (TreeItem<DCat> treeItem : list) {
+				DCat d =treeItem.getValue();
+				if (d.equals(targetDCat)){
+					tid = treeItem;
+					break;
+				}
+			}
+			if (tid == null) 
+				throw new Exception("Cannot find a category called " + targetDCat.getName());
+			
+			Set<DPat> tPats = dictionary.getPatternsInSubtree(tid);
+			for (DPat dpat : tPats) 
+				targetPatterns.add(dpat.getRegexps());
+		}
+		
 		// now the long part
 		BufferedWriter writer = null;
 		try {
@@ -158,12 +172,18 @@ public class CategoryCounter extends AbstractCounter {
 
 			Charset cs = getEncoding();
 			for (File f : files) {
+				/*
 				YoshikoderDocument idoc = 
 						new FileBasedYoshikoderDocument(f.getName(), 
 								AbstractYoshikoderDocument.getTextFromFile(f, encoding),
 								null, tok, f, cs);	
-
-				if (preConcordanced){
+                */
+				YoshikoderDocument idoc = 
+						new SimpleYoshikoderDocument(f.getName(), 
+								AbstractYoshikoderDocument.getTextFromFile(f, encoding),
+								null, tok);
+				System.err.println(idoc);
+				if (isPreConcordanced()){
 					idoc = Concordancer.makeConcordanceDocument(targetPatterns, 
 							targetWindow, idoc, tok); // convert to concordance doc
 				}

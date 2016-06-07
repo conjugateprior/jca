@@ -26,6 +26,7 @@ public class FileBasedYoshikoderDocument extends SimpleYoshikoderDocument {
 	protected String loadText() throws IOException {
 		String txt = textReference.get();
 		if (txt == null){
+			//System.err.println("reloading from file");
 			log.info("Empty soft reference, reloading from file...");
 			txt = AbstractYoshikoderDocument.getTextFromFile(file, charset);
 			textReference = new SoftReference<String>(txt);

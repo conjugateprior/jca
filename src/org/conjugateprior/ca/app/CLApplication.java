@@ -185,6 +185,9 @@ public class CLApplication {
 				ar[ii-1] = args[ii];
 		}
 		
+		//for (String string : ar) 
+		//	System.err.println(string);
+		
 		if (args[0].equalsIgnoreCase("cat")){
 			CategoryCounter cc = new CategoryCounter();
 			CLCategoryCounter c = new CLCategoryCounter(cc);
