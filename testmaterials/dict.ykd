@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dictionary style="050805" patternengine="substring">
+  <cnode name="Dictionary">
+    <cnode name="neg">
+      <cnode name="Probleme"><pnode name="Probleme"/></cnode>
+      <cnode name="abschrenkende"><pnode name="abschrenkende"/></cnode>
+      <cnode name="Lust"><pnode name="Lust"/></cnode>
+    </cnode>
+  </cnode>
+</dictionary>

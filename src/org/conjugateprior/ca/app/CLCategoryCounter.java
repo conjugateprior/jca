@@ -2,15 +2,21 @@ package org.conjugateprior.ca.app;
 
 import java.nio.charset.Charset;
 
+import javafx.scene.control.TreeItem;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
+import org.conjugateprior.ca.DCat;
 
 public class CLCategoryCounter extends CLApplication {
 
 	protected CategoryCounter counter;
-		
+	
+	protected TreeItem<DCat> category;
+	protected String pattern;
+	
 	public String getUsage() {
 		return "cat [-encoding <encoding>] [-locale <locale>] [-regexp <regexp>] " +
 				   "[-oldmatching] [-output <folder>] [-format <format>] [-silent] " +
@@ -40,6 +46,18 @@ public class CLCategoryCounter extends CLApplication {
 			Charset.defaultCharset().name() + ")");
 		format.setArgName("format");
 		addOption(format);
+		
+		Option target = new Option("target", false, 
+				"pattern or category to whose matches the "
+				+ "dictionary is applied within 'window' words");
+		
+		target.setArgName("target");
+		addOption(target);
+		
+		Option op = getWindowOption(false);
+		op.setDescription("window of words around 'target'"
+				+ " to apply dictionary to (default 15)");
+
 	}
 	
 	@Override
@@ -94,6 +112,11 @@ public class CLCategoryCounter extends CLApplication {
 		if (line.hasOption("output"))
 			counter.setOutputFolder(line.getOptionValue("output"));
 				
+		if (line.hasOption("category"))
+			counter.setCategory(line.getOptionValue("category"));
+		else if (line.hasOption("pattern"))
+			counter.addPattern(line.getOptionValue("pattern"));
+		
 		counter.processFiles();
 		
 		System.exit(0);
