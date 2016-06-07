@@ -2,11 +2,11 @@ package org.conjugateprior.ca.app;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
-import java.util.logging.Logger;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
@@ -18,6 +18,7 @@ import org.conjugateprior.ca.DocumentTokenizer;
 import org.conjugateprior.ca.RegexpDocumentTokenizer;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
+import org.conjugateprior.ca.Tokenization;
 import org.conjugateprior.ca.YoshikoderDocument;
 
 public class Concordancer extends AbstractCounter {
@@ -47,7 +48,7 @@ public class Concordancer extends AbstractCounter {
 			    "<tr><th>Document</th><th></th><th class=\"leftalign\">Pattern</th></tr>";
 	}
 	
-	protected String collapseWhitespace(String s){
+	protected static String collapseWhitespace(String s){
 		return s.replace("\n", " ").replace("\r",  " ");
 	}
 	
@@ -86,6 +87,47 @@ public class Concordancer extends AbstractCounter {
 			}
 		}
 		return str.toString();
+	}
+	
+	public static YoshikoderDocument makeConcordanceDocument(List<Pattern[]> pats, int window, 
+			YoshikoderDocument doc, DocumentTokenizer tok)
+	throws Exception {
+		// FIXME First cut: ignore double counting words that match multiple patterns
+		//StringBuffer sb = new StringBuffer();
+		//int n = doc.getWordCount();
+		String txt = doc.getText();
+		StringBuffer str = new StringBuffer();
+		
+		for (Pattern[] pat : pats) {
+			List<int[]> concs = doc.getConcordanceCharacterOffsetsForPattern(pat, window);
+		
+			for (int[] is : concs) {
+				String s;
+				if (is[0] != -1)
+					s = collapseWhitespace(txt.substring(is[0], is[1]));
+				else 
+					s = "";
+				str.append(s);
+
+				//s = " [" + txt.substring(is[2], is[3]) + "]";			
+				//str.append(s);
+				str.append(" -- "); //indicate absence without being caught in the tokenizer
+				
+				// catch trailing punctuation etc. by restarting straight after match
+				int restart = (is[3]<txt.length() ? is[3] : is[4]);
+
+				if (is[5] != -1)
+					s = collapseWhitespace(txt.substring(restart, is[5]));
+				else
+					s = "";
+
+				str.append(s);
+				str.append(SystemUtils.LINE_SEPARATOR);
+			}
+		}
+		
+		return new SimpleYoshikoderDocument("Pre-concordanced ".concat(doc.getTitle()), 
+				str.toString(), doc.getDate(), tok);
 	}
 	
 	protected String makeTextLinesFromDocument(YoshikoderDocument doc) throws Exception {
@@ -182,5 +224,19 @@ public class Concordancer extends AbstractCounter {
 				writer.close();
 		}
 	}
+	
+	public static void main(String[] args) throws Exception {
+		String s = "An mary had a little lamb and then she had some more lamb.";
+		DocumentTokenizer simp = new SimpleDocumentTokenizer(Locale.ENGLISH);
+		YoshikoderDocument doc = new SimpleYoshikoderDocument("mary", s, null, 
+				simp);
+		List<Pattern[]> pats = new ArrayList<>();
+		pats.add(new Pattern[]{Pattern.compile("lamb")});
+		pats.add(new Pattern[]{Pattern.compile("little"), Pattern.compile("lamb")});
+		YoshikoderDocument dd = Concordancer.makeConcordanceDocument(pats, 2, doc, simp);
+		System.out.println(dd.getTitle());
+		System.out.println(dd.getText());
+	}
+	
 	
 }

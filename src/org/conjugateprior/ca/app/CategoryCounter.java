@@ -5,9 +5,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Date;
-
-import javafx.scene.control.TreeItem;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -15,6 +17,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.conjugateprior.ca.AbstractYoshikoderDocument;
 import org.conjugateprior.ca.DCat;
+import org.conjugateprior.ca.DPat;
 import org.conjugateprior.ca.DocumentTokenizer;
 import org.conjugateprior.ca.FXCategoryDictionary;
 import org.conjugateprior.ca.FileBasedYoshikoderDocument;
@@ -22,11 +25,44 @@ import org.conjugateprior.ca.RegexpDocumentTokenizer;
 import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.YoshikoderDocument;
 
+import javafx.scene.control.TreeItem;
+
 public class CategoryCounter extends AbstractCounter {
 	
+	// only used when there is a category concordance target
+	// these determine what sort of concordance document is created
+	// to count the matches in.
+	boolean preConcordanced = false;
+	DCat targetDCat = null; 
+	int targetWindow = 15;
+	
 	public CategoryCounter() {
-		super();
+		super();		
 		setFormat(OutputFormat.CSV); 
+	}
+	
+	public void setTargetDCat(DCat targ){
+		targetDCat = targ;
+	}
+	
+	public DCat getTargetDCat() {
+		return targetDCat;
+	}
+	
+	public void setTargetWindow(int w){
+		targetWindow = w;
+	}
+	
+	public int getTargetWindow() {
+		return targetWindow;
+	}
+	
+	public void setPreConcordanced(boolean b){
+		preConcordanced = b;
+	}
+	
+	public boolean isPreConcordanced(){
+		return preConcordanced;
 	}
 	
 	public void dumpMetadata() throws Exception {
@@ -85,6 +121,11 @@ public class CategoryCounter extends AbstractCounter {
 			dumpMetadata();
 		}
 		
+		Set<DPat> tPats = dictionary.getPatternsInSubtree(new TreeItem<DCat>(targetDCat));
+		List<Pattern[]> targetPatterns = new ArrayList<>(tPats.size());
+		for (DPat dpat : tPats) 
+			targetPatterns.add(dpat.getRegexps());
+
 		// now the long part
 		BufferedWriter writer = null;
 		try {
@@ -121,6 +162,12 @@ public class CategoryCounter extends AbstractCounter {
 						new FileBasedYoshikoderDocument(f.getName(), 
 								AbstractYoshikoderDocument.getTextFromFile(f, encoding),
 								null, tok, f, cs);	
+
+				if (preConcordanced){
+					idoc = Concordancer.makeConcordanceDocument(targetPatterns, 
+							targetWindow, idoc, tok); // convert to concordance doc
+				}
+				
 				if (format.equals(OutputFormat.HTML))	
 					writer.write(makeHTMLLineFromDocument(idoc));
 				else 

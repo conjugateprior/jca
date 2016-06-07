@@ -1,14 +1,16 @@
 package org.conjugateprior.ca.app;
 
 import java.nio.charset.Charset;
-
-import javafx.scene.control.TreeItem;
+import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.conjugateprior.ca.DCat;
+
+
+import javafx.scene.control.TreeItem;
 
 public class CLCategoryCounter extends CLApplication {
 
@@ -19,8 +21,8 @@ public class CLCategoryCounter extends CLApplication {
 	
 	public String getUsage() {
 		return "cat [-encoding <encoding>] [-locale <locale>] [-regexp <regexp>] " +
-				   "[-oldmatching] [-output <folder>] [-format <format>] [-silent] " +
-				   "-dictionary <file> " +
+				   "[-oldmatching] [-target <category name>] [-window <number>] [-output <folder>] " +
+				   "[-format <format>] [-silent] -dictionary <file> " +
 				   "[doc1.txt doc2.txt folder1]";
 	}
 	
@@ -48,7 +50,7 @@ public class CLCategoryCounter extends CLApplication {
 		addOption(format);
 		
 		Option target = new Option("target", false, 
-				"pattern or category to whose matches the "
+				"dictionary category to whose matches the "
 				+ "dictionary is applied within 'window' words");
 		
 		target.setArgName("target");
@@ -116,6 +118,25 @@ public class CLCategoryCounter extends CLApplication {
 			counter.setCategory(line.getOptionValue("category"));
 		else if (line.hasOption("pattern"))
 			counter.addPattern(line.getOptionValue("pattern"));
+		
+		if (line.hasOption("target")){
+			counter.setPreConcordanced(true);
+			String tarname = line.getOptionValue("target");
+			List<TreeItem<DCat>> cats = counter.getDictionary().getCategoryNodesInPrintOrder();
+			DCat targetmatch = null; 
+			for (TreeItem<DCat> treeItem : cats) {
+				if (treeItem.getValue().getName().equals(tarname)){
+					targetmatch = treeItem.getValue();
+					break;
+				}
+			}
+			System.err.println("Spotted target " + targetmatch.getName());
+			counter.setTargetDCat(targetmatch);
+			
+			if (line.hasOption("window")){
+				counter.setTargetWindow(Integer.parseInt(line.getOptionValue("window")));
+			}
+		}
 		
 		counter.processFiles();
 		
