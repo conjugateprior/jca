@@ -124,15 +124,17 @@ public class CLCategoryCounter extends CLApplication {
 			counter.setPreConcordanced(true);
 			String tarname = line.getOptionValue("target");
 			List<TreeItem<DCat>> cats = counter.getDictionary().getCategoryNodesInPrintOrder();
-			DCat targetmatch = null; 
+			boolean matched = false; 
 			for (TreeItem<DCat> treeItem : cats) {
 				if (treeItem.getValue().getName().equals(tarname)){
-					targetmatch = treeItem.getValue();
+					counter.setTargetNode(treeItem);
+					matched = true;
 					break;
 				}
 			}
-			System.err.println("Spotted target " + targetmatch.getName());
-			counter.setTargetDCat(targetmatch);
+			if (!matched)
+				throw new Exception("Could not identify a target category called '" + 
+						tarname + "'");
 			
 			if (line.hasOption("window")){
 				counter.setTargetWindow(Integer.parseInt(line.getOptionValue("window")));

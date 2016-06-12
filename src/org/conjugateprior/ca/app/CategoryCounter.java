@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import javafx.scene.control.TreeItem;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -25,15 +27,14 @@ import org.conjugateprior.ca.SimpleDocumentTokenizer;
 import org.conjugateprior.ca.SimpleYoshikoderDocument;
 import org.conjugateprior.ca.YoshikoderDocument;
 
-import javafx.scene.control.TreeItem;
-
 public class CategoryCounter extends AbstractCounter {
 	
 	// only used when there is a category concordance target
 	// these determine what sort of concordance document is created
 	// to count the matches in.
 	boolean preConcordanced = false;
-	DCat targetDCat = null; 
+	//DCat targetDCat = null; 
+	TreeItem<DCat> targetNode = null;
 	int targetWindow = 15;
 	
 	public CategoryCounter() {
@@ -41,12 +42,12 @@ public class CategoryCounter extends AbstractCounter {
 		setFormat(OutputFormat.CSV); 
 	}
 	
-	public void setTargetDCat(DCat targ){
-		targetDCat = targ;
+	public void setTargetNode(TreeItem<DCat> targ){
+		targetNode = targ;
 	}
 	
-	public DCat getTargetDCat() {
-		return targetDCat;
+	public TreeItem<DCat> getTargetNode() {
+		return targetNode;
 	}
 	
 	public void setTargetWindow(int w){
@@ -123,19 +124,10 @@ public class CategoryCounter extends AbstractCounter {
 
 		List<Pattern[]> targetPatterns = new ArrayList<>();
 		if (isPreConcordanced()){
-			List<TreeItem<DCat>> list = dictionary.getCategoryNodesInPrintOrder();
-			TreeItem<DCat> tid = null;
-			for (TreeItem<DCat> treeItem : list) {
-				DCat d =treeItem.getValue();
-				if (d.equals(targetDCat)){
-					tid = treeItem;
-					break;
-				}
-			}
-			if (tid == null) 
-				throw new Exception("Cannot find a category called " + targetDCat.getName());
+			if (targetNode == null) 
+				throw new Exception("Cannot find a category called " + targetNode.getValue().getName());
 			
-			Set<DPat> tPats = dictionary.getPatternsInSubtree(tid);
+			Set<DPat> tPats = dictionary.getPatternsInSubtree(targetNode);
 			for (DPat dpat : tPats) 
 				targetPatterns.add(dpat.getRegexps());
 		}
@@ -182,10 +174,11 @@ public class CategoryCounter extends AbstractCounter {
 						new SimpleYoshikoderDocument(f.getName(), 
 								AbstractYoshikoderDocument.getTextFromFile(f, encoding),
 								null, tok);
-				System.err.println(idoc);
+				//System.err.println("===>" + idoc.getText());
 				if (isPreConcordanced()){
 					idoc = Concordancer.makeConcordanceDocument(targetPatterns, 
 							targetWindow, idoc, tok); // convert to concordance doc
+					System.err.println("---->" + idoc.getText());
 				}
 				
 				if (format.equals(OutputFormat.HTML))	
@@ -302,4 +295,24 @@ public class CategoryCounter extends AbstractCounter {
 		printer.addPropertyChangeListener(listener);		
 		printer.processFiles(false);
      */
+	
+	public static void main(String[] args) {
+		try {
+		CategoryCounter c = new CategoryCounter();
+		c.setDictionary(new File("testmaterials/concmat/concdict.vbpro"));
+		c.setWindow(1);
+		FXCategoryDictionary fxd = c.getDictionary();
+		TreeItem<DCat> item = fxd.getCategoryRoot().getChildren().get(0); // target
+		c.setPreConcordanced(true);
+		c.setTargetNode(item);
+		c.setFiles(new File[]{new File("testmaterials/concmat/doc1"), 
+				new File("testmaterials/concmat/doc2"),
+				new File("testmaterials/concmat/doc3")});
+		c.processFiles();
+		} catch (Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	
 }
